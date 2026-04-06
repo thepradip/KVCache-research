@@ -4148,10 +4148,11 @@ function setupHiDPICanvas(canvas, width, height) {
         if(sc===10){
             title('The Full Picture',40,TEXT,vis,20);
             const methods=[
-                {name:'MHA',color:RED,kbTok:512,barH:100},
-                {name:'MQA',color:GREEN,kbTok:16,barH:3},
-                {name:'GQA-8',color:GOLD,kbTok:128,barH:25},
-                {name:'MLA',color:PURPLE,kbTok:36,barH:10},
+                {name:'LLaMA-1 65B (MHA)',color:RED,kbTok:2048,barH:100},
+                {name:'Falcon-40B (MQA)',color:GREEN,kbTok:15,barH:1},
+                {name:'Qwen3 235B (GQA-4)',color:GOLD,kbTok:189,barH:9},
+                {name:'DeepSeek-V3 (MLA)',color:PURPLE,kbTok:69,barH:3},
+                {name:'Gemma 4 31B (GQA+LG)',color:CYAN,kbTok:80,barH:4},
             ];
             const progress=ease(t);
             const colW=150, colGap=18;
@@ -4215,15 +4216,15 @@ function setupHiDPICanvas(canvas, width, height) {
 
         // ============ SCENE 11: END ============
         if(sc===11){
-            title('From 512 KB to ~36 KB per token.',200,TEXT,vis,26);
-            title('That is the normalized 32-layer story this animation tells.',240,MUTED,vis,18);
-            subtitle('MHA → MQA → GQA → MLA',300,vis);
+            title('MHA: 2048 KB → MQA: 15 KB → GQA: 189 KB → MLA: 69 KB → GQA+LG: 80 KB',200,TEXT,vis,20);
+            title('Five companies. Five architectures. Same KV cache problem.',245,MUTED,vis,16);
+            subtitle('LLaMA-1 → Falcon → Qwen3 → DeepSeek-V3 → Gemma 4',290,vis);
 
             // Animated shrinking bar
             const progress=ease(t);
-            const sizes=[512,16,128,36];
-            const colors=[RED,GREEN,GOLD,PURPLE];
-            const labels=['MHA','MQA','GQA','MLA'];
+            const sizes=[2048,15,189,69,80];
+            const colors=[RED,GREEN,GOLD,PURPLE,CYAN];
+            const labels=['MHA','MQA','GQA-4','MLA','GQA+LG'];
             const steps = sizes.length - 1;
             const travel = Math.min(progress * steps, steps);
             const idx = Math.min(steps - 1, Math.floor(travel));

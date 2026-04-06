@@ -1098,16 +1098,17 @@
                 <tr>
                     <td><strong>Gemma 4 31B</strong> <span class="badge badge-green">GQA</span>+<span class="badge badge-blue">LG</span></td>
                     <td>60</td>
-                    <td>16 local / 16 global</td>
+                    <td>16 local / 4 global</td>
                     <td>256 local / 512 global</td>
-                    <td>~900 KB</td>
-                    <td>~0.9 GB</td>
-                    <td>~12 GB*</td>
+                    <td>~860 KB eq.</td>
+                    <td>~1.0 GB</td>
+                    <td>~6.1 GB*</td>
                 </tr>
             </tbody>
             <tfoot>
                 <tr><td colspan="7" style="font-size:0.8rem; color:var(--text-muted); padding-top:8px;">
-                    *MLA stores a compressed latent of 576 dims (d<sub>c</sub>=512 + d<sub>R</sub>=64) instead of separate K and V vectors. Formula: layers &times; 576 &times; 2 bytes.
+                    *MLA stores a compressed latent of 576 dims (d<sub>c</sub>=512 + d<sub>R</sub>=64) instead of separate K and V vectors. Formula: layers &times; 576 &times; 2 bytes.<br>
+                    *Gemma 4 31B estimate assumes 50 sliding-window layers capped at 1,024 tokens and 10 global layers with 4 global KV heads and unified K/V. Cache growth is therefore sub-linear with context length.
                 </td></tr>
             </tfoot>
         </table>
@@ -2512,12 +2513,12 @@
                 <tr style="background: rgba(34,197,94,0.05);">
                     <td><strong>Gemma 4 31B</strong><br><span class="badge badge-green">GQA</span>+<span class="badge badge-blue">LG</span></td>
                     <td>60 (50 local + 10 global)</td>
-                    <td>16</td>
-                    <td>256 local / 512 global</td>
-                    <td><strong>~900 KB</strong></td>
-                    <td>~0.9 GB</td>
-                    <td><strong>~12 GB*</strong></td>
-                    <td>*Estimate. 50 sliding layers (16 KV, d=256, window=1024) + 10 global layers (16 KV, d=512, full context). num_kv_shared_layers=0. Source: <a href="https://huggingface.co/google/gemma-4-31B-it">HF config.json</a>.</td>
+                    <td>16 local / 4 global</td>
+                    <td>256 / 512</td>
+                    <td><strong>~860 KB eq.</strong></td>
+                    <td>~0.86 GB</td>
+                    <td><strong>~6.1 GB*</strong></td>
+                    <td>*Mixed: 50 sliding layers (16 KV, d=256, capped at 1,024 tok) + 10 global layers (4 KV, d=512, unified K/V). Estimate from official <a href="https://huggingface.co/google/gemma-4-31B-it">Gemma 4 config</a>.</td>
                 </tr>
                 <tr style="background: rgba(6,182,212,0.05);">
                     <td><strong>Qwen3.5 9B</strong><br><span class="badge badge-green">GQA</span>+DeltaNet</td>
@@ -2544,7 +2545,7 @@
 
     <div class="info-card warning">
         <h4>Gemma 4 E4B: Aggressive KV Sharing Across Layers</h4>
-        <p>Gemma 4 E4B uses just <strong>2 KV heads</strong> and shares KV cache across <strong>18 of its 42 layers</strong> (num_kv_shared_layers=18). This means only 24 layers maintain unique KV caches. Sliding window layers are capped at 512 tokens regardless of context length. The result: a 4B-effective model that can handle 128K context with roughly <strong>2 GB of KV cache</strong> &mdash; small enough for a smartphone GPU.</p>
+        <p>Gemma 4 E4B uses just <strong>2 KV heads</strong> and shares KV cache across <strong>18 of its 42 layers</strong> (num_kv_shared_layers=18). This means only 24 layers maintain unique KV caches. Sliding window layers are capped at 512 tokens regardless of context length. The result: a 4B-effective model that can handle 128K context with roughly <strong>2 GB of KV cache</strong>, putting it in the mobile/edge-friendly range.</p>
     </div>
 
     <div class="info-card success">
@@ -2774,7 +2775,7 @@
         <div class="comparison-card" style="border-top: 3px solid var(--success);">
             <div class="metric" style="font-size: 1.3rem; background: var(--gradient-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Hybrid Attention</div>
             <div class="metric-label">Extreme Long Context</div>
-            <div class="metric-context">LLaMA 4 Scout (10M), Gemma 4 (128K on phones)</div>
+            <div class="metric-context">LLaMA 4 Scout (10M), Gemma 4 E2B/E4B (128K mobile/edge)</div>
         </div>
     </div>
 
@@ -2783,7 +2784,7 @@
 
     <p><strong>2. Ten-Million-Token Context:</strong> Meta's public LLaMA 4 Scout model card reports a <strong>10 million token</strong> context window. That is roughly 5,000 pages of text in a single prompt, even though the public card does not spell out every attention/KV implementation detail behind it.</p>
 
-    <p><strong>3. On-Device Intelligence:</strong> Gemma 4 E2B and E4B target smartphones and edge devices with 128K+ context. Google's technical report attributes this to architectural choices: MoE routing (3.8B active of 26B), 5:1 local-global attention, KV sharing across layers, and Per-Layer Embeddings. Separately, post-training KV cache quantization methods (such as TurboQuant or KIVI) could further reduce memory on these deployments, though Google's Gemma 4 documentation does not explicitly cite any specific KV quantization scheme as part of the model's on-device strategy.</p>
+    <p><strong>3. On-Device Intelligence:</strong> Gemma 4 E2B and E4B target mobile and edge deployments with 128K+ context. Their small KV budgets come from low KV-head counts, local-global attention, KV sharing across layers, and per-layer embeddings. Separately, Gemma 4 26B-A4B is the MoE family member that uses sparse routing (3.8B active of 26B); that MoE detail should not be attributed to the E2B/E4B variants. Post-training KV cache quantization methods (such as TurboQuant or KIVI) could further reduce memory, though Google's Gemma 4 documentation does not cite any specific KV quantization scheme as part of the on-device strategy.</p>
 
     <p><strong>4. Aggressive KV Head Reduction:</strong> Qwen3's MoE variant uses just 4 KV heads with 64 query heads &mdash; a 16:1 ratio. This trend toward extreme Q-to-KV ratios suggests the field is converging on the insight that you need very few KV heads, even for models with many query heads.</p>
 
@@ -4096,7 +4097,7 @@ function setupHiDPICanvas(canvas, width, height) {
                 {name:'Falcon-40B (MQA)',color:GREEN,kbTok:15,barH:1},
                 {name:'Qwen3 235B (GQA-4)',color:GOLD,kbTok:189,barH:9},
                 {name:'DeepSeek-V3 (MLA)',color:PURPLE,kbTok:69,barH:3},
-                {name:'Gemma 4 31B (GQA+LG)',color:CYAN,kbTok:900,barH:35},
+                {name:'Gemma 4 31B (GQA+LG)',color:CYAN,kbTok:860,barH:33},
             ];
             const progress=ease(t);
             const colW=150, colGap=18;

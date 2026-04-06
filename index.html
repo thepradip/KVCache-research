@@ -1052,12 +1052,12 @@
             <tbody>
                 <tr>
                     <td><strong>LLaMA-1 65B</strong> <span class="badge badge-purple">MHA</span></td>
-                    <td>64</td>
+                    <td>80</td>
                     <td>64</td>
                     <td>128</td>
-                    <td>2,048 KB</td>
-                    <td>8 GB</td>
-                    <td>256 GB</td>
+                    <td>2,560 KB</td>
+                    <td>10 GB</td>
+                    <td>320 GB</td>
                 </tr>
                 <tr>
                     <td><strong>Falcon-40B</strong> <span class="badge badge-green">MQA</span></td>
@@ -1098,11 +1098,11 @@
                 <tr>
                     <td><strong>Gemma 4 31B</strong> <span class="badge badge-green">GQA</span>+<span class="badge badge-blue">LG</span></td>
                     <td>60</td>
-                    <td>16 local / 4 global</td>
-                    <td>256 / 512</td>
-                    <td>~80 KB</td>
-                    <td>~0.31 GB</td>
-                    <td>~10 GB</td>
+                    <td>16 local / 16 global</td>
+                    <td>256 local / 512 global</td>
+                    <td>~900 KB</td>
+                    <td>~0.9 GB</td>
+                    <td>~12 GB*</td>
                 </tr>
             </tbody>
             <tfoot>
@@ -1117,7 +1117,7 @@
 
     <div class="key-insight">
         <h4>The Memory Wall</h4>
-        <p>For LLaMA-1 65B (pure MHA) at 128K context, the KV cache requires <strong>256 GB</strong> &mdash; while the model weights in FP16 are about 130 GB. The cache is nearly 2x the model. Even for a 7B model with MHA, the cache hits 64 GB at 128K context while the model is only 14 GB (4.5x ratio). This is the "memory wall" that forced the industry to rethink attention.</p>
+        <p>For LLaMA-1 65B (pure MHA) at 128K context, the KV cache requires <strong>320 GB</strong> &mdash; while the model weights in FP16 are about 130 GB. The cache is 2.5x the model. Even for a 7B model with MHA, the cache hits 64 GB at 128K context while the model is only 14 GB (4.5x ratio). This is the "memory wall" that forced the industry to rethink attention.</p>
     </div>
 
     <!-- ANIMATION 2: KV Cache Growth -->
@@ -1688,11 +1688,11 @@
                     <td>Major reduction for 128K context</td>
                 </tr>
                 <tr>
-                    <td><strong>Gemma 4</strong></td>
-                    <td>512 tokens</td>
+                    <td><strong>Gemma 4 (31B / E4B / E2B)</strong></td>
+                    <td>1024 (31B) / 512 (E4B, E2B)</td>
                     <td>Every 6th layer</td>
                     <td>5:1</td>
-                    <td>128K+ context; KV sharing across 18 layers</td>
+                    <td>128K+ context; E4B shares KV across 18 layers; 31B does not share (num_kv_shared_layers=0)</td>
                 </tr>
             </tbody>
         </table>
@@ -1775,7 +1775,7 @@
         </div>
     </div>
 
-    <p>vLLM became the <strong>most widely used open-source LLM serving framework</strong>, powering deployments at companies worldwide. PagedAttention is now the standard for production LLM serving.</p>
+    <p>vLLM became one of the most widely adopted open-source LLM serving frameworks. PagedAttention's approach to KV cache memory management has been adopted by several other serving systems including TensorRT-LLM and SGLang.</p>
 </div>
 
 <!-- ==================== SECTION 12 ==================== -->
@@ -2123,7 +2123,7 @@
         </div>
     </div>
 
-    <p>FlashAttention is now a foundational building block used by virtually all modern LLM frameworks (vLLM, Hugging Face, PyTorch) and is essential for making KV cache access efficient during decoding.</p>
+    <p>FlashAttention is now integrated into most major LLM frameworks (vLLM, Hugging Face Transformers, PyTorch) and is widely used for reducing memory overhead and improving throughput during both training and inference.</p>
 </div>
 
 <!-- ==================== SECTION 15 ==================== -->
@@ -2188,7 +2188,7 @@
                     <td>16</td>
                     <td>16</td>
                     <td>8K</td>
-                    <td>~256 KB</td>
+                    <td>448 KB</td>
                 </tr>
                 <tr>
                     <td><strong>LLaMA-3 8B</strong></td>
@@ -2385,20 +2385,20 @@
                     <td>2026</td>
                     <td>~5.1B (2.3B eff.)</td>
                     <td><span class="badge badge-green">GQA</span>+<span class="badge badge-blue">LG</span></td>
-                    <td>&mdash;</td>
-                    <td>1&ndash;16 (varies)</td>
+                    <td>8</td>
+                    <td>1</td>
                     <td>128K+</td>
-                    <td>Per-Layer Embeddings (PLE); KV sharing across 20/35 layers</td>
+                    <td>PLE; KV sharing across 20/35 layers (num_kv_shared_layers=20)</td>
                 </tr>
                 <tr style="background: rgba(34,197,94,0.08);">
                     <td><strong>Gemma 4 E4B</strong></td>
                     <td>2026</td>
                     <td>~8B (4B eff.)</td>
                     <td><span class="badge badge-green">GQA</span>+<span class="badge badge-blue">LG</span></td>
-                    <td>&mdash;</td>
-                    <td>Varies</td>
+                    <td>8</td>
+                    <td>2</td>
                     <td>128K+</td>
-                    <td>PLE; hybrid head_dim (256 local / 512 global)</td>
+                    <td>PLE; 42 layers; head_dim 256/512; sliding_window=512; num_kv_shared_layers=18</td>
                 </tr>
                 <tr style="background: rgba(34,197,94,0.08);">
                     <td><strong>Gemma 4 26B-A4B</strong></td>
@@ -2442,7 +2442,7 @@
 
     <h3>Exact KV Cache Memory Requirements &mdash; Calculated from config.json</h3>
 
-    <p>Below are <strong>precise KV cache memory calculations</strong> derived directly from each model's published configuration files on HuggingFace. Every number below can be independently verified.</p>
+    <p>Below are KV cache memory calculations derived from published config.json files where available. Rows marked with * are estimates due to hybrid architectures (mixed head dimensions, KV sharing, or sliding windows) where an exact single number is not straightforward.</p>
 
     <div class="table-wrapper">
         <table>
@@ -2461,13 +2461,13 @@
             <tbody>
                 <tr style="background: rgba(239,68,68,0.05);">
                     <td><strong>LLaMA-1 65B</strong><br><span class="badge badge-purple">MHA</span></td>
-                    <td>64</td>
+                    <td>80</td>
                     <td>64</td>
                     <td>128</td>
-                    <td><strong>2,048 KB</strong></td>
-                    <td>2 GB</td>
-                    <td><strong>256 GB</strong></td>
-                    <td>2&times;64&times;64&times;128&times;2 = 2,097,152 B. Pure MHA: every head has its own K+V.</td>
+                    <td><strong>2,560 KB</strong></td>
+                    <td>2.5 GB</td>
+                    <td><strong>320 GB</strong></td>
+                    <td>2&times;80&times;64&times;128&times;2 = 2,621,440 B. Pure MHA: every head has its own K+V. Source: <a href="https://huggingface.co/huggyllama/llama-65b">HF config</a>.</td>
                 </tr>
                 <tr style="background: rgba(34,197,94,0.05);">
                     <td><strong>Falcon-40B</strong><br><span class="badge badge-green">MQA</span></td>
@@ -2511,13 +2511,13 @@
                 </tr>
                 <tr style="background: rgba(34,197,94,0.05);">
                     <td><strong>Gemma 4 31B</strong><br><span class="badge badge-green">GQA</span>+<span class="badge badge-blue">LG</span></td>
-                    <td>60</td>
-                    <td>16 local / 4 global</td>
-                    <td>256 / 512</td>
-                    <td><strong>~80 KB</strong></td>
-                    <td>~80 MB</td>
-                    <td><strong>~10 GB</strong></td>
-                    <td>Mixed: 50 sliding layers (16 KV, d=256, capped at 512 tok) + 10 global layers (4 KV, d=512). Estimate.</td>
+                    <td>60 (50 local + 10 global)</td>
+                    <td>16</td>
+                    <td>256 local / 512 global</td>
+                    <td><strong>~900 KB</strong></td>
+                    <td>~0.9 GB</td>
+                    <td><strong>~12 GB*</strong></td>
+                    <td>*Estimate. 50 sliding layers (16 KV, d=256, window=1024) + 10 global layers (16 KV, d=512, full context). num_kv_shared_layers=0. Source: <a href="https://huggingface.co/google/gemma-4-31B-it">HF config.json</a>.</td>
                 </tr>
                 <tr style="background: rgba(6,182,212,0.05);">
                     <td><strong>Qwen3.5 9B</strong><br><span class="badge badge-green">GQA</span>+DeltaNet</td>
@@ -2734,7 +2734,7 @@
                 <tr>
                     <td>Tool calls per session</td>
                     <td>0&ndash;5 typically</td>
-                    <td>200&ndash;1,500 tool calls (up to 100 parallel sub-agents)</td>
+                    <td>Hundreds of tool calls across parallel sub-agents (paper reports up to 100 tool calls per sub-agent in BrowseComp)</td>
                 </tr>
                 <tr>
                     <td>Context resets</td>
@@ -4092,7 +4092,7 @@ function setupHiDPICanvas(canvas, width, height) {
         if(sc===10){
             title('The Full Picture',40,TEXT,vis,20);
             const methods=[
-                {name:'LLaMA-1 65B (MHA)',color:RED,kbTok:2048,barH:100},
+                {name:'LLaMA-1 65B (MHA)',color:RED,kbTok:2560,barH:100},
                 {name:'Falcon-40B (MQA)',color:GREEN,kbTok:15,barH:1},
                 {name:'Qwen3 235B (GQA-4)',color:GOLD,kbTok:189,barH:9},
                 {name:'DeepSeek-V3 (MLA)',color:PURPLE,kbTok:69,barH:3},

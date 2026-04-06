@@ -879,21 +879,6 @@
     <p style="margin-top: 20px; font-size: 1rem; color: #94a3b8; font-weight: 500;">By <strong style="color: #f8fafc;">Pradip Tivhale</strong></p>
 </div>
 
-<!-- ==================== RECAP ANIMATION ==================== -->
-<div class="container">
-<div class="section recap-section">
-    <div class="recap-shell">
-        <div class="recap-header">
-            <div class="section-number recap-kicker">Visual Recap</div>
-        </div>
-
-        <div class="recap-frame">
-            <canvas id="recapAnim" class="recap-canvas" width="900" height="620"></canvas>
-        </div>
-    </div>
-</div>
-</div>
-
 <!-- ==================== TABLE OF CONTENTS ==================== -->
 <div class="container">
 <div class="toc">
@@ -2907,6 +2892,18 @@
     <div class="key-insight">
         <h4>The Big Picture</h4>
         <p>The story of KV cache optimization is a story of the AI community refusing to accept limitations. When the "memory wall" threatened to stop progress, researchers attacked the problem from every angle: architectural changes (MQA, GQA, MLA), memory management (PagedAttention), numerical compression (KIVI, TurboQuant), intelligent caching (H2O, SnapKV), and attention pattern design (sliding window, local-global). Together, these advances have reduced the effective KV cache cost by <strong>50&ndash;100&times;</strong>, enabling language models to run on devices that fit in your pocket while handling documents longer than entire novels.</p>
+    </div>
+</div>
+
+<!-- ==================== VISUAL RECAP (before References) ==================== -->
+<div class="section recap-section">
+    <div class="section-number">Visual Recap</div>
+    <h2>The Full Journey &mdash; MHA to MLA</h2>
+    <div class="section-divider"></div>
+    <div class="recap-shell">
+        <div class="recap-frame">
+            <canvas id="recapAnim" class="recap-canvas" width="900" height="620"></canvas>
+        </div>
     </div>
 </div>
 

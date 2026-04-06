@@ -549,6 +549,78 @@
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
         }
 
+        .recap-copy {
+            max-width: 760px;
+            margin: 14px auto 26px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .recap-media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .recap-video-card {
+            position: relative;
+            z-index: 1;
+            border-radius: 22px;
+            padding: 16px;
+            border: 1px solid rgba(92, 121, 155, 0.24);
+            background: linear-gradient(180deg, rgba(8, 17, 31, 0.94), rgba(10, 20, 35, 0.9));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        .recap-video-card h4 {
+            margin: 14px 0 10px;
+            font-size: 1.05rem;
+        }
+
+        .recap-video-card p {
+            margin-bottom: 0;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .recap-video {
+            width: 100%;
+            display: block;
+            border-radius: 16px;
+            border: 1px solid rgba(92, 121, 155, 0.26);
+            background: #020617;
+            box-shadow: 0 16px 36px rgba(2, 8, 23, 0.28);
+        }
+
+        .recap-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .recap-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(77, 163, 255, 0.22);
+            background: rgba(77, 163, 255, 0.08);
+            color: #cde4ff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .recap-link:hover {
+            transform: translateY(-1px);
+            background: rgba(77, 163, 255, 0.14);
+            border-color: rgba(77, 163, 255, 0.34);
+        }
+
         .recap-canvas {
             display: block;
             width: 100%;
@@ -833,6 +905,8 @@
             .counter-value { font-size: 2.35rem; }
             .recap-shell { padding: 20px 16px; border-radius: 22px; }
             .recap-title { font-size: 1.9rem; }
+            .recap-copy { margin-bottom: 20px; }
+            .recap-video-card { padding: 14px; }
             .recap-frame { padding: 12px; }
         }
 
@@ -1336,7 +1410,7 @@
     </div>
 
     <h3>Models Using MQA</h3>
-    <p>MQA was adopted by several notable models including <strong>PaLM</strong> (Google, 2022), <strong>Falcon-40B</strong> (TII, 2023), and <strong>StarCoder</strong> (BigCode, 2023). However, concerns about quality degradation in large-scale training led most subsequent models to prefer GQA instead.</p>
+    <p>MQA was adopted by several notable models including <strong>PaLM</strong> (Google, 2022), <strong>Falcon-7B</strong> (TII, 2023), and <strong>StarCoder</strong> (BigCode, 2023). Note: Falcon-40B and Falcon-180B use GQA (8 KV heads), not MQA &mdash; only the 7B variant uses true single-head MQA. Concerns about quality degradation led most subsequent models to prefer GQA instead.</p>
 </div>
 
 <!-- ==================== SECTION 7 ==================== -->
@@ -2849,6 +2923,35 @@
     <h2>The Full Journey &mdash; MHA to MLA</h2>
     <div class="section-divider"></div>
     <div class="recap-shell">
+        <div class="recap-header">
+            <div class="hero-badge recap-kicker">Video + Canvas</div>
+            <h3 class="recap-title"><span>Watch the recap or scrub the interactive version</span></h3>
+            <p class="recap-copy">Prefer a clean export over a live animation? Use the fast social-friendly recap or the slower full walkthrough below. The original interactive canvas is still here if you want to explore the whole visual journey inside the article.</p>
+        </div>
+        <div class="recap-media-grid">
+            <div class="recap-video-card">
+                <video class="recap-video" controls playsinline preload="metadata" muted>
+                    <source src="videos/recap-paced-canvas.webm" type="video/webm">
+                    Your browser does not support embedded video. <a href="videos/recap-paced-canvas.webm">Open the recap video</a>.
+                </video>
+                <h4>Fast recap video</h4>
+                <p>A lighter export that works well for article readers and social previews. It covers the full progression from MHA to MLA without the slower pauses.</p>
+                <div class="recap-links">
+                    <a class="recap-link" href="videos/recap-paced-canvas.webm">Open video</a>
+                </div>
+            </div>
+            <div class="recap-video-card">
+                <video class="recap-video" controls playsinline preload="metadata" muted>
+                    <source src="videos/recap-5x-slow-full.webm" type="video/webm">
+                    Your browser does not support embedded video. <a href="videos/recap-5x-slow-full.webm">Open the full walkthrough</a>.
+                </video>
+                <h4>Slow full walkthrough</h4>
+                <p>A slower export for readers who want time to follow the labels, cache counters, and architecture transitions frame by frame.</p>
+                <div class="recap-links">
+                    <a class="recap-link" href="videos/recap-5x-slow-full.webm">Open video</a>
+                </div>
+            </div>
+        </div>
         <div class="recap-frame">
             <canvas id="recapAnim" class="recap-canvas" width="900" height="620"></canvas>
         </div>
@@ -2924,6 +3027,14 @@
             <li>Microsoft Research. "Phi-4-Mini Technical Report: Compact yet Powerful Multimodal Language Models via Mixture-of-LoRAs." <em>arXiv preprint</em>, 2025. <a href="https://arxiv.org/abs/2503.01743">arXiv:2503.01743</a></li>
 
             <li>Kimi Team, Moonshot AI. "Kimi K2.5: Visual Agentic Intelligence." <em>arXiv preprint</em>, 2026. <a href="https://arxiv.org/abs/2602.02276">arXiv:2602.02276</a></li>
+
+            <li>Touvron, H., Lavril, T., Izacard, G., et al. "LLaMA: Open and Efficient Foundation Language Models." <em>arXiv preprint</em>, 2023. <a href="https://arxiv.org/abs/2302.13971">arXiv:2302.13971</a></li>
+
+            <li>Penedo, G., et al. "The RefinedWeb Dataset for Falcon LLM: Outperforming Curated Corpora with Web Data, and Web Data Only." <em>arXiv preprint</em>, 2023. <a href="https://arxiv.org/abs/2306.01116">arXiv:2306.01116</a></li>
+
+            <li>Qwen Team. "Qwen3.5 Model Series." Model card, 2025. <a href="https://huggingface.co/Qwen/Qwen3.5-9B">HuggingFace: Qwen3.5-9B</a></li>
+
+            <li>PrismML / Caltech. "1-bit Bonsai: The First Commercially Viable 1-bit LLMs." Whitepaper, 2025. <a href="https://github.com/PrismML-Eng/Bonsai-demo/blob/main/1-bit-bonsai-8b-whitepaper.pdf">GitHub</a></li>
         </ol>
     </div>
 </div>

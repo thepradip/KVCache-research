@@ -975,7 +975,9 @@
         <li><a href="#sec15">Model-by-Model Comparison &mdash; The Complete Picture</a></li>
         <li><a href="#sec16">Kimi K2.5 &mdash; How Reasoning Changes for AI Agents</a></li>
         <li><a href="#sec17">The State of the Art (2026) &amp; Future Directions</a></li>
-        <li><a href="#sec18">References</a></li>
+        <li><a href="#sec18">DeepSeek V4 &mdash; The Million-Token Efficiency Breakthrough</a></li>
+        <li><a href="#sec19">DFlash &mdash; Block Diffusion for Flash Speculative Decoding</a></li>
+        <li><a href="#sec20">References</a></li>
     </ol>
 </div>
 </div>
@@ -2917,6 +2919,285 @@
     </div>
 </div>
 
+<!-- ==================== SECTION 18: DEEPSEEK V4 ==================== -->
+<div class="container">
+<div class="section" id="sec18">
+    <div class="section-number">Chapter 18</div>
+    <h2>DeepSeek V4 &mdash; The Million-Token Efficiency Breakthrough</h2>
+    <div class="section-divider"></div>
+
+    <p>April 24, 2026. DeepSeek open-sources two new models &mdash; <strong>DeepSeek-V4-Pro</strong> and <strong>DeepSeek-V4-Flash</strong> &mdash; and the headlines focus on benchmark scores. But buried in the technical report is a number that matters more for anyone running these models in production: at one million tokens of context, V4-Pro needs only <strong>10% of the KV cache</strong> that DeepSeek-V3.2 required for the same workload. V4-Flash goes further, to <strong>7%</strong>. That is a 90&ndash;93% reduction in cache memory at the context lengths where it hurts most.</p>
+
+    <p>This was not achieved by simply adding more quantization or swapping in GQA. DeepSeek introduced a fundamentally new attention architecture &mdash; one that distinguishes between tokens that need precise attention and tokens that can tolerate aggressive compression &mdash; and layered it on top of their existing MLA foundation.</p>
+
+    <div class="citation">DeepSeek-AI. "DeepSeek-V4 Technical Report." <em>arXiv preprint</em>, April 2026. <a href="https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro">HuggingFace: DeepSeek-V4-Pro</a></div>
+
+    <h3>Two Model Variants</h3>
+
+    <div class="comparison-grid">
+        <div class="comparison-card" style="border-top: 3px solid var(--primary);">
+            <div class="metric" style="font-size: 1.3rem; background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">V4-Pro</div>
+            <div class="metric-label">1.6T total / 49B active</div>
+            <div class="metric-context">27% of single-token FLOPs vs V3.2 &bull; 10% of KV cache at 1M tokens &bull; 1M context window &bull; MIT licensed</div>
+        </div>
+        <div class="comparison-card" style="border-top: 3px solid var(--accent);">
+            <div class="metric" style="font-size: 1.3rem; background: var(--gradient-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">V4-Flash</div>
+            <div class="metric-label">284B total / 13B active</div>
+            <div class="metric-context">10% of single-token FLOPs vs V3.2 &bull; 7% of KV cache at 1M tokens &bull; 1M context window &bull; MIT licensed</div>
+        </div>
+    </div>
+
+    <h3>The Hybrid Attention Architecture</h3>
+
+    <p>Both V4 variants use a <strong>Hybrid Attention</strong> design that mixes two complementary mechanisms. Every layer in the network is assigned one of two attention types, depending on how critical its tokens are to the output quality:</p>
+
+    <h4>1. Compressed Sparse Attention (CSA) &mdash; Precision for Critical Layers</h4>
+
+    <p>CSA is applied to the layers where fine-grained token interactions matter most. It works in two steps:</p>
+
+    <div class="flow-diagram">
+        <div class="flow-box input">Full KV Sequence</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box process">Dynamic Sequence Compression</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box cache">Compressed KV Cache</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box process">DeepSeek Sparse Attention (DSA)</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box output">Sparse Attention Output</div>
+    </div>
+
+    <p>First, KV entries are compressed to reduce the raw memory footprint. Then, DeepSeek Sparse Attention (DSA) sparsifies the attention matrix &mdash; computing full attention only between tokens that have high relevance scores and skipping the rest. The result is a mechanism that preserves precision where it counts while eliminating unnecessary computation everywhere else.</p>
+
+    <h4>2. Heavily Compressed Attention (HCA) &mdash; Aggressive Compression for Supporting Layers</h4>
+
+    <p>HCA is assigned to layers that provide context and pattern reinforcement rather than precise token-level discrimination. Instead of individual compressed entries, HCA <strong>consolidates multiple consecutive tokens into a single shared KV entry</strong>. Think of it as summarizing a paragraph into a sentence: you lose fine-grained detail but retain the essential meaning at a fraction of the memory cost.</p>
+
+    <div class="info-card">
+        <h4>CSA vs HCA: When to Use Which</h4>
+        <p><strong>CSA layers</strong> preserve individual token identity with moderate compression. They are used in the deeper, semantically rich layers where precise relationships between tokens (e.g., coreference, long-range dependencies) must be resolved correctly.</p>
+        <p><strong>HCA layers</strong> collapse groups of tokens into single entries. They are used in shallower layers that perform broad pattern recognition &mdash; where the exact identity of each token matters less than the collective signal from the surrounding context.</p>
+        <p>The ratio of CSA to HCA layers is tuned per model variant. V4-Flash, being lighter, uses a higher proportion of HCA layers to achieve its 7% KV cache figure.</p>
+    </div>
+
+    <h3>Additional Architectural Innovation: Manifold-Constrained Hyper-Connections</h3>
+
+    <p>Beyond the attention architecture, DeepSeek V4 replaces the standard residual connection with <strong>Manifold-Constrained Hyper-Connections (mHC)</strong>. Standard residual connections add the layer's output directly to its input (<code>x + f(x)</code>). mHC constrains the residual path to a learned manifold, improving signal propagation stability across the depth of the model &mdash; which becomes critical when you have alternating CSA/HCA layers that may produce outputs with very different magnitudes.</p>
+
+    <h3>Inference Efficiency: By the Numbers</h3>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric at 1M-token context</th>
+                    <th>DeepSeek-V3.2 (baseline)</th>
+                    <th>V4-Pro</th>
+                    <th>V4-Flash</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Single-token inference FLOPs</td>
+                    <td>100% (baseline)</td>
+                    <td><strong>27%</strong></td>
+                    <td><strong>10%</strong></td>
+                </tr>
+                <tr>
+                    <td>KV cache memory</td>
+                    <td>100% (baseline)</td>
+                    <td><strong>10%</strong></td>
+                    <td><strong>7%</strong></td>
+                </tr>
+                <tr>
+                    <td>KV memory reduction vs V3.2</td>
+                    <td>&mdash;</td>
+                    <td><strong>9.5&ndash;10&times;</strong></td>
+                    <td><strong>13.7&ndash;14&times;</strong></td>
+                </tr>
+                <tr>
+                    <td>Total parameters</td>
+                    <td>671B</td>
+                    <td>1.6T</td>
+                    <td>284B</td>
+                </tr>
+                <tr>
+                    <td>Active parameters per token</td>
+                    <td>37B</td>
+                    <td>49B</td>
+                    <td>13B</td>
+                </tr>
+                <tr>
+                    <td>Context window</td>
+                    <td>128K</td>
+                    <td><strong>1M</strong></td>
+                    <td><strong>1M</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ANIMATION: DeepSeek V4 Hybrid Attention (CSA vs HCA) -->
+    <div class="chart-container chart-tall" style="max-height:420px; margin: 30px 0;">
+        <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Interactive: watch CSA and HCA layers shape the KV cache footprint across a 12-layer model stack</p>
+        <canvas id="deepseekV4Anim" width="800" height="520" style="width:100%; max-height:520px;"></canvas>
+    </div>
+
+    <h3>Day-0 Inference: SGLang Integration</h3>
+
+    <p>The SGLang team shipped optimized inference support for DeepSeek V4 on the same day as the release. The stack includes several techniques that compound the architectural gains:</p>
+
+    <div class="comparison-grid">
+        <div class="comparison-card">
+            <div class="metric" style="font-size: 1rem;">ShadowRadix Prefix Cache</div>
+            <div class="metric-label">Prefix reuse at scale</div>
+            <div class="metric-context">Caches shared prefixes (system prompts, document headers) across requests, reducing redundant KV computation in serving scenarios with repeated context.</div>
+        </div>
+        <div class="comparison-card">
+            <div class="metric" style="font-size: 1rem;">HiSparse CPU-Extended KV</div>
+            <div class="metric-label">CPU offload for HCA blocks</div>
+            <div class="metric-context">HCA's aggressively compressed KV blocks are cheap to access, making them suitable for CPU offload without a latency penalty. Frees GPU HBM for active CSA layers.</div>
+        </div>
+        <div class="comparison-card">
+            <div class="metric" style="font-size: 1rem;">MTP Speculative Decoding</div>
+            <div class="metric-label">Multi-token prediction</div>
+            <div class="metric-context">V4's Multi-Token Prediction heads generate draft tokens inline; SGLang verifies them in the same pass using in-graph metadata, eliminating a separate draft model.</div>
+        </div>
+        <div class="comparison-card">
+            <div class="metric" style="font-size: 1rem;">Flash Compressor + Lightning TopK</div>
+            <div class="metric-label">Real-time CSA routing</div>
+            <div class="metric-context">Flash Compressor runs the dynamic sequence compression step in a fused CUDA kernel; Lightning TopK identifies the sparse attention targets at GPU speed without leaving the forward pass.</div>
+        </div>
+    </div>
+
+    <div class="key-insight">
+        <h4>What V4 Proves About the KV Cache Problem</h4>
+        <p>DeepSeek V4 demonstrates that the path to one-million-token context is not brute-force memory scaling &mdash; it is <strong>architectural differentiation of attention layers</strong>. By assigning CSA to precision-critical layers and HCA to context-reinforcement layers, V4 achieves the kind of memory profile that previously required dedicated eviction policies or offline quantization. The 90% reduction in KV cache at 1M tokens is a direct consequence of the model <em>knowing at inference time</em> which tokens it needs to remember precisely and which it can compress aggressively. Combined with MLA's existing latent compression (carried over from V3), V4's effective KV footprint per token is now so small that a single H100 can hold over 1M tokens of context for a 49B-active-parameter model.</p>
+    </div>
+</div>
+</div>
+
+<!-- ==================== SECTION 19: DFLASH ==================== -->
+<div class="container">
+<div class="section" id="sec19">
+    <div class="section-number">Chapter 19</div>
+    <h2>DFlash &mdash; Block Diffusion for Flash Speculative Decoding</h2>
+    <div class="section-divider"></div>
+
+    <p>Architectural changes like MLA, GQA, and HCA reduce how <em>much</em> KV cache you need to store. But there is a complementary problem: how fast can you <em>generate</em> tokens given whatever cache you have? This is the domain of speculative decoding &mdash; and in February 2026, Z Lab published <strong>DFlash</strong>, which pushes speculative decoding to a new level by replacing the autoregressive draft model with a block diffusion model.</p>
+
+    <div class="citation">Z Lab. "DFlash: Block Diffusion for Flash Speculative Decoding." <em>arXiv preprint</em>, February 2026. <a href="https://arxiv.org/abs/2602.06036">arXiv:2602.06036</a></div>
+
+    <h3>The Speculative Decoding Bottleneck</h3>
+
+    <p>Standard autoregressive decoding generates one token per forward pass. Even with a fully optimized KV cache, the decode step is memory-bandwidth-bound: each new token requires loading the entire KV cache from HBM, computing attention, and writing one output token. GPU utilization hovers around 20&ndash;40% during decode &mdash; most of the hardware is idle.</p>
+
+    <p><strong>Speculative decoding</strong> addresses this by using a fast, small <em>draft model</em> to generate a block of candidate tokens, then verifying all of them in a single forward pass of the large <em>target model</em>. If k draft tokens are accepted, you effectively get k tokens of output from one target-model forward pass. The catch: conventional draft models are themselves autoregressive, so drafting k tokens still requires k sequential forward passes of the draft model. The bottleneck moves, but does not disappear.</p>
+
+    <p>DFlash eliminates this remaining bottleneck by using a <strong>block diffusion model</strong> as the drafter. A diffusion model generates an entire block of tokens in a single forward pass &mdash; non-autoregressively. No sequential chain. The full draft block is ready in one shot.</p>
+
+    <h3>How DFlash Works</h3>
+
+    <h4>Step 1: Context Feature Extraction</h4>
+
+    <p>After each prefill or verification step, DFlash extracts hidden-state features from the target model. Rather than using only the final layer's output, it samples from layers distributed uniformly across the target model's depth &mdash; capturing both low-level syntax patterns (early layers) and high-level semantic intent (late layers). These features are fused via a lightweight projection.</p>
+
+    <h4>Step 2: KV Cache Injection into the Draft Model</h4>
+
+    <p>This is DFlash's key technical contribution. The fused context features are injected directly into the <strong>Key/Value projections of every layer in the draft model</strong> and stored in the draft model's own KV cache. This means the draft model has persistent access to the target model's understanding of the full context throughout the diffusion process &mdash; not just a summary passed in at the start.</p>
+
+    <div class="flow-diagram">
+        <div class="flow-box input">Target Model Prefill</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box process">Extract Hidden States (all depths)</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box process">Fuse &amp; Project Features</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box cache">Inject into Draft KV Cache</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box output">Block Diffusion Draft (1 pass)</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box process">Target Model Verification (1 pass)</div>
+    </div>
+
+    <h4>Step 3: Parallel Verification</h4>
+
+    <p>The block of draft tokens is verified by the target model in a single forward pass. Tokens that match are accepted; the first mismatch is corrected and the remaining draft tokens are discarded. Because the target model's KV cache already covers the full prior context, verification is as fast as a single decode step &mdash; regardless of block size.</p>
+
+    <div class="info-card success">
+        <h4>Why KV Cache Injection Matters for Acceptance Rate</h4>
+        <p>The key advantage of injecting context into <em>every draft layer's KV cache</em> is that the draft model remains coherent with the target model throughout the entire diffusion process. Earlier speculative methods conditioned the draft model only at the start (via a summary or the last hidden state). DFlash's persistent conditioning means draft tokens remain on-distribution with the target model even for long block lengths, resulting in higher acceptance rates &mdash; which is the primary driver of end-to-end speedup.</p>
+    </div>
+
+    <h3>Performance Results</h3>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Drafting Strategy</th>
+                    <th>Speedup vs Autoregressive</th>
+                    <th>vs EAGLE-3</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Autoregressive baseline</td>
+                    <td>1 token per pass</td>
+                    <td>1&times; (baseline)</td>
+                    <td>&mdash;</td>
+                </tr>
+                <tr>
+                    <td>EAGLE-3 (SOTA prior)</td>
+                    <td>Autoregressive draft tree</td>
+                    <td>~2.5&times;</td>
+                    <td>1&times;</td>
+                </tr>
+                <tr>
+                    <td><strong>DFlash</strong></td>
+                    <td><strong>Block diffusion (1 pass)</strong></td>
+                    <td><strong>6&times;+</strong></td>
+                    <td><strong>2.5&times;</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ANIMATION: DFlash speculative decoding comparison -->
+    <div class="chart-container chart-tall" style="max-height:400px; margin: 30px 0;">
+        <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Interactive: compare autoregressive, standard speculative decoding, and DFlash block diffusion side-by-side</p>
+        <canvas id="dflashAnim" width="800" height="520" style="width:100%; max-height:520px;"></canvas>
+    </div>
+
+    <p>DFlash achieves <strong>over 6&times; lossless acceleration</strong> across a range of models and benchmarks. "Lossless" here means the output distribution of DFlash is provably identical to that of the target model alone &mdash; speculative decoding with correct rejection sampling never changes what the model says, only how fast it says it.</p>
+
+    <h3>Relationship to KV Cache Efficiency</h3>
+
+    <p>DFlash and architectural KV cache improvements (MLA, CSA/HCA) are orthogonal and composable:</p>
+
+    <div class="comparison-grid">
+        <div class="comparison-card" style="border-top: 3px solid var(--primary);">
+            <div class="metric" style="font-size: 1rem;">Architectural (MLA, GQA, HCA)</div>
+            <div class="metric-label">Reduce KV cache size</div>
+            <div class="metric-context">Less memory per token &rarr; fit longer contexts, serve more users per GPU, reduce memory-bandwidth pressure during each decode step.</div>
+        </div>
+        <div class="comparison-card" style="border-top: 3px solid var(--accent);">
+            <div class="metric" style="font-size: 1rem;">DFlash (Block Diffusion)</div>
+            <div class="metric-label">Reduce decode steps</div>
+            <div class="metric-context">More tokens per target-model pass &rarr; amortize the fixed cost of loading the KV cache across more output tokens, directly improving tokens-per-second.</div>
+        </div>
+    </div>
+
+    <p>When both are applied together &mdash; for example, running DFlash on top of DeepSeek V4-Flash with its 7% KV cache footprint &mdash; the memory bandwidth freed by the smaller cache means each target-model verification step is faster, which further improves the effective speedup of speculative decoding. The two techniques multiply rather than substitute.</p>
+
+    <div class="key-insight">
+        <h4>Why DFlash Represents a Paradigm Shift in Drafting</h4>
+        <p>Every previous speculative decoding system was limited by the autoregressive nature of its draft model: to draft k tokens, you needed k sequential forward passes. DFlash breaks this coupling entirely. By treating token generation as a denoising diffusion process conditioned on the target model's KV cache, it collapses k drafting steps into one. The result &mdash; 6&times; lossless speedup and 2.5&times; over the prior state of the art &mdash; suggests that the next frontier in LLM inference is not just <em>what</em> you cache, but <em>how you generate</em> the tokens that populate that cache.</p>
+    </div>
+</div>
+</div>
+
 <!-- ==================== VISUAL RECAP (before References) ==================== -->
 <div class="section recap-section">
     <div class="section-number">Visual Recap</div>
@@ -2958,9 +3239,9 @@
     </div>
 </div>
 
-<!-- ==================== SECTION 17: REFERENCES ==================== -->
-<div class="section" id="sec18">
-    <div class="section-number">Chapter 18</div>
+<!-- ==================== SECTION 20: REFERENCES ==================== -->
+<div class="section" id="sec20">
+    <div class="section-number">Chapter 20</div>
     <h2>References</h2>
     <div class="section-divider"></div>
 
@@ -3035,6 +3316,10 @@
             <li>Qwen Team. "Qwen3.5 Model Series." Model card, 2025. <a href="https://huggingface.co/Qwen/Qwen3.5-9B">HuggingFace: Qwen3.5-9B</a></li>
 
             <li>PrismML / Caltech. "1-bit Bonsai: The First Commercially Viable 1-bit LLMs." Whitepaper, 2025. <a href="https://github.com/PrismML-Eng/Bonsai-demo/blob/main/1-bit-bonsai-8b-whitepaper.pdf">GitHub</a></li>
+
+            <li>DeepSeek-AI. "DeepSeek-V4 Technical Report." <em>arXiv preprint</em>, April 2026. <a href="https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro">HuggingFace: DeepSeek-V4-Pro</a></li>
+
+            <li>Z Lab. "DFlash: Block Diffusion for Flash Speculative Decoding." <em>arXiv preprint</em>, February 2026. <a href="https://arxiv.org/abs/2602.06036">arXiv:2602.06036</a></li>
         </ol>
     </div>
 </div>
@@ -4826,7 +5111,918 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     }
     animate();
 })();
-</script>
 
-</body>
-</html>
+// ========== ANIMATION: DeepSeek V4 — Hybrid Attention Deep Dive ==========
+(function(){
+    const canvas = document.getElementById('deepseekV4Anim');
+    if(!canvas) return;
+    const W=800, H=520;
+    const ctx = setupHiDPICanvas(canvas, W, H);
+
+    const BG='#07111d', CSA='#4da3ff', HCA='#fb923c', KEY_C='#f59e0b', VAL_C='#22c55e';
+    const TEXT='#d7e5f2', MUTED='#8fa3b8', BRIGHT='#f8fbff', DIM='rgba(71,85,105,0.2)', SUCCESS='#22c55e';
+
+    // 6 scenes
+    const SCENES=[{dur:160},{dur:240},{dur:280},{dur:300},{dur:300},{dur:280}];
+    let frame=0, scene=0, st=0;
+
+    function ease(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+    function easeOut(t){return 1-Math.pow(1-t,3);}
+    function lerp(a,b,t){return a+(b-a)*Math.min(1,Math.max(0,t));}
+    function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+
+    function glow(col,blur){ctx.shadowColor=col;ctx.shadowBlur=blur;}
+    function noGlow(){ctx.shadowBlur=0;ctx.shadowColor='transparent';}
+
+    function rrect(x,y,w,h,r,fill,stroke,sw){
+        ctx.beginPath();ctx.roundRect(x,y,w,h,r);
+        if(fill){ctx.fillStyle=fill;ctx.fill();}
+        if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=sw||1.5;ctx.stroke();}
+    }
+    function arrowLine(x1,y1,x2,y2,col,alpha,lw){
+        ctx.globalAlpha=alpha||1;ctx.strokeStyle=col;ctx.lineWidth=lw||1.5;
+        ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+        const a=Math.atan2(y2-y1,x2-x1);
+        ctx.fillStyle=col;ctx.beginPath();
+        ctx.moveTo(x2,y2);ctx.lineTo(x2-9*Math.cos(a-0.4),y2-9*Math.sin(a-0.4));
+        ctx.lineTo(x2-9*Math.cos(a+0.4),y2-9*Math.sin(a+0.4));ctx.closePath();ctx.fill();
+        ctx.globalAlpha=1;
+    }
+    function lbl(text,x,y,col,sz,wt,align){
+        ctx.fillStyle=col||TEXT;ctx.font=(wt||'normal')+' '+(sz||12)+'px Inter,sans-serif';
+        ctx.textAlign=align||'left';ctx.fillText(text,x,y);ctx.textAlign='left';
+    }
+    function mono(text,x,y,col,sz,align){
+        ctx.fillStyle=col||MUTED;ctx.font=(sz||10)+'px JetBrains Mono,monospace';
+        ctx.textAlign=align||'left';ctx.fillText(text,x,y);ctx.textAlign='left';
+    }
+    function flowDots(x1,y1,x2,y2,col,t,n,speed){
+        for(let i=0;i<n;i++){
+            const p=((t*(speed||1.8)+i/n)%1);
+            const px=lerp(x1,x2,p),py=lerp(y1,y2,p);
+            const sz=1.5+2.5*Math.sin(p*Math.PI);
+            ctx.beginPath();ctx.arc(px,py,sz,0,Math.PI*2);
+            ctx.fillStyle=col;ctx.globalAlpha=0.2+0.75*Math.sin(p*Math.PI);ctx.fill();
+        }
+        ctx.globalAlpha=1;
+    }
+
+    // ============================================================
+    // SCENE 0: Intro — animated title with particle field
+    // ============================================================
+    function drawScene0(t){
+        const p=ease(Math.min(1,t*3)),pOut=t>0.75?ease((t-0.75)/0.25):1,vis=p*pOut;
+        for(let i=0;i<38;i++){
+            const angle=i*0.165+frame*0.007;
+            const r=85+30*Math.sin(i*0.6+frame*0.014);
+            const px=W/2+Math.cos(angle)*r*1.7,py=H/2-18+Math.sin(angle)*r*0.55;
+            ctx.beginPath();ctx.arc(px,py,2.2,0,Math.PI*2);
+            ctx.fillStyle=[CSA,HCA,KEY_C,VAL_C][i%4];
+            ctx.globalAlpha=vis*(0.12+0.22*Math.sin(frame*0.035+i));ctx.fill();
+        }
+        ctx.globalAlpha=vis;
+        // Title
+        glow(CSA,20);
+        ctx.fillStyle=BRIGHT;ctx.font='bold 30px Inter,sans-serif';ctx.textAlign='center';
+        ctx.fillText('DeepSeek V4',W/2,H/2-52);noGlow();
+        ctx.fillStyle=CSA;ctx.font='bold 15px Inter,sans-serif';
+        ctx.fillText('Hybrid Attention: CSA + HCA',W/2,H/2-22);
+        ctx.fillStyle=MUTED;ctx.font='12px Inter,sans-serif';
+        ctx.fillText('How two attention types combine to cut KV cache by 90–93% at 1M tokens',W/2,H/2+4);
+        // Badges
+        const badges=[
+            {t:'V4-Pro  1.6T / 49B active',c:CSA,x:W/2-220},
+            {t:'1M token context window',c:HCA,x:W/2},
+            {t:'90% less KV cache',c:VAL_C,x:W/2+220},
+        ];
+        badges.forEach(b=>{
+            rrect(b.x-78,H/2+28,156,32,8,b.c+'1a',b.c+'77',1.5);
+            ctx.fillStyle=b.c;ctx.font='bold 11px Inter,sans-serif';
+            ctx.fillText(b.t,b.x,H/2+48);
+        });
+        ctx.textAlign='left';ctx.globalAlpha=1;
+    }
+
+    // ============================================================
+    // SCENE 1: The Memory Problem — KV grows with context
+    // ============================================================
+    function drawScene1(t){
+        const prog=ease(Math.min(1,t*1.4));
+        lbl('The Memory Wall: Why V4 Had to Change',20,28,BRIGHT,15,'bold');
+        lbl("At 1M tokens, DeepSeek-V3.2's KV cache overwhelms the entire GPU",20,50,MUTED,12);
+
+        const ctxK=[1,8,64,256,1000];
+        const kvPerToken=70; // KB per token, V3.2 MLA
+        const aX=68,aY=88,aW=W-220,aH=310,gpuMax=80;
+
+        // Y-axis gridlines
+        [0,20,40,60,80].forEach(v=>{
+            const gy=aY+aH*(1-v/gpuMax);
+            ctx.strokeStyle='rgba(71,85,105,0.18)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+            ctx.beginPath();ctx.moveTo(aX,gy);ctx.lineTo(aX+aW,gy);ctx.stroke();ctx.setLineDash([]);
+            mono(v+'GB',aX-38,gy+4,MUTED,9,'right');
+        });
+        // 80GB limit line
+        ctx.strokeStyle='rgba(239,68,68,0.7)';ctx.lineWidth=2;ctx.setLineDash([6,3]);
+        ctx.beginPath();ctx.moveTo(aX,aY);ctx.lineTo(aX+aW,aY);ctx.stroke();ctx.setLineDash([]);
+        lbl('H100  80 GB limit',aX+aW+8,aY+4,'#ef4444',10);
+
+        // Y axis label
+        ctx.save();ctx.translate(aX-48,aY+aH/2);ctx.rotate(-Math.PI/2);
+        lbl('GPU Memory (GB)',0,0,MUTED,11,'normal','center');ctx.restore();
+
+        // Bars
+        const bW=(aW-ctxK.length*12)/ctxK.length;
+        ctxK.forEach((k,i)=>{
+            const memGB=k*1000*kvPerToken/1024/1024;
+            const frac=Math.min(1,memGB/gpuMax);
+            const delay=i*0.14;
+            const aF=frac*ease(clamp((prog-delay)/0.55,0,1));
+            const bx=aX+i*(bW+12),bh=aH*aF,by=aY+aH-bh;
+            const overflow=memGB>gpuMax;
+            const col=overflow?'#ef4444':HCA;
+            ctx.globalAlpha=clamp((prog-delay)*3,0,1);
+            rrect(bx,by,bW,bh,5,col+(overflow?'55':'44'),col+(overflow?'cc':'88'),1.5);
+            if(overflow){glow('#ef4444',16);rrect(bx,by,bW,22,5,null,'#ef4444',2.5);noGlow();}
+            // X label
+            lbl(k>=1000?(k/1000)+'M':k+'K',bx+bW/2,aY+aH+18,MUTED,10,'normal','center');
+            lbl('tokens',bx+bW/2,aY+aH+30,MUTED,9,'normal','center');
+            // Memory label
+            if(bh>22&&prog>delay+0.3){
+                const memTxt=memGB>=1?memGB.toFixed(1)+'GB':memGB.toFixed(2)+'GB';
+                ctx.fillStyle=overflow?'#fca5a5':TEXT;
+                ctx.font='bold 10px JetBrains Mono,monospace';ctx.textAlign='center';
+                ctx.fillText(memTxt,bx+bW/2,by+(overflow?16:-6));
+                ctx.textAlign='left';
+            }
+            ctx.globalAlpha=1;
+        });
+        mono('DeepSeek-V3.2: ~70 KB / token (MLA)  |  H100 80 GB',aX,aY+aH+50,'#475569',10);
+
+        // Solution callout
+        if(prog>0.68){
+            const cp=ease((prog-0.68)/0.32);
+            ctx.globalAlpha=cp;
+            glow(CSA,10);
+            rrect(W-210,H-76,196,56,10,'rgba(77,163,255,0.1)',CSA,1.8);
+            noGlow();
+            lbl("V4's solution:",W-106,H-56,CSA,13,'bold','center');
+            lbl('CSA + HCA layers',W-106,H-38,TEXT,12,'normal','center');
+            lbl('cut KV to 7–10%',W-106,H-22,TEXT,12,'normal','center');
+            ctx.globalAlpha=1;
+        }
+    }
+
+    // ============================================================
+    // SCENE 2: Hybrid architecture — layer stack with data flow
+    // ============================================================
+    function drawScene2(t){
+        const prog=ease(Math.min(1,t*1.4));
+        lbl('Hybrid Architecture: CSA and HCA Layers Alternate',20,28,BRIGHT,15,'bold');
+        lbl('Each layer is assigned one type. V4-Flash uses more HCA layers for a smaller KV budget.',20,50,MUTED,12);
+
+        const types=['CSA','CSA','HCA','CSA','CSA','HCA','CSA','HCA','CSA','HCA','HCA','HCA'];
+        const N=types.length,lH=27,lGap=3,sx=72,sy=68,lW=W-210;
+
+        // Input label
+        if(prog>0.05){
+            const ip=ease(clamp((prog-0.05)/0.2,0,1));
+            ctx.globalAlpha=ip;
+            lbl('Input',sx-56,sy+N*(lH+lGap)/2+5,MUTED,10);
+            arrowLine(sx-10,sy+N*(lH+lGap)/2,sx-1,sy+N*(lH+lGap)/2,TEXT,ip,2);
+            ctx.globalAlpha=1;
+        }
+
+        types.forEach((type,i)=>{
+            const delay=i*0.065;
+            const alpha=ease(clamp((prog-delay)/0.38,0,1));
+            if(alpha<=0)return;
+            const y=sy+i*(lH+lGap),col=type==='CSA'?CSA:HCA;
+            ctx.globalAlpha=alpha;
+            rrect(sx,y,lW,lH,5,col+'16',col+'55',1.2);
+
+            // Data flow pulse
+            if(prog>delay+0.3){
+                const fp=ease(clamp((prog-delay-0.3)/0.4,0,1));
+                rrect(sx,y,lW*fp,lH,5,col+'28',null);
+                if(fp<0.97){
+                    const px=sx+lW*fp;
+                    glow(col,10);
+                    ctx.fillStyle=col;ctx.beginPath();ctx.arc(px,y+lH/2,3.5,0,Math.PI*2);ctx.fill();
+                    noGlow();
+                }
+            }
+            lbl('L'+(i+1)+': '+type,sx+7,y+lH/2+5,col,11,'bold');
+
+            // KV size indicator on right
+            const kvX=sx+lW+10,kvMaxW=96,kvFrac=type==='CSA'?0.33:0.10;
+            ctx.fillStyle='rgba(71,85,105,0.18)';ctx.fillRect(kvX,y+4,kvMaxW,lH-8);
+            if(prog>delay+0.42){
+                const kp=ease(clamp((prog-delay-0.42)/0.45,0,1));
+                ctx.fillStyle=col+'60';ctx.fillRect(kvX,y+4,kvMaxW*kvFrac*kp,lH-8);
+                ctx.strokeStyle=col+'80';ctx.lineWidth=1;ctx.strokeRect(kvX,y+4,kvMaxW,lH-8);
+                ctx.fillStyle=col;ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='right';
+                ctx.fillText(type==='CSA'?'33%':'10%',kvX+kvMaxW+22,y+lH/2+4);ctx.textAlign='left';
+            }
+            ctx.globalAlpha=1;
+        });
+
+        if(prog>0.5){lbl('KV Size',sx+lW+62,sy-10,MUTED,10,'normal','center');}
+        // Legend
+        if(prog>0.62){
+            const lp=ease((prog-0.62)/0.38);ctx.globalAlpha=lp;
+            [[CSA,'CSA — moderate compression + sparse attention'],[HCA,'HCA — aggressive grouping, tiny KV footprint']].forEach(([c,text],i)=>{
+                rrect(sx+i*330,sy+N*(lH+lGap)+14,14,14,3,c+'2a',c,1.2);
+                lbl(text,sx+i*330+20,sy+N*(lH+lGap)+24,c,11);
+            });
+            ctx.globalAlpha=1;
+        }
+    }
+
+    // ============================================================
+    // SCENE 3: CSA — step by step
+    // ============================================================
+    function drawScene3(t){
+        const prog=ease(Math.min(1,t*1.2));
+        lbl('CSA — Compressed Sparse Attention',20,28,CSA,16,'bold');
+        lbl('Step 1: compress each token’s K and V individually.  Step 2: each query attends to its top-K most relevant keys only.',20,50,MUTED,11);
+
+        const N=8,tW=54,tH=38,tGap=6,rowX=(W-N*(tW+tGap))/2,rowY=78;
+
+        // Raw tokens
+        for(let i=0;i<N;i++){
+            const alpha=ease(clamp((prog*N*0.85-i)/2.2,0,1));
+            if(alpha<=0)continue;
+            const x=rowX+i*(tW+tGap);
+            ctx.globalAlpha=alpha;
+            glow(CSA,4);rrect(x,rowY,tW,tH,7,'rgba(77,163,255,0.16)',CSA,1.8);noGlow();
+            lbl('T'+(i+1),x+tW/2,rowY+tH/2+5,CSA,11,'bold','center');
+            ctx.globalAlpha=1;
+        }
+        mono('Input tokens',rowX,rowY-10,MUTED,9);
+
+        // Per-token compression
+        if(prog>0.26){
+            const cp=ease(clamp((prog-0.26)/0.32,0,1));
+            const kvY=rowY+tH+52;
+            ctx.globalAlpha=cp;
+            lbl('↓ Per-token compression: K and V each shrink to ~74% of original size',rowX,kvY-12,TEXT,11);
+            ctx.globalAlpha=1;
+            for(let i=0;i<N;i++){
+                const x=rowX+i*(tW+tGap);
+                ctx.globalAlpha=cp;
+                ctx.strokeStyle=CSA+'40';ctx.lineWidth=1;
+                ctx.beginPath();ctx.moveTo(x+tW/2,rowY+tH+4);ctx.lineTo(x+tW/2,kvY-4);ctx.stroke();
+                const cw=tW*0.72;
+                ctx.fillStyle=KEY_C+'55';ctx.fillRect(x,kvY,cw,10);
+                ctx.strokeStyle=KEY_C+'80';ctx.lineWidth=1;ctx.strokeRect(x,kvY,cw,10);
+                ctx.fillStyle=VAL_C+'44';ctx.fillRect(x,kvY+12,cw,10);
+                ctx.strokeStyle=VAL_C+'70';ctx.lineWidth=1;ctx.strokeRect(x,kvY+12,cw,10);
+                if(i===0){mono('K',x-14,kvY+9,KEY_C,9);mono('V',x-14,kvY+21,VAL_C,9);}
+                ctx.globalAlpha=1;
+            }
+        }
+
+        // Sparse attention grid
+        if(prog>0.52){
+            const sp=ease(clamp((prog-0.52)/0.36,0,1));
+            const gS=18,gGap=2,gX=(W-N*(gS+gGap))/2,gY=222;
+            ctx.globalAlpha=sp;
+            lbl('↓ Sparse attention: each query attends only to local window + attention sink (~3 keys)',gX,gY-12,TEXT,11);
+            ctx.globalAlpha=1;
+            for(let r=0;r<N;r++){
+                for(let c=0;c<N;c++){
+                    const local=Math.abs(r-c)<=1,sink=c===0,active=local||sink;
+                    const x=gX+c*(gS+gGap),y=gY+r*(gS+gGap);
+                    ctx.globalAlpha=sp*(active?0.85:0.07);
+                    if(active){glow(CSA,4);rrect(x,y,gS,gS,2,CSA+'88',null);noGlow();}
+                    else{ctx.fillStyle='rgba(71,85,105,0.15)';ctx.fillRect(x,y,gS,gS);}
+                }
+            }
+            ctx.globalAlpha=sp;
+            ctx.save();ctx.translate(gX-16,gY+N*(gS+gGap)/2);ctx.rotate(-Math.PI/2);
+            mono('Queries',0,0,MUTED,9,'center');ctx.restore();
+            mono('Keys',gX+N*(gS+gGap)/2-12,gY-3,MUTED,9,'center');
+            ctx.globalAlpha=1;
+        }
+
+        // Stats footer
+        if(prog>0.84){
+            const rp=ease(clamp((prog-0.84)/0.16,0,1));
+            ctx.globalAlpha=rp;
+            rrect(20,H-58,W-40,42,10,'rgba(77,163,255,0.1)',CSA,1.5);
+            glow(CSA,8);lbl('~34% of full KV cache per CSA layer',W/2,H-38,CSA,14,'bold','center');noGlow();
+            lbl('Precise token-level memory at moderate cost — used for deep semantic layers',W/2,H-20,MUTED,10,'normal','center');
+            ctx.globalAlpha=1;
+        }
+    }
+
+    // ============================================================
+    // SCENE 4: HCA — step by step
+    // ============================================================
+    function drawScene4(t){
+        const prog=ease(Math.min(1,t*1.2));
+        lbl('HCA — Heavily Compressed Attention',20,28,HCA,16,'bold');
+        lbl('Groups of 4 tokens are consolidated into a single shared KV entry. Far fewer cache slots.',20,50,MUTED,11);
+
+        const N=12,GROUP=4,nG=N/GROUP,tW=38,tH=30,tGap=4;
+        const sx=(W-N*(tW+tGap))/2,tokY=72;
+        const gCols=[HCA,'#2dd4bf'];
+
+        // Tokens
+        for(let i=0;i<N;i++){
+            const alpha=ease(clamp((prog*N-i)/2.6,0,1));
+            if(alpha<=0)continue;
+            const g=Math.floor(i/GROUP),col=gCols[g%2],x=sx+i*(tW+tGap);
+            ctx.globalAlpha=alpha;
+            rrect(x,tokY,tW,tH,5,col+'22',col+'99',1.5);
+            lbl('T'+(i+1),x+tW/2,tokY+tH/2+5,col,9,'bold','center');
+            ctx.globalAlpha=1;
+        }
+        mono('Input tokens',sx,tokY-10,MUTED,9);
+
+        // Group brackets
+        if(prog>0.20){
+            const bp=ease(clamp((prog-0.20)/0.32,0,1));
+            for(let g=0;g<nG;g++){
+                const col=gCols[g%2],gx=sx+g*GROUP*(tW+tGap),gw=GROUP*(tW+tGap)-tGap;
+                ctx.globalAlpha=bp;
+                ctx.strokeStyle=col;ctx.lineWidth=2;
+                ctx.beginPath();
+                ctx.moveTo(gx,tokY+tH+5);ctx.lineTo(gx,tokY+tH+14);
+                ctx.lineTo(gx+gw,tokY+tH+14);ctx.lineTo(gx+gw,tokY+tH+5);ctx.stroke();
+                lbl('Group '+(g+1),gx+gw/2,tokY+tH+28,col,10,'normal','center');
+                ctx.globalAlpha=1;
+            }
+        }
+
+        // Consolidation
+        if(prog>0.42){
+            const kp=ease(clamp((prog-0.42)/0.36,0,1));
+            const kvY=tokY+tH+58;
+            ctx.globalAlpha=kp;
+            lbl('↓ '+N+' tokens → '+nG+' KV entries  ('+GROUP+' tokens share 1 slot)',sx,kvY-12,TEXT,11);
+            ctx.globalAlpha=1;
+            for(let g=0;g<nG;g++){
+                const col=gCols[g%2],gx=sx+g*GROUP*(tW+tGap),ew=GROUP*(tW+tGap)-tGap,midX=gx+ew/2;
+                if(prog>0.5){
+                    const fp=ease(clamp((prog-0.5)/0.3,0,1));
+                    for(let j=0;j<GROUP;j++){
+                        const tx=sx+(g*GROUP+j)*(tW+tGap)+tW/2;
+                        ctx.globalAlpha=fp*0.28;ctx.strokeStyle=col;ctx.lineWidth=1;
+                        ctx.beginPath();ctx.moveTo(tx,tokY+tH+28);ctx.lineTo(midX,kvY-5);ctx.stroke();
+                    }
+                    ctx.globalAlpha=1;
+                }
+                ctx.globalAlpha=kp;
+                glow(col,7);rrect(gx,kvY,ew,28,7,col+'2a',col,2);noGlow();
+                lbl('1 KV',midX,kvY+18,col,11,'bold','center');
+                ctx.fillStyle=KEY_C+'50';ctx.fillRect(gx+3,kvY+32,ew-6,6);
+                ctx.fillStyle=VAL_C+'40';ctx.fillRect(gx+3,kvY+40,ew-6,6);
+                ctx.globalAlpha=1;
+            }
+        }
+
+        // Memory comparison bars
+        if(prog>0.68){
+            const mp=ease(clamp((prog-0.68)/0.32,0,1));
+            const barX=190,barMaxW=320,barH=20,startY=316;
+            ctx.globalAlpha=mp;
+            lbl('Cache entries for '+N+' tokens:',20,startY-9,TEXT,12);
+            [{n:N,lbl:'Full MHA',col:'#ef4444'},{n:N,lbl:'CSA (N independent)',col:CSA},{n:nG,lbl:'HCA (grouped '+GROUP+'∶1)',col:HCA}].forEach(({n,lbl:label,col},i)=>{
+                const bw=barMaxW*(n/N),y=startY+i*30;
+                ctx.fillStyle=col+'16';ctx.fillRect(barX,y,barMaxW,barH);
+                ctx.fillStyle=col+'65';ctx.fillRect(barX,y,bw,barH);
+                ctx.strokeStyle=col+'80';ctx.lineWidth=1.2;ctx.strokeRect(barX,y,barMaxW,barH);
+                lbl(label,barX-6,y+barH/2+4,col,10,'normal','right');
+                mono(n+' entries',barX+bw+6,y+barH/2+4,col,9);
+            });
+            ctx.globalAlpha=1;
+        }
+
+        // Badge
+        if(prog>0.87){
+            const rp=ease(clamp((prog-0.87)/0.13,0,1));
+            ctx.globalAlpha=rp;
+            rrect(20,H-58,W-40,42,10,'rgba(251,146,60,0.1)',HCA,1.5);
+            glow(HCA,8);lbl('~10% of full KV cache per HCA layer',W/2,H-38,HCA,14,'bold','center');noGlow();
+            lbl('Aggressive broad-context compression — used for shallower pattern-reinforcement layers',W/2,H-20,MUTED,10,'normal','center');
+            ctx.globalAlpha=1;
+        }
+    }
+
+    // ============================================================
+    // SCENE 5: Results
+    // ============================================================
+    function drawScene5(t){
+        const prog=ease(Math.min(1,t*1.3));
+        lbl('The Payoff: KV Cache at 1M Tokens',20,28,BRIGHT,16,'bold');
+        lbl('CSA + HCA together slash the KV footprint by 90–93% vs DeepSeek-V3.2',20,52,MUTED,12);
+
+        const models=[
+            {name:'DeepSeek-V3.2',frac:1.00,col:'#ef4444',tag:'MLA only — baseline'},
+            {name:'V4-Pro',frac:0.10,col:CSA,tag:'27% FLOPs  ·  10% KV  ·  1.6T / 49B active'},
+            {name:'V4-Flash',frac:0.07,col:HCA,tag:'10% FLOPs  ·   7% KV  ·   284B / 13B active'},
+        ];
+        const maxBW=W-310,bH=56,bGap=18,sY=88;
+
+        models.forEach((m,i)=>{
+            const delay=i*0.18;
+            const alpha=ease(clamp((prog-delay)*2.8,0,1));
+            if(alpha<=0)return;
+            const animF=m.frac*ease(clamp((prog-delay-0.06)/0.72,0,1));
+            const y=sY+i*(bH+bGap),bw=maxBW*animF;
+            ctx.globalAlpha=alpha;
+            rrect(190,y,maxBW,bH,7,DIM,null);
+            rrect(190,y,bw,bH,7,m.col+'28',null);
+            rrect(190,y,bw,bH/3.5,7,m.col+'50',null);
+            rrect(190,y,maxBW,bH,7,null,m.col+'60',1.8);
+            if(bw>0){glow(m.col,12);rrect(190,y,Math.min(bw,10),bH,7,null,m.col,2.2);noGlow();}
+            lbl(m.name,186,y+bH/2-4,m.col,14,'bold','right');
+            mono(m.tag,186,y+bH/2+13,MUTED,9,'right');
+            const pctTxt=Math.round(m.frac*100)+'%';
+            if(bw>100){glow(m.col,8);lbl(pctTxt,190+bw/2,y+bH/2+7,m.col,17,'bold','center');noGlow();}
+            else if(bw>0){lbl(pctTxt,194+bw,y+bH/2+7,m.col,13,'bold');}
+            ctx.globalAlpha=1;
+        });
+
+        // Reduction badges
+        if(prog>0.62){
+            const cp=ease(clamp((prog-0.62)/0.38,0,1));
+            [[1,'9.5–10× less memory',CSA],[2,'13–14× less memory',HCA]].forEach(([idx,text,col])=>{
+                const y=sY+idx*(bH+bGap);
+                ctx.globalAlpha=cp;
+                glow(col,6);rrect(W-192,y+14,178,26,7,col+'18',col,1.5);noGlow();
+                lbl(text,W-103,y+31,col,12,'bold','center');
+                ctx.globalAlpha=1;
+            });
+        }
+
+        // Final insight
+        if(prog>0.78){
+            const fp=ease(clamp((prog-0.78)/0.22,0,1));
+            const bY=sY+models.length*(bH+bGap)+8;
+            ctx.globalAlpha=fp;
+            glow(SUCCESS,8);rrect(20,bY,W-40,66,10,'rgba(34,197,94,0.07)',SUCCESS,1.5);noGlow();
+            lbl('Single H100 80 GB can hold 1M+ tokens for a 49B-active-param model',W/2,bY+22,SUCCESS,13,'bold','center');
+            lbl('CSA + HCA × MLA latent compression: effective ~3–5 KB/token vs 512 KB (MHA 2023 baseline)',W/2,bY+42,TEXT,11,'normal','center');
+            mono('DeepSeek-V4 Technical Report, April 2026  |  V4-Pro: 1.6T/49B  |  V4-Flash: 284B/13B',W/2,bY+58,MUTED,9,'center');
+            ctx.globalAlpha=1;
+        }
+    }
+
+    // ============================================================
+    // Main loop
+    // ============================================================
+    function drawLoop(){
+        frame++;st++;
+        if(st>=SCENES[scene].dur){scene=(scene+1)%SCENES.length;st=0;}
+        const t=st/SCENES[scene].dur;
+        ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
+        if(scene===0)drawScene0(t);
+        else if(scene===1)drawScene1(t);
+        else if(scene===2)drawScene2(t);
+        else if(scene===3)drawScene3(t);
+        else if(scene===4)drawScene4(t);
+        else if(scene===5)drawScene5(t);
+        // Scene dots
+        SCENES.forEach((_,i)=>{
+            const active=i===scene;
+            ctx.beginPath();ctx.arc(W/2-SCENES.length*13+i*26,H-13,active?5:3.5,0,Math.PI*2);
+            if(active)glow(CSA,10);
+            ctx.fillStyle=active?CSA:'rgba(71,85,105,0.38)';ctx.fill();noGlow();
+        });
+        requestAnimationFrame(drawLoop);
+    }
+    drawLoop();
+})();
+
+// ========== ANIMATION: DFlash — Block Diffusion Speculative Decoding ==========
+(function(){
+    const canvas=document.getElementById('dflashAnim');
+    if(!canvas)return;
+    const W=800,H=520;
+    const ctx=setupHiDPICanvas(canvas,W,H);
+
+    const BG='#07111d',TEXT='#d7e5f2',MUTED='#8fa3b8',BRIGHT='#f8fbff';
+    const AR='#ef4444',SD='#f59e0b',DF='#4da3ff',INJ='#2dd4bf',OK='#22c55e',FAIL='#ef4444';
+
+    const SCENES=[{dur:140},{dur:260},{dur:340},{dur:280},{dur:260}];
+    let frame=0,scene=0,st=0;
+
+    function ease(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+    function lerp(a,b,t){return a+(b-a)*Math.min(1,Math.max(0,t));}
+    function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+
+    function glow(col,blur){ctx.shadowColor=col;ctx.shadowBlur=blur;}
+    function noGlow(){ctx.shadowBlur=0;ctx.shadowColor='transparent';}
+    function rrect(x,y,w,h,r,fill,stroke,sw){
+        ctx.beginPath();ctx.roundRect(x,y,w,h,r);
+        if(fill){ctx.fillStyle=fill;ctx.fill();}
+        if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=sw||1.5;ctx.stroke();}
+    }
+    function lbl(t,x,y,col,sz,wt,al){
+        ctx.fillStyle=col||TEXT;ctx.font=(wt||'normal')+' '+(sz||12)+'px Inter,sans-serif';
+        ctx.textAlign=al||'left';ctx.fillText(t,x,y);ctx.textAlign='left';
+    }
+    function mono(t,x,y,col,sz,al){
+        ctx.fillStyle=col||MUTED;ctx.font=(sz||10)+'px JetBrains Mono,monospace';
+        ctx.textAlign=al||'left';ctx.fillText(t,x,y);ctx.textAlign='left';
+    }
+    function arrowTo(x1,y1,x2,y2,col,alpha,lw){
+        ctx.globalAlpha=alpha||1;ctx.strokeStyle=col;ctx.lineWidth=lw||1.5;
+        ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+        const a=Math.atan2(y2-y1,x2-x1);
+        ctx.fillStyle=col;ctx.beginPath();
+        ctx.moveTo(x2,y2);ctx.lineTo(x2-9*Math.cos(a-0.4),y2-9*Math.sin(a-0.4));
+        ctx.lineTo(x2-9*Math.cos(a+0.4),y2-9*Math.sin(a+0.4));ctx.closePath();ctx.fill();
+        ctx.globalAlpha=1;
+    }
+    function flowDots(x1,y1,x2,y2,col,t,n,spd){
+        for(let i=0;i<n;i++){
+            const p=((t*(spd||2)+i/n)%1);
+            const px=lerp(x1,x2,p),py=lerp(y1,y2,p);
+            const sz=1.5+2.5*Math.sin(p*Math.PI);
+            ctx.beginPath();ctx.arc(px,py,sz,0,Math.PI*2);
+            ctx.fillStyle=col;ctx.globalAlpha=0.2+0.75*Math.sin(p*Math.PI);ctx.fill();
+        }
+        ctx.globalAlpha=1;
+    }
+
+    // ============================================================
+    // SCENE 0: Title
+    // ============================================================
+    function drawScene0(t){
+        const p=ease(Math.min(1,t*3)),pO=t>0.75?ease((t-0.75)/0.25):1,v=p*pO;
+        for(let i=0;i<30;i++){
+            const a=i*0.21+frame*0.01,r=80+25*Math.sin(i*0.8+frame*0.02);
+            ctx.beginPath();ctx.arc(W/2+Math.cos(a)*r*1.8,H/2-15+Math.sin(a)*r*0.5,2,0,Math.PI*2);
+            ctx.fillStyle=[DF,INJ,OK,SD][i%4];ctx.globalAlpha=v*(0.12+0.2*Math.sin(frame*0.04+i));ctx.fill();
+        }
+        ctx.globalAlpha=v;
+        glow(DF,20);lbl('DFlash',W/2,H/2-48,BRIGHT,32,'bold','center');noGlow();
+        lbl('Block Diffusion for Flash Speculative Decoding',W/2,H/2-18,DF,15,'bold','center');
+        lbl('Generate an entire draft block in one pass. Target verifies. 6× lossless speedup.',W/2,H/2+6,MUTED,12,'normal','center');
+        [[DF,'arXiv: 2602.06036'],[INJ,'Z Lab  ·  Feb 2026'],[OK,'6× over autoregressive']].forEach((b,i)=>{
+            const bx=W/2+(i-1)*220;
+            rrect(bx-70,H/2+28,140,32,8,b[0]+'1a',b[0]+'77',1.5);
+            lbl(b[1],bx,H/2+49,b[0],11,'bold','center');
+        });
+        ctx.textAlign='left';ctx.globalAlpha=1;
+    }
+
+    // ============================================================
+    // SCENE 1: Autoregressive — the bottleneck
+    // ============================================================
+    function drawScene1(t){
+        const prog=ease(Math.min(1,t*1.4));
+        lbl('① The Bottleneck: Autoregressive Decoding',20,28,AR,15,'bold');
+        lbl('Every token requires one full forward pass. GPU sits mostly idle between passes.',20,50,MUTED,12);
+
+        const mX=W/2-80,mY=90,mW=160,mH=52;
+        rrect(mX,mY,mW,mH,8,'rgba(239,68,68,0.14)',AR,2);
+        glow(AR,8);lbl('Target LLM',mX+mW/2,mY+mH/2+5,AR,13,'bold','center');noGlow();
+
+        // KV cache block
+        const kvX=mX+mW+22,kvY=mY,kvW=110,kvH=mH;
+        rrect(kvX,kvY,kvW,kvH,7,'rgba(71,85,105,0.2)','#475569',1.2);
+        lbl('KV Cache',kvX+kvW/2,kvY+kvH/2+5,MUTED,11,'normal','center');
+
+        // Tokens appearing one by one
+        const N=6,tW=44,tH=34,tGap=8;
+        const tStartX=(W-N*(tW+tGap))/2,tY=190;
+        const nVisible=Math.min(N,Math.floor(prog*N*1.4));
+
+        lbl('Output tokens (each = 1 separate forward pass):',tStartX,tY-10,MUTED,11);
+
+        for(let i=0;i<N;i++){
+            const x=tStartX+i*(tW+tGap);
+            if(i<nVisible){
+                ctx.globalAlpha=Math.min(1,(prog*N*1.4-i)/1.5);
+                rrect(x,tY,tW,tH,6,'rgba(239,68,68,0.2)',AR,1.8);
+                lbl('t'+(i+1),x+tW/2,tY+tH/2+5,AR,11,'bold','center');
+                ctx.strokeStyle=AR+'40';ctx.lineWidth=1;
+                ctx.beginPath();ctx.moveTo(mX+mW/2,mY+mH);ctx.lineTo(x+tW/2,tY);ctx.stroke();
+                ctx.globalAlpha=1;
+            } else {
+                rrect(x,tY,'rgba(71,85,105,0.1)',null,6);
+                ctx.fillStyle='rgba(71,85,105,0.1)';ctx.fillRect(x,tY,tW,tH);
+                ctx.strokeStyle='rgba(71,85,105,0.25)';ctx.lineWidth=1;ctx.strokeRect(x,tY,tW,tH);
+            }
+        }
+
+        // Timeline cost diagram
+        if(prog>0.55){
+            const cp=ease(clamp((prog-0.55)/0.45,0,1));
+            const barY=270,barH=16,cellW=42,cellGap=4,bx=tStartX;
+            ctx.globalAlpha=cp;
+            lbl('Time cost per token:',bx,barY-9,MUTED,11);
+            for(let i=0;i<N;i++){
+                const x=bx+i*(cellW+cellGap);
+                rrect(x,barY,cellW,barH,4,AR+'50',AR,1.2);
+                lbl('pass'+(i+1),x+cellW/2,barY+barH/2+4,MUTED,8,'normal','center');
+            }
+            // Brace
+            ctx.strokeStyle=AR;ctx.lineWidth=1.5;
+            ctx.beginPath();
+            ctx.moveTo(bx,barY+barH+5);ctx.lineTo(bx,barY+barH+14);
+            ctx.lineTo(bx+N*(cellW+cellGap)-cellGap,barY+barH+14);
+            ctx.lineTo(bx+N*(cellW+cellGap)-cellGap,barY+barH+5);ctx.stroke();
+            lbl(N+' serial passes = '+N+'× single-pass latency',bx+N*(cellW+cellGap)/2-14,barY+barH+28,AR,11,'bold');
+            ctx.globalAlpha=1;
+        }
+
+        if(prog>0.78){
+            const fp=ease(clamp((prog-0.78)/0.22,0,1));
+            ctx.globalAlpha=fp;
+            rrect(20,H-60,W-40,44,10,'rgba(239,68,68,0.08)',AR,1.5);
+            lbl('GPU utilization during decode: 20–40%  —  most hardware sits idle between passes',W/2,H-39,AR,12,'bold','center');
+            lbl('The decode step is memory-bandwidth-bound: loading the KV cache per token is the true bottleneck',W/2,H-20,MUTED,11,'normal','center');
+            ctx.globalAlpha=1;
+        }
+    }
+
+    // ============================================================
+    // SCENE 2: The KV Injection Pipeline (DFlash's core)
+    // ============================================================
+    function drawScene2(t){
+        const prog=ease(Math.min(1,t*1.2));
+        lbl('② DFlash: KV Injection Pipeline',20,28,DF,15,'bold');
+        lbl("Target model's features are injected into every draft layer's KV cache — persistent conditioning throughout diffusion.",20,50,MUTED,11);
+
+        // 6 pipeline stages
+        const stages=[
+            {id:'prefill',  label:'Target\nPrefill',   sub:'full context',      col:DF,  x:30,  y:100,w:105,h:56},
+            {id:'extract',  label:'Extract\nHidden',   sub:'all depths',         col:SD,  x:170, y:100,w:105,h:56},
+            {id:'fuse',     label:'Fuse &\nProject',   sub:'lightweight MLP',   col:OK,  x:310, y:100,w:105,h:56},
+            {id:'inject',   label:'Inject\nKV Cache',  sub:'every draft layer', col:INJ, x:450, y:100,w:105,h:56},
+            {id:'draft',    label:'Block\nDiffusion',  sub:'1 pass, N tokens',  col:'#c084fc',x:590,y:100,w:105,h:56},
+            {id:'verify',   label:'Target\nVerify',    sub:'1 pass parallel',   col:OK,  x:W-115,y:100,w:105,h:56},
+        ];
+
+        // Draw pipeline boxes with staggered fade-in
+        stages.forEach((s,i)=>{
+            const delay=i*0.1;
+            const alpha=ease(clamp((prog-delay)/0.4,0,1));
+            if(alpha<=0)return;
+            ctx.globalAlpha=alpha;
+            glow(s.col,8);
+            rrect(s.x,s.y,s.w,s.h,9,s.col+'18',s.col,2);
+            noGlow();
+            // Label (two lines)
+            const lines=s.label.split('\n');
+            lines.forEach((line,li)=>{
+                lbl(line,s.x+s.w/2,s.y+18+li*18,s.col,12,'bold','center');
+            });
+            lbl(s.sub,s.x+s.w/2,s.y+s.h-6,MUTED,9,'normal','center');
+            // Step number
+            lbl((i+1)+'',s.x+8,s.y+14,s.col+'80',10,'bold');
+            ctx.globalAlpha=1;
+        });
+
+        // Arrows between stages
+        stages.forEach((s,i)=>{
+            if(i===stages.length-1)return;
+            const next=stages[i+1];
+            const delay=i*0.1+0.28;
+            const alpha=ease(clamp((prog-delay)/0.4,0,1));
+            if(alpha<=0)return;
+            // Flowing dots
+            flowDots(s.x+s.w,s.y+s.h/2,next.x,next.y+s.h/2,s.col,frame/60,5,1.4);
+            arrowTo(s.x+s.w+2,s.y+s.h/2,next.x-1,next.y+s.h/2,s.col,alpha*0.7,1.5);
+        });
+
+        // Detail panel for "Inject KV Cache"
+        if(prog>0.42){
+            const dp=ease(clamp((prog-0.42)/0.38,0,1));
+            const inj=stages[3];
+            const panX=20,panY=180,panW=W-40,panH=120;
+            ctx.globalAlpha=dp;
+            rrect(panX,panY,panW,panH,10,'rgba(45,212,191,0.07)',INJ,1.5);
+
+            lbl('How KV Injection Works:',panX+14,panY+20,INJ,13,'bold');
+            lbl('After each prefill or verify step, DFlash samples hidden states from layers distributed',panX+14,panY+40,TEXT,11);
+            lbl('uniformly across the target model depth — early layers give syntax/position, deep layers give semantics.',panX+14,panY+56,TEXT,11);
+            lbl('These are fused by a lightweight projection and stored directly in the K and V projections of',panX+14,panY+74,TEXT,11);
+            lbl('every draft model layer. The draft KV cache carries target-model context throughout diffusion.',panX+14,panY+90,TEXT,11);
+
+            // Mini diagram inside panel
+            const dX=panX+panW-310,dY=panY+18;
+            [[DF,'Target L1'],[DF,'Target L4'],[DF,'Target L8'],[DF,'Target LN']].forEach((b,i)=>{
+                const bx=dX+i*58;
+                rrect(bx,dY,50,18,4,b[0]+'20',b[0]+'80',1);
+                lbl(b[1],bx+25,dY+13,b[0],8,'normal','center');
+                // Down arrows to fuse
+                ctx.strokeStyle=b[0]+'50';ctx.lineWidth=1;
+                ctx.beginPath();ctx.moveTo(bx+25,dY+18);ctx.lineTo(bx+25,dY+34);ctx.stroke();
+            });
+            // Fuse box
+            rrect(dX,dY+36,50*4+3*8,18,4,INJ+'20',INJ,1.2);
+            lbl('Fuse + Project',dX+(50*4+3*8)/2,dY+49,INJ,9,'bold','center');
+            // Inject arrow
+            ctx.strokeStyle=INJ;ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+            ctx.beginPath();ctx.moveTo(dX+(50*4+3*8)/2,dY+54);ctx.lineTo(dX+(50*4+3*8)/2,dY+72);ctx.stroke();
+            ctx.setLineDash([]);
+            // Draft KV box
+            rrect(dX+20,dY+73,130,18,4,INJ+'25',INJ,1.5);
+            lbl('Draft KV Cache (all layers)',dX+85,dY+86,INJ,9,'bold','center');
+
+            ctx.globalAlpha=1;
+        }
+
+        // Why it matters
+        if(prog>0.72){
+            const wp=ease(clamp((prog-0.72)/0.28,0,1));
+            ctx.globalAlpha=wp;
+            rrect(20,H-62,W-40,46,10,'rgba(77,163,255,0.08)',DF,1.5);
+            glow(DF,6);lbl('Persistent conditioning → higher draft acceptance rate → more tokens per target-model pass',W/2,H-41,DF,12,'bold','center');noGlow();
+            lbl('Earlier methods conditioned only at the start. DFlash re-injects at every step, so drafts stay on-distribution.',W/2,H-22,MUTED,11,'normal','center');
+            ctx.globalAlpha=1;
+        }
+    }
+
+    // ============================================================
+    // SCENE 3: Block Diffusion in action
+    // ============================================================
+    function drawScene3(t){
+        const prog=ease(Math.min(1,t*1.2));
+        lbl('③ Block Diffusion: All Tokens at Once',20,28,'#c084fc',15,'bold');
+        lbl('The draft model starts from noise and denoises the entire block in a single forward pass.',20,50,MUTED,11);
+
+        const BLOCK=6,tW=66,tH=46,tGap=10;
+        const bX=(W-BLOCK*(tW+tGap))/2,noiseY=85,draftY=185,verifyY=310;
+
+        // Step 1: Noise tokens
+        if(prog>0.06){
+            const np=ease(clamp((prog-0.06)/0.35,0,1));
+            ctx.globalAlpha=np;
+            lbl('Start: noisy draft block (random)',bX,noiseY-12,MUTED,11);
+            for(let i=0;i<BLOCK;i++){
+                const x=bX+i*(tW+tGap);
+                const noise=Math.sin(frame*0.09+i*1.3)*0.5+0.5;
+                rrect(x,noiseY,tW,tH,8,'rgba(148,163,184,0.12)','rgba(148,163,184,0.4)',1.5);
+                // Noise bars
+                for(let r=0;r<5;r++){
+                    const rw=tW*(0.3+0.5*Math.sin(frame*0.07+i*2.1+r*0.9));
+                    ctx.fillStyle='rgba(148,163,184,'+(0.1+0.15*Math.sin(r+frame*0.05))+')';
+                    ctx.fillRect(x+4,noiseY+6+r*7,rw,4);
+                }
+                mono('noise',x+tW/2,noiseY+tH-6,'#64748b',8,'center');
+            }
+            ctx.globalAlpha=1;
+        }
+
+        // Diffusion arrow (inject features + 1 pass)
+        if(prog>0.32){
+            const ap=ease(clamp((prog-0.32)/0.28,0,1));
+            ctx.globalAlpha=ap;
+            // KV injection arrows coming from above
+            const injY=noiseY+tH+8;
+            glow(INJ,10);
+            lbl('↓ KV-injected diffusion  (1 forward pass, all tokens parallel)',bX,injY+8,INJ,12,'bold');
+            noGlow();
+            // Animated flow dots across all blocks
+            for(let i=0;i<BLOCK;i++){
+                const x=bX+i*(tW+tGap)+tW/2;
+                flowDots(x,injY+2,x,draftY-6,INJ,frame/60,3,1.2);
+            }
+            ctx.globalAlpha=1;
+        }
+
+        // Step 2: Draft tokens (all appear together)
+        if(prog>0.45){
+            const dp=ease(clamp((prog-0.45)/0.36,0,1));
+            ctx.globalAlpha=dp;
+            lbl('Draft block: '+BLOCK+' tokens generated simultaneously',bX,draftY-12,INJ,11);
+            for(let i=0;i<BLOCK;i++){
+                const x=bX+i*(tW+tGap);
+                glow(INJ,dp>0.7?8:0);
+                rrect(x,draftY,tW,tH,8,'rgba(45,212,191,0.2)',INJ,2);
+                noGlow();
+                lbl('d'+(i+1),x+tW/2,draftY+tH/2+5,'#2dd4bf',13,'bold','center');
+            }
+            ctx.globalAlpha=1;
+        }
+
+        // Step 3: Target verification
+        if(prog>0.62){
+            const vp=ease(clamp((prog-0.62)/0.34,0,1));
+            ctx.globalAlpha=vp;
+            lbl('Target verifies all '+BLOCK+' drafts in 1 parallel pass (high acceptance — persistent KV conditioning):',bX,verifyY-12,DF,11);
+            const results=[true,true,true,true,true,false];
+            for(let i=0;i<BLOCK;i++){
+                const x=bX+i*(tW+tGap);
+                const ok=results[i];
+                ctx.strokeStyle=DF+'40';ctx.lineWidth=1;
+                ctx.beginPath();ctx.moveTo(x+tW/2,draftY+tH+4);ctx.lineTo(x+tW/2,verifyY-4);ctx.stroke();
+                glow(ok?OK:FAIL,8);
+                rrect(x,verifyY,tW,tH,8,ok?'rgba(34,197,94,0.2)':'rgba(239,68,68,0.15)',ok?OK:FAIL,2);
+                noGlow();
+                lbl(ok?'✓':'✗',x+tW/2,verifyY+tH/2+7,ok?OK:FAIL,18,'bold','center');
+            }
+            ctx.globalAlpha=1;
+        }
+
+        // Efficiency callout
+        if(prog>0.84){
+            const ep=ease(clamp((prog-0.84)/0.16,0,1));
+            ctx.globalAlpha=ep;
+            rrect(20,H-56,W-40,40,10,'rgba(77,163,255,0.08)',DF,1.5);
+            lbl(BLOCK+' draft tokens via 1 diffusion pass + 1 verify pass  =  2 forward passes for '+BLOCK+' output tokens',W/2,H-36,DF,12,'bold','center');
+            lbl('Autoregressive would need '+BLOCK+' passes for the same output',W/2,H-17,MUTED,11,'normal','center');
+            ctx.globalAlpha=1;
+        }
+    }
+
+    // ============================================================
+    // SCENE 4: Speedup comparison
+    // ============================================================
+    function drawScene4(t){
+        const prog=ease(Math.min(1,t*1.3));
+        lbl('④ Lossless Speedup vs Baselines',20,28,BRIGHT,15,'bold');
+        lbl('DFlash achieves over 6× lossless acceleration — output distribution is identical to the target model alone.',20,50,MUTED,12);
+
+        const methods=[
+            {name:'Autoregressive',sub:'1 token / forward pass',mult:1.0,col:AR},
+            {name:'EAGLE-3',sub:'Autoregressive draft tree (prior SOTA)',mult:2.5,col:SD},
+            {name:'DFlash',sub:'Block diffusion (1 pass) + KV injection',mult:6.2,col:DF},
+        ];
+        const maxBW=W-300,bH=60,bGap=20,sY=92;
+
+        methods.forEach((m,i)=>{
+            const delay=i*0.18;
+            const alpha=ease(clamp((prog-delay)*3,0,1));
+            if(alpha<=0)return;
+            const animF=(m.mult/6.2)*ease(clamp((prog-delay-0.05)/0.7,0,1));
+            const y=sY+i*(bH+bGap),bw=maxBW*animF;
+            ctx.globalAlpha=alpha;
+            rrect(185,y,maxBW,bH,7,'rgba(71,85,105,0.18)',null);
+            rrect(185,y,bw,bH,7,m.col+'28',null);
+            rrect(185,y,bw,bH/3,7,m.col+'50',null);
+            if(bw>0){glow(m.col,12);rrect(185,y,Math.min(bw,10),bH,7,null,m.col,2.5);noGlow();}
+            rrect(185,y,maxBW,bH,7,null,m.col+'55',1.8);
+            lbl(m.name,181,y+bH/2-4,m.col,14,'bold','right');
+            mono(m.sub,181,y+bH/2+13,MUTED,9,'right');
+            const multTxt=m.mult+'×';
+            if(bw>90){glow(m.col,8);lbl(multTxt,185+bw/2,y+bH/2+7,m.col,17,'bold','center');noGlow();}
+            else if(bw>0){lbl(multTxt,190+bw,y+bH/2+8,m.col,13,'bold');}
+            ctx.globalAlpha=1;
+        });
+
+        // DFlash advantage badge
+        if(prog>0.6){
+            const cp=ease(clamp((prog-0.6)/0.4,0,1));
+            ctx.globalAlpha=cp;
+            glow(DF,10);rrect(W-210,sY+2*(bH+bGap)+8,196,42,9,'rgba(77,163,255,0.12)',DF,1.8);noGlow();
+            lbl('2.5× faster than EAGLE-3',W-112,sY+2*(bH+bGap)+28,DF,13,'bold','center');
+            lbl('(prior SOTA spec decoding)',W-112,sY+2*(bH+bGap)+44,MUTED,10,'normal','center');
+            ctx.globalAlpha=1;
+        }
+
+        // Lossless guarantee
+        if(prog>0.74){
+            const lp=ease(clamp((prog-0.74)/0.26,0,1));
+            ctx.globalAlpha=lp;
+            rrect(20,H-104,W-40,48,10,'rgba(34,197,94,0.08)',OK,1.5);
+            glow(OK,6);lbl('"Lossless" means the output distribution is provably unchanged',W/2,H-82,OK,13,'bold','center');noGlow();
+            lbl('Speculative decoding with correct rejection sampling never alters what the model says — only how fast.',W/2,H-62,MUTED,11,'normal','center');
+            ctx.globalAlpha=1;
+        }
+
+        // Composability note
+        if(prog>0.84){
+            const np=ease(clamp((prog-0.84)/0.16,0,1));
+            ctx.globalAlpha=np;
+            rrect(20,H-50,W-40,38,10,'rgba(45,212,191,0.07)',INJ,1.5);
+            lbl('Orthogonal to KV cache compression (MLA, CSA, HCA): smaller KV → faster verify → even higher effective speedup',W/2,H-33,INJ,11,'bold','center');
+            lbl('Run DFlash on top of DeepSeek V4-Flash: smaller KV + block drafting compound multiplicatively.',W/2,H-15,MUTED,10,'normal','center');
+            ctx.globalAlpha=1;
+        }
+    }
+
+    // ============================================================
+    // Main loop
+    // ============================================================
+    function drawLoop(){
+        frame++;st++;
+        if(st>=SCENES[scene].dur){scene=(scene+1)%SCENES.length;st=0;}
+        const t=st/SCENES[scene].dur;
+        ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
+        if(scene===0)drawScene0(t);
+        else if(scene===1)drawScene1(t);
+        else if(scene===2)drawScene2(t);
+        else if(scene===3)drawScene3(t);
+        else if(scene===4)drawScene4(t);
+        // Scene dots
+        SCENES.forEach((_,i)=>{
+            const active=i===scene;
+            ctx.beginPath();ctx.arc(W/2-SCENES.length*13+i*26,H-13,active?5:3.5,0,Math.PI*2);
+            if(active)glow(DF,10);
+            ctx.fillStyle=active?DF:'rgba(71,85,105,0.38)';ctx.fill();noGlow();
+        });
+        requestAnimationFrame(drawLoop);
+    }
+    drawLoop();
+})();
+
+</script>

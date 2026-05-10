@@ -28,7 +28,7 @@
 
 ---
 
-## 🧠 What is KV Cache? (Explain Like I'm 10)
+## 🧠 What is KV Cache? 
 
 Imagine you're having a conversation with a friend. Every time your friend wants to reply, they re-read **the entire conversation from the beginning** — every single word — before saying the next sentence. That's exhausting and slow!
 

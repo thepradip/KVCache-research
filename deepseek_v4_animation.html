@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeepSeek-V4: Efficient Million-Token Context Intelligence</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --ink:#07101f;
+  --panel:#101b34;
+  --blue:#60a5fa;
+  --paper:#f8fbff;
+  --muted:#d5e5ff;
+}
+body{background:
+  radial-gradient(circle at 18% 8%,rgba(96,165,250,.18),transparent 30%),
+  radial-gradient(circle at 78% 5%,rgba(167,139,250,.14),transparent 30%),
+  radial-gradient(circle at 52% 96%,rgba(20,184,166,.12),transparent 34%),
+  linear-gradient(145deg,#07101f 0%,#101b34 48%,#0a1226 100%);
+  display:flex;flex-direction:column;align-items:center;
+  min-height:100vh;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  -webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;
+  padding:20px 16px 34px;color:var(--paper);}
+h1{color:#f8fbff;font-size:1.06rem;font-weight:850;text-align:center;margin-bottom:12px;letter-spacing:.01em;
+  text-shadow:0 2px 2px rgba(0,0,0,.72),0 0 16px rgba(96,165,250,.24);}
+h1 span{color:var(--blue);}
+canvas{display:block;border-radius:18px;max-width:100%;
+  border:1px solid rgba(248,251,255,.26);
+  box-shadow:0 28px 90px rgba(0,0,0,.48),0 0 58px rgba(96,165,250,.18),inset 0 1px 0 rgba(255,255,255,.14);}
+.ctrl{display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap;justify-content:center;}
+.btn{background:linear-gradient(180deg,rgba(96,165,250,.22),rgba(15,23,42,.92));border:1.5px solid rgba(147,197,253,.70);color:#f8fbff;
+  padding:8px 20px;border-radius:9px;cursor:pointer;font-size:.86rem;font-weight:700;
+  transition:all .18s;min-width:88px;box-shadow:0 8px 24px rgba(0,0,0,.30);text-shadow:0 1px 1px #000;}
+.btn:hover{background:linear-gradient(180deg,rgba(20,184,166,.20),rgba(15,23,42,.94));border-color:rgba(20,184,166,.76);color:#ecfeff;}
+.lbl{color:#f8fbff;font-size:.82rem;min-width:190px;text-align:center;font-weight:700;text-shadow:0 1px 1px #000;}
+.dots{display:flex;gap:6px;align-items:center;margin-top:7px;}
+.dot{width:8px;height:8px;border-radius:50%;background:rgba(213,229,255,.28);cursor:pointer;transition:all .18s;}
+.dot.on{background:var(--blue);box-shadow:0 0 10px rgba(96,165,250,.70);}
+.note{color:#d5e5ff;font-size:.72rem;margin-top:7px;text-align:center;text-shadow:0 1px 1px #000;}
+</style>
+</head>
+<body>
+<h1>DeepSeek-V4 — <span>Efficient Million-Token Context Intelligence</span></h1>
+<canvas id="cv"></canvas>
+<div class="ctrl">
+  <button class="btn" id="bp">← Prev</button>
+  <span class="lbl" id="sl">1 / 11 — Intro</span>
+  <button class="btn" id="bn">Next →</button>
+</div>
+<div class="dots" id="dots"></div>
+<p class="note">Click Next / Prev or any dot to jump · Fact-checked against DeepSeek-V4 report/model card · April 2026</p>
+
+<script>
+/* ── canvas ───────────────────────────────── */
+const W=900,H=560,cv=document.getElementById('cv');
+const dpr=Math.min(Math.max(window.devicePixelRatio||1,3),4);
+cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+cv.style.width=W+'px';cv.style.height=H+'px';
+const g=cv.getContext('2d');
+g.setTransform(dpr,0,0,dpr,0,0);
+g.imageSmoothingEnabled=true;
+g.imageSmoothingQuality='high';
+
+/* ── palette ─────────────────────────────── */
+const P={
+  bg:'#07101f',
+  bg2:'#101b34',
+  card:'rgba(15,23,42,.82)',
+  card2:'rgba(30,41,59,.74)',
+  brown1:'#c47a13',
+  brown2:'#c94b5f',
+  brown3:'#d69e2e',
+  blue:'#6ea8fe',
+  bronze:'#c47a13',
+  teal:'#0f9488',
+  gold:'#d69e2e',
+  green:'#16a34a',
+  purple:'#9b87f5',
+  red:'#ef6b6b',
+  pink:'#d85a9f',
+  text:'#f8fbff',
+  muted:'#d5e5ff',
+  bright:'#ffffff',
+  ink:'#050816',
+  dim:'rgba(213,229,255,.17)'
+};
+
+/* ── layout zones (STRICT — nothing crosses these) ────
+   Header  : y  0 – 61
+   Content : y 66 – 420  (354 px)
+   Example : y 428 – 514 (86 px)
+   Dots    : y 544
+──────────────────────────────────────────────────── */
+const CX=24,CW=852;           // left edge, width
+const T=66,B=420,CH=B-T;      // content top/bottom/height
+const EY=428,EH=86;           // example box
+
+/* ── helpers ─────────────────────────────── */
+const lerp=(a,b,t)=>a+(b-a)*Math.min(1,Math.max(0,t));
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+const soft=t=>1-Math.pow(1-Math.min(1,Math.max(0,t)),3);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function glow(c,r){g.shadowColor=c;g.shadowBlur=Math.min(r,8);}
+function ng(){g.shadowBlur=0;g.shadowColor='transparent';}
+
+function rr(x,y,w,h,r,fill,stroke,sw){
+  if(w<=0||h<=0)return;
+  g.beginPath();g.roundRect(x,y,w,h,r);
+  if(fill){
+    g.fillStyle=fill;g.fill();
+    if(String(fill).includes('rgba')||String(fill).startsWith('#')){
+      g.save();g.globalAlpha=Math.min(g.globalAlpha,.22);
+      const lg=g.createLinearGradient(x,y,x,y+h);
+      lg.addColorStop(0,'rgba(255,244,223,.16)');
+      lg.addColorStop(.42,'rgba(255,255,255,.025)');
+      lg.addColorStop(1,'rgba(0,0,0,.18)');
+      g.fillStyle=lg;g.fill();
+      g.restore();
+    }
+  }
+  if(stroke){g.strokeStyle=stroke;g.lineWidth=sw||1.5;g.stroke();}
+}
+function bg(fr){
+  const grd=g.createLinearGradient(0,0,W,H);
+  grd.addColorStop(0,'#07101f');
+  grd.addColorStop(.42,P.bg);
+  grd.addColorStop(1,'#111827');
+  g.fillStyle=grd;g.fillRect(0,0,W,H);
+
+  const r1=g.createRadialGradient(140,40,20,140,40,430);
+  r1.addColorStop(0,'rgba(96,165,250,.18)');
+  r1.addColorStop(.55,'rgba(96,165,250,.05)');
+  r1.addColorStop(1,'rgba(96,165,250,0)');
+  g.fillStyle=r1;g.fillRect(0,0,W,H);
+
+  const r2=g.createRadialGradient(740,90,10,740,90,360);
+  r2.addColorStop(0,'rgba(167,139,250,.15)');
+  r2.addColorStop(.48,'rgba(167,139,250,.045)');
+  r2.addColorStop(1,'rgba(167,139,250,0)');
+  g.fillStyle=r2;g.fillRect(0,0,W,H);
+
+  const r3=g.createRadialGradient(540,540,30,540,540,360);
+  r3.addColorStop(0,'rgba(20,184,166,.12)');
+  r3.addColorStop(.54,'rgba(20,184,166,.035)');
+  r3.addColorStop(1,'rgba(20,184,166,0)');
+  g.fillStyle=r3;g.fillRect(0,0,W,H);
+
+  g.save();
+  g.globalAlpha=.18;
+  g.strokeStyle='rgba(213,229,255,.22)';
+  g.lineWidth=1;
+  for(let x=-40+(fr*.08%44);x<W+44;x+=44){
+    g.beginPath();g.moveTo(x,64);g.lineTo(x+180,H-26);g.stroke();
+  }
+  g.restore();
+
+  rr(10,10,W-20,H-20,18,'rgba(15,23,42,.26)','rgba(248,251,255,.12)',1);
+}
+/* single-line text */
+function tx(s,x,y,col,sz,wt,al){
+  g.font=(wt||'normal')+' '+(sz||12)+'px Inter,sans-serif';
+  g.textAlign=al||'left';
+  g.lineJoin='round';
+  g.strokeStyle='rgba(5,8,22,.86)';
+  g.lineWidth=Math.max(2.2,(sz||12)*.16);
+  g.strokeText(String(s),x,y);
+  g.fillStyle=col||P.text;g.fillText(String(s),x,y);g.textAlign='left';
+}
+/* monospace */
+function mo(s,x,y,col,sz,al){
+  g.font=(sz||10)+'px JetBrains Mono,monospace';
+  g.textAlign=al||'left';
+  g.strokeStyle='rgba(5,8,22,.82)';
+  g.lineWidth=Math.max(1.8,(sz||10)*.14);
+  g.strokeText(String(s),x,y);
+  g.fillStyle=col||P.muted;g.fillText(String(s),x,y);g.textAlign='left';
+}
+/* word-wrap; returns lines drawn */
+function wr(s,x,y,maxW,lh,col,sz,wt){
+  g.font=(wt||'normal')+' '+(sz||11)+'px Inter,sans-serif';
+  const words=s.split(' ');let line='',lines=[];
+  for(const w of words){
+    const test=line?(line+' '+w):w;
+    if(g.measureText(test).width>maxW&&line){lines.push(line);line=w;}else line=test;
+  }
+  if(line)lines.push(line);
+  lines.forEach((l,i)=>{
+    const yy=y+i*lh;
+    g.textAlign='left';
+    g.strokeStyle='rgba(5,8,22,.86)';
+    g.lineWidth=Math.max(2,(sz||11)*.15);
+    g.strokeText(l,x,yy);
+    g.fillStyle=col||P.text;g.fillText(l,x,yy);
+  });
+  return lines.length;
+}
+function tw(s,sz,wt){
+  g.font=(wt||'normal')+' '+(sz||11)+'px Inter,sans-serif';
+  return g.measureText(s).width;
+}
+function arw(x1,y1,x2,y2,col,a,lw){
+  g.globalAlpha=a||1;g.strokeStyle=col;g.lineWidth=lw||1.5;
+  g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();
+  const ang=Math.atan2(y2-y1,x2-x1);
+  g.fillStyle=col;g.beginPath();
+  g.moveTo(x2,y2);g.lineTo(x2-8*Math.cos(ang-.44),y2-8*Math.sin(ang-.44));
+  g.lineTo(x2-8*Math.cos(ang+.44),y2-8*Math.sin(ang+.44));g.closePath();g.fill();
+  g.globalAlpha=1;
+}
+function dots2(x1,y1,x2,y2,col,t,n,sp){
+  for(let i=0;i<n;i++){const p=((t*(sp||2)+i/n)%1);
+    const px=lerp(x1,x2,p),py=lerp(y1,y2,p);
+    g.beginPath();g.arc(px,py,1.4+2.2*Math.sin(p*Math.PI),0,Math.PI*2);
+    g.fillStyle=col;g.globalAlpha=.18+.7*Math.sin(p*Math.PI);g.fill();}
+  g.globalAlpha=1;}
+
+/* ── standard header (title + subtitle in header zone) ── */
+function hdr(title,sub,col){
+  /* background strip */
+  const grad=g.createLinearGradient(0,0,W,64);
+  grad.addColorStop(0,'rgba(15,23,42,.94)');
+  grad.addColorStop(.58,'rgba(30,41,59,.78)');
+  grad.addColorStop(1,'rgba(8,13,30,.30)');
+  g.fillStyle=grad;g.fillRect(0,0,W,63);
+  g.strokeStyle='rgba(125,211,252,.26)';g.lineWidth=1;
+  g.beginPath();g.moveTo(CX,62.5);g.lineTo(CX+CW,62.5);g.stroke();
+  glow(col,9);tx(title,CX,24,col,14,'bold');ng();
+  wr(sub,CX,43,CW-6,15,P.muted,11);
+}
+
+/* ── example box (always at EY, height EH) ── */
+function ex(lines){
+  rr(CX,EY,CW,EH,12,'rgba(36,22,14,.72)',P.blue+'55',1.3);
+  glow(P.blue,5);tx('Example',CX+12,EY+17,P.blue,11,'bold');ng();
+  if(typeof lines==='string')lines=[lines];
+  lines.forEach((l,i)=>wr(l,CX+12,EY+33+i*18,CW-28,18,P.text,11));
+}
+
+/* ── progress dots on canvas ── */
+function pdots(total,cur){
+  const sp=22,sx=W/2-total*sp/2+11,dy=H-13;
+  for(let i=0;i<total;i++){
+    g.beginPath();g.arc(sx+i*sp,dy,i===cur?4.5:3,0,Math.PI*2);
+    if(i===cur)glow(P.blue,8);
+    g.fillStyle=i===cur?P.blue:'rgba(213,229,255,.30)';g.fill();ng();
+  }
+  mo((cur+1)+'/'+total,W-40,16,P.muted,9,'right');
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCENE 0 — Intro
+═══════════════════════════════════════════════════════ */
+function sc0(t,fr){
+  const p=soft(clamp(t*2.2,0,1)),v=p*(t>.82?ease((t-.82)/.18):1);
+  // particles
+  for(let i=0;i<24;i++){
+    const a=i*.262+fr*.006,r=90+32*Math.sin(i*.7+fr*.018);
+    g.beginPath();g.arc(W/2+Math.cos(a)*r*1.9,H/2-8+Math.sin(a)*r*.5,2,0,Math.PI*2);
+    g.fillStyle=[P.brown1,P.brown2,P.brown3,P.blue][i%4];
+    g.globalAlpha=v*(.08+.14*Math.sin(fr*.028+i));g.fill();
+  }
+  g.globalAlpha=v;
+  glow(P.blue,10);tx('DeepSeek-V4',W/2,H/2-56,P.bright,40,'bold','center');ng();
+  tx('Efficient Million-Token Context Intelligence',W/2,H/2-20,P.blue,15,'bold','center');
+  wr('April 2026 · Hybrid CSA + HCA cuts KV cache to 10% / 7% of DeepSeek-V3.2 at 1M tokens',
+     W/2-270,H/2+4,540,18,P.muted,12,'normal');
+  // badges
+  [{t:'V4-Pro: 1.6T / 49B active',c:P.blue},
+   {t:'1M token context',c:P.brown3},
+   {t:'10% / 7% of V3.2 KV',c:P.brown2}].forEach((b,i)=>{
+    const bx=W/2+(i-1)*228;
+    rr(bx-82,H/2+34,164,32,8,b.c+'18',b.c+'66',1.5);
+    glow(b.c,4);tx(b.t,bx,H/2+55,b.c,11,'bold','center');ng();
+  });
+  g.textAlign='left';g.globalAlpha=1;
+  ex('Goal: read a 1,000-page codebase, 5 full novels, or a year of chat history in a single prompt — without running out of GPU memory.');
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCENE 1 — The Challenge (clean horizontal bars, no overlap)
+   Content zones:
+     y=T+0   to y=T+22   : subtitle row
+     y=T+28  to y=T+268  : 5 horizontal bars (each 40px tall, 8px gap)
+     y=T+278 to y=T+340  : context-scaling note
+     y=T+348 to y=B      : stays clear
+═══════════════════════════════════════════════════════ */
+function sc1(t,fr){
+  hdr('The Challenge: KV Cache Memory at 1 Million Tokens',
+      'How much GPU memory does each architecture need for a 1M-token context? (KV cache only, not model weights)',P.red);
+  const prog=ease(clamp(t*1.3,0,1));
+
+  const models=[
+    {lbl:'MHA  (LLaMA-2 7B, 2023)',  kbT:512, col:P.red},
+    {lbl:'GQA  (LLaMA-3 8B, 2024)',  kbT:128, col:P.bronze},
+    {lbl:'DeepSeek-V3.2 baseline',     kbT:70,  col:P.purple},
+    {lbl:'V4-Pro  (Hybrid Attn)',     kbT:7,   col:P.blue},
+    {lbl:'V4-Flash  (Hybrid Attn)',   kbT:4.9, col:P.teal},
+  ];
+  // GB at 1M tokens
+  const toGB=kb=>kb*1e6/1024/1024;
+  const maxGB=toGB(512); // 488 GB
+
+  const barX=CX+196;         // bar left edge (after labels)
+  const barMaxW=CW-200;      // bar zone width (to right edge)
+  const barH=40;             // bar height
+  const barGap=10;           // gap between bars
+  const barStartY=T+8;       // first bar top
+
+  // 80 GB H100 line
+  const h100X=barX+barMaxW*(80/maxGB);
+  g.strokeStyle=P.red+'99';g.lineWidth=1.5;g.setLineDash([5,4]);
+  g.beginPath();g.moveTo(h100X,barStartY-4);
+  g.lineTo(h100X,barStartY+models.length*(barH+barGap)-barGap+4);g.stroke();g.setLineDash([]);
+  tx('H100 80 GB limit',h100X-1,barStartY-6,P.red,9,'bold','center');
+
+  models.forEach((m,i)=>{
+    const gb=toGB(m.kbT);
+    const delay=i*.12;
+    const af=ease(clamp((prog-delay)/.6,0,1));
+    const bw=barMaxW*(gb/maxGB)*af;
+    const y=barStartY+i*(barH+barGap);
+    const overflow=gb>80;
+
+    // track (full width, dim)
+    rr(barX,y,barMaxW,barH,5,P.dim,null);
+    // filled bar
+    rr(barX,y,Math.max(bw,2),barH,5,m.col+'33',null);
+    // shimmer top strip
+    rr(barX,y,Math.max(bw,2),barH/3.2,5,m.col+'55',null);
+    // border
+    rr(barX,y,barMaxW,barH,5,null,m.col+'55',1.4);
+    // overflow glow
+    if(overflow&&bw>0){glow(P.red,14);rr(barX,y,Math.min(bw,16),barH,5,null,P.red,2.2);ng();}
+
+    // label LEFT (right-aligned into the label zone)
+    tx(m.lbl,barX-6,y+barH/2-4,m.col,11,'bold','right');
+    tx(m.kbT+' KB/token',barX-6,y+barH/2+10,P.muted,9,'normal','right');
+
+    // value label: outside for short bars, inside for full-width bars
+    const fullish=bw>barMaxW-130;
+    const vx=fullish?barX+barMaxW-104:barX+bw+6;
+    const vStr=gb>=1?gb.toFixed(1)+' GB':gb.toFixed(2)+' GB';
+    const note=overflow?' ← EXCEEDS H100!':gb>40?' ← fills most of H100':'';
+    if(prog>delay+.3){
+      glow(m.col,4);tx(vStr,vx,y+barH/2-3,m.col,12,'bold');ng();
+      if(note){
+        if(fullish&&overflow)tx('EXCEEDS H100',vx,y+barH/2+12,P.red,9,'bold');
+        else tx(note,vx+tw(vStr,12,'bold')+4,y+barH/2-3,overflow?P.red:P.muted,10);
+      }
+    }
+  });
+
+  // Context-scaling note (below bars)
+  const noteY=barStartY+models.length*(barH+barGap)+4;
+  if(prog>.60){
+    const np=ease(clamp((prog-.60)/.40,0,1));
+    g.globalAlpha=np;
+    rr(CX,noteY,CW,62,8,'rgba(185,86,53,.10)',P.red+'44',1.3);
+    tx('Why this matters:',CX+12,noteY+16,P.red,11,'bold');
+    wr('At 1M tokens MHA needs 488 GB — 6 full H100s just for KV cache. Even V3.2 (70 KB/token) fills 84% of a single H100. V4-Flash (4.9 KB/token) uses only 4.7 GB.',
+       CX+12,noteY+32,CW-24,17,P.text,10);
+    g.globalAlpha=1;
+  }
+
+  ex([
+    '488 GB for MHA at 1M tokens = 6 entire H100 GPUs just storing keys and values.',
+    'V4-Flash cuts this to 4.7 GB — about the size of a 4K movie file — same context, 104× less memory.',
+  ]);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCENE 2 — KV Cache Memory Growth (ANIMATED, NEW)
+   Shows memory filling up token by token for each model
+   Content zones:
+     y=T+0   to y=T+32  : token counter
+     y=T+38  to y=T+286 : three animated bars (each 74px, 20px gap)
+     y=T+292 to y=T+354 : milestone table
+═══════════════════════════════════════════════════════ */
+function sc2(t,fr){
+  hdr('KV Cache Memory Usage — Grows With Every New Token',
+      'Live: watch GPU memory fill up as context length increases. H100 = 80 GB limit.',P.blue);
+  const prog=ease(clamp(t*1.2,0,1));
+
+  const MODELS=[
+    {lbl:'DeepSeek-V3.2',sub:'baseline  ·  ~70 KB / token',kbT:70,  col:P.red},
+    {lbl:'V4-Pro',        sub:'CSA+HCA hybrid  ·  7 KB / token', kbT:7,   col:P.blue},
+    {lbl:'V4-Flash',      sub:'CSA+HCA hybrid  ·  4.9 KB / token',kbT:4.9, col:P.teal},
+  ];
+  const H100=80; // GB
+
+  // Animate token count from 0 to 1M (cycles in the scene)
+  const tokMax=1e6;
+  const tokCur=Math.floor(tokMax*ease(Math.min(prog,1)));
+
+  // Token counter
+  const tcY=T+10;
+  tx('Context length:',CX,tcY+14,P.muted,11);
+  glow(P.blue,8);
+  const tokStr=tokCur>=1e6?'1,000,000':(tokCur>=1e3?(Math.floor(tokCur/100)/10).toFixed(0)+'K':tokCur.toString());
+  tx(tokStr+' tokens',CX+110,tcY+16,P.bright,16,'bold');ng();
+
+  // Animated bar area
+  const barLW=160;   // label zone width
+  const barX=CX+barLW+8;
+  const barZW=CW-barLW-12;  // bar zone
+  const barH=66;
+  const barGap=18;
+  const bar0Y=T+38;
+
+  // H100 limit marker (vertical line across all bars)
+  const limitX=barX+barZW*(H100/(H100*1.05));
+  g.strokeStyle=P.red+'70';g.lineWidth=1.4;g.setLineDash([5,3]);
+  g.beginPath();g.moveTo(limitX,bar0Y-6);
+  g.lineTo(limitX,bar0Y+MODELS.length*(barH+barGap)-barGap+6);g.stroke();g.setLineDash([]);
+  tx('H100 80 GB',limitX,bar0Y-8,P.red,9,'bold','center');
+
+  // X-axis labels at bottom
+  const axY=bar0Y+MODELS.length*(barH+barGap)-barGap+10;
+  [0,20,40,60,80].forEach(gb=>{
+    const x=barX+barZW*(gb/(H100*1.05));
+    mo(gb+'GB',x,axY+8,P.muted,8,'center');
+    g.strokeStyle='rgba(213,229,255,.14)';g.lineWidth=1;
+    g.beginPath();g.moveTo(x,bar0Y);g.lineTo(x,axY);g.stroke();
+  });
+
+  MODELS.forEach((m,i)=>{
+    const y=bar0Y+i*(barH+barGap);
+    const gbNow=tokCur*m.kbT/1024/1024;
+    const frac=Math.min(1,gbNow/(H100*1.05));
+    const bw=barZW*frac;
+    const overflow=gbNow>H100;
+
+    // track
+    rr(barX,y,barZW,barH,6,P.dim,null);
+    // fill
+    if(bw>0){
+      rr(barX,y,bw,barH,6,m.col+(overflow?'55':'30'),null);
+      rr(barX,y,bw,barH/3.2,6,m.col+(overflow?'88':'52'),null);
+    }
+    // border
+    rr(barX,y,barZW,barH,6,null,m.col+(overflow?'cc':'55'),overflow?2:1.5);
+    if(overflow){glow(P.red,16);rr(barX,y,Math.min(bw,14),barH,6,null,P.red,2.5);ng();}
+
+    // label left
+    tx(m.lbl,CX,y+barH/2-4,m.col,12,'bold');
+    tx(m.sub,CX,y+barH/2+13,P.muted,9);
+
+    // GB value inside / beside bar
+    const gbStr=gbNow>=1?gbNow.toFixed(2)+' GB':gbNow.toFixed(3)+' GB';
+    if(bw>90){glow(m.col,6);tx(gbStr,barX+bw/2,y+barH/2+5,P.bright,13,'bold','center');ng();}
+    else{tx(gbStr,barX+bw+6,y+barH/2+5,m.col,12,'bold');}
+    if(overflow)tx('OVER LIMIT',barX+barZW-72,y+barH/2+5,P.red,10,'bold');
+  });
+
+  // Milestone reference table
+  const tblY=bar0Y+MODELS.length*(barH+barGap)-barGap+22;
+  if(prog>.55){
+    const tp=ease(clamp((prog-.55)/.45,0,1));
+    g.globalAlpha=tp;
+    rr(CX,tblY,CW,54,8,P.card,'rgba(213,229,255,.24)',1.2);
+    tx('Memory checkpoint:',CX+12,tblY+15,P.muted,10,'bold');
+    // Only show one milestone at a time based on current token count
+    const mRow=tokCur>=500e3?2:tokCur>=50e3?1:0;
+    const mData=[
+      [10e3,   '0.67 GB','0.067 GB','0.047 GB'],
+      [100e3,  '6.7 GB', '0.67 GB', '0.47 GB'],
+      [1000e3, '66.7 GB','6.7 GB',  '4.7 GB'],
+    ][mRow];
+    const labels=['V3.2','V4-Pro','V4-Flash'];
+    const cols2=[P.red,P.blue,P.teal];
+    mo('At '+(mData[0]/1000)+'K tokens →',CX+12,tblY+36,P.muted,9);
+    labels.forEach((lb,i)=>{
+      const ox=CX+118+i*170;
+      rr(ox,tblY+22,162,22,5,cols2[i]+'18',cols2[i]+'55',1);
+      tx(lb+': '+mData[i+1],ox+7,tblY+37,cols2[i],10,'bold');
+    });
+    g.globalAlpha=1;
+  }
+
+  ex([
+    'Every token you add to the context costs KV memory. At 1M tokens: V3.2 = 66.7 GB, V4-Flash = 4.7 GB.',
+    'That 14× difference means V4-Flash fits on 1 H100; V3.2 fills it completely with only the cache.',
+  ]);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCENE 3 — Architecture Overview
+   Content zones:
+     y=T+0   to y=T+52  : pipeline boxes
+     y=T+62  to y=T+200 : MoE detail panel (LEFT=text, RIGHT=diagram)
+     y=T+210 to y=T+244 : variant badges
+═══════════════════════════════════════════════════════ */
+function sc3(t,fr){
+  hdr('Architecture Overview','MoE backbone + Hybrid Attention (CSA & HCA) + mHC residual. Two variants: V4-Pro (1.6T/49B) and V4-Flash (284B/13B).',P.blue);
+  const prog=ease(clamp(t*1.3,0,1));
+
+  // Pipeline — careful widths so last box fits inside W
+  const boxes=[
+    {lbl:'Input\nTokens',    col:P.teal,   x:CX,    w:86},
+    {lbl:'Embed\n+RoPE',     col:P.teal,   x:CX+100,w:86},
+    {lbl:'MoE+Hybrid\nAttn×N',col:P.blue, x:CX+200,w:110},
+    {lbl:'mHC\nResidual',    col:P.purple, x:CX+324,w:90},
+    {lbl:'Output\nProj',     col:P.bronze, x:CX+428,w:86},
+    {lbl:'Logits\n/Output',  col:P.green,  x:CX+528,w:86},
+  ];
+  const bY=T+4,bH=46;
+
+  boxes.forEach((b,i)=>{
+    const alpha=ease(clamp((prog-i*.09)/.36,0,1));
+    if(alpha<=0)return;
+    g.globalAlpha=alpha;
+    glow(b.col,5);rr(b.x,bY,b.w,bH,8,b.col+'18',b.col,2);ng();
+    b.lbl.split('\n').forEach((l,li)=>tx(l,b.x+b.w/2,bY+13+li*16,b.col,11,'bold','center'));
+    if(i<boxes.length-1){
+      const nx=boxes[i+1].x;
+      dots2(b.x+b.w,bY+bH/2,nx,bY+bH/2,b.col,fr/60,4,1.2);
+      arw(b.x+b.w+2,bY+bH/2,nx-2,bY+bH/2,b.col,alpha*.7,1.4);
+    }
+    g.globalAlpha=1;
+  });
+
+  // MoE detail panel — LEFT half = description, RIGHT half = routing diagram
+  if(prog>.34){
+    const pp=ease(clamp((prog-.34)/.36,0,1));
+    const pY=bY+bH+14,pH=138,pW=CW;
+    g.globalAlpha=pp;
+    rr(CX,pY,pW,pH,10,P.card,P.blue+'44',1.4);
+
+    // LEFT HALF text (x: CX+12 to CX+CW/2-10 = 442)
+    const lW=CW/2-22;
+    tx('MoE Routing:',CX+12,pY+18,P.blue,12,'bold');
+    wr('Each token uses 1 shared expert + 6 routed experts. Pro has 384 routed experts; Flash has 256.',
+       CX+12,pY+34,lW,17,P.text,10);
+    wr('Active compute: 49B params for Pro, 13B for Flash.',
+       CX+12,pY+74,lW,17,P.teal,10,'bold');
+    wr('1M context, MIT license, and FP4/FP8 mixed released checkpoints.',
+       CX+12,pY+98,lW,16,P.muted,10);
+
+    // RIGHT HALF diagram (x: CX+CW/2+10 = 450)
+    const rX=CX+CW/2+10;
+    tx('Token routing example:',rX,pY+18,P.blue,10,'bold');
+    // One token
+    rr(rX,pY+26,60,22,5,P.blue+'20',P.blue,1.5);
+    tx('1 token',rX+30,pY+41,P.blue,10,'bold','center');
+    arw(rX+60,pY+37,rX+82,pY+37,P.muted,.7,1.2);
+    tx('router',rX+64,pY+47,P.muted,8);
+    // 12 displayed routed experts: 6 active, the rest idle. Plus one shared expert.
+    rr(rX+88,pY+24,44,26,5,P.green+'22',P.green,1.3);
+    tx('shared',rX+110,pY+41,P.green,8,'bold','center');
+    for(let i=0;i<12;i++){
+      const ex2=rX+140+i*18;
+      rr(ex2,pY+26,14,22,3,P.blue+(i<6?'44':'0d'),P.blue+(i<6?'aa':'28'),1);
+      tx(i<6?'✓':'·',ex2+7,pY+40,i<6?P.blue:P.muted,8,'bold','center');
+    }
+    tx('6 routed active; many routed experts idle',rX+88,pY+58,P.muted,9);
+    // Hybrid attn note
+    rr(rX,pY+68,CW/2-20,40,6,P.blue+'0c',P.blue+'40',1.2);
+    tx('Hybrid Attention:',rX+8,pY+82,P.blue,10,'bold');
+    wr('Each attention layer is either CSA or HCA — see next scenes.',rX+8,pY+96,CW/2-36,16,P.text,10);
+    g.globalAlpha=1;
+  }
+
+  // Variant badges
+  if(prog>.70){
+    const vp=ease(clamp((prog-.70)/.30,0,1));
+    const badY=T+276;
+    g.globalAlpha=vp;
+    [{lbl:'V4-Pro: 1.6T total / 49B active / 1M ctx',col:P.blue},
+     {lbl:'V4-Flash: 284B total / 13B active / 1M ctx',col:P.bronze}].forEach((b,i)=>{
+      const bx=CX+i*440;
+      rr(bx,badY,420,28,6,b.col+'16',b.col+'55',1.2);
+      tx(b.lbl,bx+10,badY+18,b.col,11);
+    });
+    g.globalAlpha=1;
+  }
+
+  ex('MoE analogy: one general doctor always checks the patient, then the router calls 6 specialists from a much larger bench. Most experts stay idle for that token.');
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCENE 4 — Correct Baseline and V4 Target
+═══════════════════════════════════════════════════════ */
+function sc4(t,fr){
+  hdr('Step 1 — Baseline: Why 1M Tokens Are Hard',
+      'The paper compares DeepSeek-V4 against DeepSeek-V3.2 at 1M context: V4-Pro uses 10% KV, V4-Flash 7% KV.',P.purple);
+  const prog=ease(clamp(t*1.2,0,1));
+
+  const lanes=[
+    {name:'DeepSeek-V3.2',kv:'100% KV',flops:'100% FLOPs',col:P.red,w:1},
+    {name:'V4-Pro',kv:'10% KV',flops:'27% FLOPs',col:P.blue,w:.10},
+    {name:'V4-Flash',kv:'7% KV',flops:'10% FLOPs',col:P.teal,w:.07},
+  ];
+  const y0=T+16,barX=CX+190,barW=CW-220,barH=34,gap=30;
+
+  lanes.forEach((m,i)=>{
+    const p=ease(clamp((prog-i*.12)/.48,0,1));
+    const y=y0+i*(barH+gap);
+    g.globalAlpha=p;
+    tx(m.name,barX-10,y+20,m.col,12,'bold','right');
+    rr(barX,y,barW,barH,7,P.dim,m.col+'44',1.2);
+    rr(barX,y,Math.max(8,barW*m.w*p),barH,7,m.col+'35',null);
+    rr(barX,y,Math.max(8,barW*m.w*p),barH/3,7,m.col+'55',null);
+    const labelX=m.w>.55?barX+barW-82:barX+Math.max(46,barW*m.w*p)+10;
+    tx(m.kv,labelX,y+14,m.col,11,'bold');
+    tx(m.flops,labelX,y+29,P.muted,9);
+    g.globalAlpha=1;
+  });
+
+  if(prog>.42){
+    const ap=ease(clamp((prog-.42)/.35,0,1));
+    g.globalAlpha=ap;
+    const bx=CX,by=T+206,bw=(CW-24)/3,bh=82;
+    [
+      ['CSA','m = 4','Compress KV, then sparse top-k selection',P.blue],
+      ['HCA',"m' = 128",'Aggressive compression, dense attention over compressed stream',P.bronze],
+      ['SWA','nwin = 128','Recent tokens stay exact through a sliding-window branch',P.green],
+    ].forEach(([ttl,metric,body,col],i)=>{
+      const x=bx+i*(bw+12);
+      rr(x,by,bw,bh,8,P.card,col+'55',1.3);
+      tx(ttl,x+12,by+18,col,13,'bold');
+      tx(metric,x+12,by+36,P.bright,12,'bold');
+      wr(body,x+12,by+54,bw-24,15,P.text,9);
+    });
+    g.globalAlpha=1;
+  }
+
+  if(prog>.72){
+    const sp=ease(clamp((prog-.72)/.28,0,1));
+    g.globalAlpha=sp;
+    rr(CX,T+306,CW,38,8,P.purple+'10',P.purple+'66',1.3);
+    tx('Correction applied:',CX+12,T+320,P.purple,11,'bold');
+    tx('V4 savings are represented as CSA + HCA + precision/cache layout, not as MLA stacked onto V4.',CX+126,T+320,P.text,10);
+    tx('DeepSeek-V3.2 remains the baseline for the 10% / 7% KV comparison.',CX+12,T+337,P.muted,10);
+    g.globalAlpha=1;
+  }
+
+  ex('Fact check: the official report gives V4-Pro = 27% FLOPs / 10% KV and V4-Flash = 10% FLOPs / 7% KV versus DeepSeek-V3.2 at 1M tokens.');
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCENE 5 — CSA: Compressed Sparse Attention
+   Confirmed: 4× sequence compression + DSA sparse pattern
+   Content zones:
+     y=T+4   to y=T+50  : input tokens
+     y=T+60  to y=T+178 : Phase 1 compression
+     y=T+188 to y=T+350 : Phase 2 sparse attention grid
+═══════════════════════════════════════════════════════ */
+function sc5(t,fr){
+  hdr('Step 2 — CSA: Compressed Sparse Attention',
+      'm = 4 compression. DSA selects top-k compressed entries; a 128-token sliding-window branch keeps recent tokens exact.',P.blue);
+  const prog=ease(clamp(t*1.18,0,1));
+
+  const N=8,tW=54,tH=34,tGap=8;
+  const rX=(W-N*(tW+tGap))/2,rY=T+6;
+
+  // Input tokens
+  for(let i=0;i<N;i++){
+    const phaseVisible=prog>.22;
+    const alpha=phaseVisible?1:ease(clamp((prog*N*1.45-i)/1.35,0,1));
+    if(alpha<=0)continue;
+    g.globalAlpha=alpha;
+    glow(P.blue,4);rr(rX+i*(tW+tGap),rY,tW,tH,7,P.blue+'18',P.blue,1.8);ng();
+    tx('T'+(i+1),rX+i*(tW+tGap)+tW/2,rY+tH/2+5,P.blue,11,'bold','center');
+    g.globalAlpha=1;
+  }
+  mo('8 input tokens: T1-T8',rX,rY-10,P.muted,9);
+
+  // Phase 1 — 4×compression
+  if(prog>.22){
+    const cp=ease(clamp((prog-.22)/.30,0,1));
+    const p1Y=rY+tH+14;   // phase 1 header row
+
+    g.globalAlpha=cp;
+    tx('Phase 1 — Softmax-gated pooling',CX,p1Y,P.blue,11,'bold');
+    tx('4 tokens pool into 1 compressed KV entry.  8 tokens → 2 KV entries.',CX,p1Y+15,P.text,10);
+    g.globalAlpha=1;
+
+    const kvY=p1Y+26;   // KV entry row
+    const groups=[[0,1,2,3],[4,5,6,7]];
+    groups.forEach((grp,gi)=>{
+      const col=gi===0?P.blue:P.teal;
+      const gx=rX+grp[0]*(tW+tGap),gw=4*(tW+tGap)-tGap,midX=gx+gw/2;
+      g.globalAlpha=cp;
+      // bracket
+      g.strokeStyle=col;g.lineWidth=1.5;
+      g.beginPath();g.moveTo(gx,rY+tH+4);g.lineTo(gx,rY+tH+12);
+      g.lineTo(gx+gw,rY+tH+12);g.lineTo(gx+gw,rY+tH+4);g.stroke();
+      arw(midX,rY+tH+13,midX,kvY-2,col,cp*.7,1.4);
+      // KV block
+      if(prog>.36){
+        const kp=ease(clamp((prog-.36)/.28,0,1));
+        g.globalAlpha=kp;
+        glow(col,6);rr(gx+gw/2-30,kvY,60,28,7,col+'28',col,2);ng();
+        tx('1 KV',midX,kvY+18,col,12,'bold','center');
+        g.fillStyle=P.gold+'50';g.fillRect(gx+gw/2-26,kvY+32,52,7);
+        g.strokeStyle=P.gold;g.lineWidth=.8;g.strokeRect(gx+gw/2-26,kvY+32,52,7);
+        g.fillStyle=P.green+'40';g.fillRect(gx+gw/2-26,kvY+41,52,7);
+        g.strokeStyle=P.green;g.lineWidth=.8;g.strokeRect(gx+gw/2-26,kvY+41,52,7);
+      }
+      g.globalAlpha=1;
+    });
+    mo('Result: 8 tokens → 2 KV entries  (4× smaller KV cache)',rX,kvY+60,P.muted,9);
+  }
+
+  // Phase 2 — Sparse attention grid
+  if(prog>.50){
+    const sp=ease(clamp((prog-.50)/.35,0,1));
+    const gS=14,gGap=2;
+    // Grid position: centred, leave room for legend to the right
+    const gridW=8*gS+7*gGap,gridX=CX+214,gridY=T+222;
+
+    g.globalAlpha=sp;
+    tx('Phase 2 — DSA sparse selection',CX,T+178,P.blue,11,'bold');
+    tx('Indexer chooses top-k compressed blocks; recent tokens use SWA.',CX,T+194,P.text,10);
+    g.globalAlpha=1;
+
+    const selected=new Set(['0,1','1,4','2,2','3,6','4,3','5,7','6,5','7,0']);
+    for(let r=0;r<8;r++){
+      for(let c=0;c<8;c++){
+        const topk=selected.has(r+','+c),recent=(c>=6&&r>=4),active=topk||recent;
+        g.globalAlpha=sp*(active?.82:.07);
+        if(active){glow(P.blue,3);rr(gridX+c*(gS+gGap),gridY+r*(gS+gGap),gS,gS,2,P.blue+'78',null);ng();}
+        else{g.fillStyle='rgba(213,229,255,.12)';g.fillRect(gridX+c*(gS+gGap),gridY+r*(gS+gGap),gS,gS);}
+      }
+    }
+    // Axis labels
+    g.globalAlpha=sp;
+    g.save();g.translate(gridX-16,gridY+gridW/2);g.rotate(-Math.PI/2);
+    mo('Queries',0,0,P.muted,8,'center');g.restore();
+    mo('Keys (compressed)',gridX,gridY-9,P.muted,8);
+
+    // Legend (RIGHT of grid, no overlap)
+    const lX=gridX+gridW+28,lY=gridY-2;
+    if(prog>.66){
+      const lp=ease(clamp((prog-.66)/.34,0,1));
+      g.globalAlpha=lp;
+      rr(lX-4,lY-4,190,100,7,P.card,'rgba(213,229,255,.24)',1.2);
+      g.fillStyle=P.blue+'78';g.fillRect(lX,lY+4,10,10);
+      tx('Selected compressed block',lX+14,lY+13,P.text,9);
+      tx('top-k via DSA indexer',lX+14,lY+25,P.muted,9);
+      g.fillStyle='rgba(213,229,255,.18)';g.fillRect(lX,lY+30,10,10);
+      tx('Not selected this query',lX+14,lY+39,P.muted,9);
+      rr(lX,lY+50,178,42,5,P.blue+'10',P.blue+'50',1);
+      tx('Outcome:',lX+6,lY+64,P.blue,10,'bold');
+      wr('4× shorter KV stream, then sparse core attention.',lX+6,lY+78,170,14,P.text,9);
+      g.globalAlpha=1;
+    }
+    g.globalAlpha=1;
+  }
+
+  ex('Textbook analogy: CSA first compresses every 4 pages into 1 note. Then an index picks the most relevant notes, while the newest pages remain available exactly.');
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCENE 6 — HCA: Heavily Compressed Attention
+   Confirmed: 128 consecutive tokens → 1 consolidated KV entry
+   Content zones:
+     y=T+4   to y=T+40  : token row (showing 16 representative)
+     y=T+50  to y=T+60  : scale note
+     y=T+68  to y=T+82  : group brackets
+     y=T+92  to y=T+180 : consolidation + KV block
+     y=T+190 to y=T+290 : memory comparison bars
+     y=T+300 to y=B     : stays clear
+═══════════════════════════════════════════════════════ */
+function sc6(t,fr){
+  hdr('Step 3 — HCA: Heavily Compressed Attention',
+      'm′ = 128. HCA compresses long-range KV aggressively, then attends densely over the compressed stream plus recent SWA tokens.',P.bronze);
+  const prog=ease(clamp(t*1.18,0,1));
+
+  // Show 16 tokens (representative; real group = 128)
+  const SHOW=16,tW=34,tH=28,tGap=4;
+  const sX=(W-SHOW*(tW+tGap))/2,tY=T+6;
+  const gCols=[P.bronze,P.teal,P.gold,P.pink];
+
+  for(let i=0;i<SHOW;i++){
+    const alpha=ease(clamp((prog*SHOW-i)/3,0,1));
+    if(alpha<=0)continue;
+    const col=gCols[Math.floor(i/4)%4];
+    g.globalAlpha=alpha;
+    rr(sX+i*(tW+tGap),tY,tW,tH,5,col+'20',col+'88',1.3);
+    tx('t'+(i+1),sX+i*(tW+tGap)+tW/2,tY+tH/2+5,col,8,'bold','center');
+    g.globalAlpha=1;
+  }
+  // scale note to the right, same Y row, no overlap
+  rr(sX+SHOW*(tW+tGap)+8,tY,110,tH,5,P.bronze+'18',P.bronze+'60',1.2);
+  tx('+112 more',sX+SHOW*(tW+tGap)+63,tY+tH/2-3,P.bronze,9,'bold','center');
+  tx('= 128 total',sX+SHOW*(tW+tGap)+63,tY+tH/2+9,P.muted,8,'normal','center');
+
+  // Group brackets (4 visual groups representing the one real 128-token group)
+  if(prog>.18){
+    const bp=ease(clamp((prog-.18)/.28,0,1));
+    for(let grp=0;grp<4;grp++){
+      const col=gCols[grp],gx=sX+grp*4*(tW+tGap),gw=4*(tW+tGap)-tGap;
+      g.globalAlpha=bp;
+      g.strokeStyle=col;g.lineWidth=1.4;
+      g.beginPath();g.moveTo(gx,tY+tH+4);g.lineTo(gx,tY+tH+11);
+      g.lineTo(gx+gw,tY+tH+11);g.lineTo(gx+gw,tY+tH+4);g.stroke();
+      g.globalAlpha=1;
+    }
+    mo('(visual sample — real group = 128 tokens)',sX,tY+tH+22,P.muted,8);
+  }
+
+  // Consolidation to 1 KV entry
+  if(prog>.38){
+    const kp=ease(clamp((prog-.38)/.36,0,1));
+    const kvY=T+92;
+
+    g.globalAlpha=kp;
+    tx('128 tokens → 1 consolidated KV entry  (128× compression!)',CX,kvY-10,P.bronze,12,'bold');
+
+    // converging arrows from 4 visual groups
+    for(let grp=0;grp<4;grp++){
+      const midX=sX+grp*4*(tW+tGap)+2*(tW+tGap);
+      g.strokeStyle=gCols[grp]+'44';g.lineWidth=1;
+      g.beginPath();g.moveTo(midX,tY+tH+12);g.lineTo(W/2,kvY+16);g.stroke();
+    }
+
+    // Single KV block
+    const entW=260,entH=42,entX=(W-entW)/2;
+    glow(P.bronze,10);rr(entX,kvY,entW,entH,10,P.bronze+'25',P.bronze,2.5);ng();
+    tx('1 KV Entry',entX+entW/2,kvY+entH/2-3,P.bronze,14,'bold','center');
+    tx('(represents all 128 tokens)',entX+entW/2,kvY+entH/2+13,P.muted,10,'normal','center');
+    g.fillStyle=P.gold+'50';g.fillRect(entX+10,kvY+entH+6,entW-20,8);
+    g.fillStyle=P.green+'40';g.fillRect(entX+10,kvY+entH+16,entW-20,8);
+    mo('K',entX-14,kvY+entH+12,P.gold,9);
+    mo('V',entX-14,kvY+entH+22,P.green,9);
+    g.globalAlpha=1;
+  }
+
+  // Memory comparison bars
+  if(prog>.64){
+    const mp=ease(clamp((prog-.64)/.36,0,1));
+    const bY=T+192,bMaxW=CW-200,bX=CX+196,bH=18;
+    g.globalAlpha=mp;
+    tx('Sequence cache entries for 128 tokens:',CX,bY-9,P.text,11,'bold');
+    [{n:128,lbl:'Standard (no compression)',col:P.red},
+     {n:32, lbl:'CSA  (4× pooling)',         col:P.blue},
+     {n:1,  lbl:'HCA  (128× consolidation)', col:P.bronze}].forEach(({n,lbl,col},i)=>{
+      const bw=bMaxW*(n/128);
+      const y=bY+i*28;
+      g.fillStyle=col+'16';g.fillRect(bX,y,bMaxW,bH);
+      glow(col,4);g.fillStyle=col+'70';g.fillRect(bX,y,bw,bH);ng();
+      g.strokeStyle=col+'77';g.lineWidth=1.2;g.strokeRect(bX,y,bMaxW,bH);
+      tx(lbl,bX-6,y+bH/2+4,col,10,'normal','right');
+      const labelX=n===128?bX+bMaxW-58:bX+bw+5;
+      mo(n+' entr'+(n===1?'y':'ies'),labelX,y+bH/2+4,col,9);
+    });
+    g.globalAlpha=1;
+  }
+
+  // Outcome box
+  if(prog>.84){
+    const op=ease(clamp((prog-.84)/.16,0,1));
+    const obY=T+282;
+    g.globalAlpha=op;
+    rr(CX,obY,CW,46,8,P.bronze+'0f',P.bronze,1.5);
+    glow(P.bronze,7);tx('HCA outcome: 128× shorter compressed stream  ·  dense attention remains cheap',W/2,obY+18,P.bronze,12,'bold','center');ng();
+    wr('Trade-off: coarse long-range memory, balanced by exact recent tokens from the sliding-window branch.',CX+14,obY+34,CW-28,15,P.muted,10,'normal');
+    g.textAlign='left';g.globalAlpha=1;
+  }
+
+  ex('128 pages become one compressed note. HCA still reads every compressed note densely, so global context stays reachable while cache stays small.');
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCENE 7 — Hybrid Stack
+   Combined result: V4-Pro=10%, V4-Flash=7% (confirmed)
+   Content zones:
+     y=T+6  to y=T+8+12*30=368  : 12 layer rows
+     y=T+380 to y=T+354          : legend + result badge
+═══════════════════════════════════════════════════════ */
+function sc7(t,fr){
+  hdr('Step 4 — Hybrid Layer Stack: CSA + HCA Combined',
+      'Representative stack: early HCA, then interleaved CSA/HCA; final MTP block uses sliding-window attention only.',P.bright);
+  const prog=ease(clamp(t*1.28,0,1));
+
+  const types=['HCA','HCA','CSA','HCA','CSA','HCA','CSA','HCA','CSA','HCA','CSA','SWA'];
+  const N=types.length,lH=20,lGap=2;
+  const sX=CX+54,sY=T+6,lW=CW-160;
+
+  // "In" arrow
+  if(prog>.04){
+    const ip=ease(clamp((prog-.04)/.22,0,1));
+    g.globalAlpha=ip;
+    tx('In',sX-36,sY+N*(lH+lGap)/2+4,P.muted,9);
+    arw(sX-12,sY+N*(lH+lGap)/2,sX-2,sY+N*(lH+lGap)/2,P.text,ip,2);
+    g.globalAlpha=1;
+  }
+
+  types.forEach((type,i)=>{
+    const delay=i*.055;
+    const alpha=ease(clamp((prog-delay)/.35,0,1));
+    if(alpha<=0)return;
+    const y=sY+i*(lH+lGap),col=type==='CSA'?P.blue:type==='HCA'?P.bronze:P.green;
+    g.globalAlpha=alpha;
+    rr(sX,y,lW,lH,4,col+'15',col+'55',1.1);
+    // data flow pulse
+    if(prog>delay+.30){
+      const fp=ease(clamp((prog-delay-.30)/.38,0,1));
+      rr(sX,y,lW*fp,lH,4,col+'24',null);
+      if(fp<.95){glow(col,8);g.fillStyle=col;g.beginPath();g.arc(sX+lW*fp,y+lH/2,3,0,Math.PI*2);g.fill();ng();}
+    }
+    tx('L'+(i+1)+' — '+type,sX+7,y+lH/2+4,col,10,'bold');
+
+    // KV contribution bar (right side, labelled column)
+    const kvX=sX+lW+8,kvMaxW=86;
+    const kvFrac=type==='CSA'?.30:type==='HCA'?.008:.08; // CSA moderate, HCA 1/128, SWA recent window
+    g.fillStyle='rgba(213,229,255,.16)';g.fillRect(kvX,y+3,kvMaxW,lH-6);
+    if(prog>delay+.44){
+      const kp=ease(clamp((prog-delay-.44)/.42,0,1));
+      g.fillStyle=col+'60';g.fillRect(kvX,y+3,kvMaxW*kvFrac*kp,lH-6);
+      g.strokeStyle=col+'66';g.lineWidth=1;g.strokeRect(kvX,y+3,kvMaxW,lH-6);
+    }
+    tx(type,kvX+kvMaxW+4,y+lH/2+4,col,8,'bold');
+    g.globalAlpha=1;
+  });
+
+  // Column header
+  if(prog>.28){tx('KV size',sX+lW+42,sY-10,P.muted,9,'normal','center');}
+
+  // Legend + combined result (safely below layers)
+  const legY=sY+N*(lH+lGap)+8;
+  if(prog>.58){
+    const lp=ease(clamp((prog-.58)/.42,0,1));
+    g.globalAlpha=lp;
+    [[P.bronze,'HCA — 128× compressed dense attention'],
+     [P.blue,'CSA — 4× compressed sparse top-k'],
+     [P.green,'SWA — exact recent-token branch']].forEach(([c,label],i)=>{
+      const x=CX+i*282;
+      rr(x,legY,14,14,3,c+'28',c,1.2);
+      tx(label,x+18,legY+11,c,9);
+    });
+    const resY=legY+22;
+    glow(P.green,4);
+    rr(CX,resY,CW,34,8,'rgba(34,197,94,.11)',P.green,1.5);ng();
+    tx('Combined result at 1M tokens:',CX+12,resY+13,P.green,11,'bold');
+    tx('V4-Pro = 10% of V3.2 KV  (9.5–10× reduction)',CX+12,resY+27,P.text,10);
+    tx('V4-Flash = 7% of V3.2 KV  (13–14× reduction)',CX+420,resY+27,P.teal,10,'bold');
+    g.globalAlpha=1;
+  }
+
+  ex('Hybrid intuition: CSA is the precise sparse reader, HCA is the cheap global reader, and SWA preserves exact recent context. The stack mixes them instead of using one rule everywhere.');
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCENE 8 — mHC: Manifold-Constrained Hyper-Connections
+   Content zones (TWO SIDE-BY-SIDE PANELS):
+     LEFT panel  : x CX to CX+CW/2-12, y T+6 to T+300
+     RIGHT panel : x CX+CW/2+12 to CX+CW, y T+6 to T+300
+     Result box  : y T+310 to T+354
+═══════════════════════════════════════════════════════ */
+function sc8(t,fr){
+  hdr('Step 5 — mHC: Manifold-Constrained Hyper-Connections',
+      'Replaces standard residual (x+f(x)) with a manifold-constrained path. Keeps signal stable through alternating CSA/HCA layers.',P.purple);
+  const prog=ease(clamp(t*1.28,0,1));
+
+  const halfW=CW/2-18;
+  const LX=CX,RX=CX+CW/2+6;   // panel left edges
+
+  // LEFT: Standard residual
+  if(prog>.06){
+    const lp=ease(clamp((prog-.06)/.30,0,1));
+    g.globalAlpha=lp;
+    tx('Standard  x + f(x)',LX,T+16,P.red,12,'bold');
+
+    // 3 stacked boxes with arrows between them
+    const bW=120,bH=38,bX=LX+20;
+    const bRows=[{y:T+28,lbl:'Input  x',col:P.muted},{y:T+90,lbl:'Layer  f(x)',col:P.red},{y:T+152,lbl:'Output  x+f(x)',col:P.red}];
+    bRows.forEach((b,i)=>{
+      rr(bX,b.y,bW,bH,7,b.col+'18',b.col,1.5);
+      tx(b.lbl,bX+bW/2,b.y+bH/2+5,b.col,11,'bold','center');
+      if(i<bRows.length-1)arw(bX+bW/2,b.y+bH,bX+bW/2,bRows[i+1].y,b.col,lp*.7,1.5);
+    });
+    // skip connection
+    g.strokeStyle=P.red+'44';g.lineWidth=1.5;g.setLineDash([4,3]);
+    g.beginPath();g.moveTo(bX+bW,T+46);g.lineTo(LX+halfW-10,T+46);
+    g.lineTo(LX+halfW-10,T+166);g.lineTo(bX+bW,T+166);g.stroke();g.setLineDash([]);
+    tx('+',LX+halfW-22,T+162,P.red,14,'bold');
+
+    // Problem box (clear of RIGHT panel)
+    rr(LX,T+208,halfW,66,7,P.red+'0d',P.red+'44',1.2);
+    tx('Problem:',LX+8,T+224,P.red,10,'bold');
+    wr('CSA, HCA, and SWA paths have different scales. A naive x+f(x) can make deep signal propagation harder to stabilize.',
+       LX+8,T+238,halfW-16,16,P.text,10);
+    g.globalAlpha=1;
+  }
+
+  // RIGHT: mHC
+  if(prog>.30){
+    const rp=ease(clamp((prog-.30)/.36,0,1));
+    g.globalAlpha=rp;
+    glow(P.purple,7);tx('mHC  (manifold-constrained)',RX,T+16,P.purple,12,'bold');ng();
+
+    const bW=140,bH=38,bX=RX+14;
+    const rRows=[{y:T+28,lbl:'Input  x',col:P.muted},{y:T+90,lbl:'Layer  f(x)',col:P.purple},{y:T+152,lbl:'mHC(x, f(x))',col:P.purple}];
+    rRows.forEach((b,i)=>{
+      rr(bX,b.y,bW,bH,7,b.col+'18',b.col,1.5);
+      tx(b.lbl,bX+bW/2,b.y+bH/2+5,b.col,11,'bold','center');
+      if(i<rRows.length-1)arw(bX+bW/2,b.y+bH,bX+bW/2,rRows[i+1].y,b.col,rp*.7,1.5);
+    });
+    // manifold arc
+    g.strokeStyle=P.purple+'70';g.lineWidth=2;
+    g.beginPath();g.moveTo(bX+bW,T+46);
+    g.bezierCurveTo(RX+halfW-4,T+46,RX+halfW-4,T+166,bX+bW,T+166);g.stroke();
+    // animated points on manifold
+    [55,100,145].forEach(dy=>{
+      const px=RX+halfW-8+6*Math.sin(fr*.06+dy*.025);
+      const py=T+46+dy;
+      glow(P.purple,6);g.beginPath();g.arc(px,py,3,0,Math.PI*2);
+      g.fillStyle=P.purple;g.globalAlpha=.6+.35*Math.sin(fr*.055+dy*.02);g.fill();ng();
+      g.globalAlpha=rp;
+    });
+    tx('Learned',RX+halfW+2,T+96,P.purple,8);
+    tx('manifold',RX+halfW+2,T+108,P.purple,8);
+
+    // Benefit box (same height zone as left problem box)
+    rr(RX,T+208,halfW,66,7,P.purple+'0d',P.purple+'44',1.2);
+    tx('Solution:',RX+8,T+224,P.purple,10,'bold');
+    wr('mHC constrains the layer-mixing path on a learned manifold, improving stability while preserving expressive residual updates.',
+       RX+8,T+238,halfW-16,16,P.text,10);
+    g.globalAlpha=1;
+  }
+
+  // Result row
+  if(prog>.72){
+    const kp=ease(clamp((prog-.72)/.28,0,1));
+    g.globalAlpha=kp;
+    rr(CX,T+292,CW,40,8,P.purple+'0f',P.purple,1.5);
+    glow(P.purple,7);
+    tx('mHC helps stabilize the 61-layer Pro and 43-layer Flash hybrid-attention stacks.',
+       W/2,T+308,P.purple,11,'bold','center');ng();
+    tx('This is what makes the deep hybrid stack trainable at scale.',W/2,T+325,P.muted,10,'normal','center');
+    g.globalAlpha=1;
+  }
+
+  ex('Analogy: standard residuals are like adding fixed springs (CSA spring ≠ HCA spring strength). mHC is adaptive shock absorbers — auto-adjusts strength per layer type so the chassis stays stable.');
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCENE 9 — Results
+   Confirmed: V4-Pro 10% KV, V4-Flash 7% KV (vs V3.2), April 2026
+   Content zones:
+     y=T+4   to y=T+240 : three animated bars
+     y=T+250 to y=T+320 : reduction badges + FLOPs
+     y=T+330 to y=B     : insight box
+═══════════════════════════════════════════════════════ */
+function sc9(t,fr){
+  hdr('Step 6 — Confirmed Results: KV Cache at 1M Tokens',
+      'DeepSeek-V4 Technical Report, April 2026. Numbers are vs DeepSeek-V3.2 at 1 million tokens.',P.bright);
+  const prog=ease(clamp(t*1.22,0,1));
+
+  const models=[
+    {name:'DeepSeek-V3.2',sub:'baseline  ·  ~70 KB/token',    kbT:70,  col:P.red},
+    {name:'V4-Pro',        sub:'10% KV  ·  27% FLOPs',kbT:7,  col:P.blue},
+    {name:'V4-Flash',      sub:'7% KV  ·  10% FLOPs', kbT:4.9,col:P.teal},
+  ];
+  const toGB=kb=>kb*1e6/1024/1024;
+  const maxGB=toGB(70); // baseline
+  const barLW=200,barX=CX+barLW+8,barZW=CW-barLW-12;
+  const barH=60,barGap=18;
+
+  models.forEach((m,i)=>{
+    const gb=toGB(m.kbT);
+    const delay=i*.16;
+    const af=ease(clamp((prog-delay-.06)/.68,0,1));
+    const bw=barZW*(gb/maxGB)*af;
+    const y=T+4+i*(barH+barGap);
+    g.globalAlpha=ease(clamp((prog-delay)*2.8,0,1));
+
+    // track
+    rr(barX,y,barZW,barH,7,P.dim,null);
+    // fill
+    if(bw>0){
+      rr(barX,y,bw,barH,7,m.col+'28',null);
+      rr(barX,y,bw,barH/3.2,7,m.col+'50',null);
+      glow(m.col,12);rr(barX,y,Math.min(bw,12),barH,7,null,m.col,2.2);ng();
+    }
+    rr(barX,y,barZW,barH,7,null,m.col+'55',1.8);
+
+    // label left
+    tx(m.name,barX-4,y+barH/2-5,m.col,14,'bold','right');
+    mo(m.sub,barX-4,y+barH/2+12,P.muted,9,'right');
+
+    // GB value
+    const gbStr=gb.toFixed(1)+' GB';
+    const pctStr=i===0?'100%':(Math.round(m.kbT/70*100)+'%');
+    if(bw>120){glow(m.col,8);tx(gbStr,barX+bw/2,y+barH/2+3,m.col,16,'bold','center');
+      tx(pctStr+' of V3.2',barX+bw/2,y+barH/2+18,P.muted,9,'normal','center');ng();}
+    else if(bw>0){tx(gbStr,barX+bw+6,y+barH/2+3,m.col,13,'bold');
+      tx(pctStr,barX+bw+6,y+barH/2+16,P.muted,9);}
+    g.globalAlpha=1;
+  });
+
+  // Reduction badges (below bars)
+  if(prog>.58){
+    const cp=ease(clamp((prog-.58)/.42,0,1));
+    const bdgY=T+4+3*(barH+barGap)+4;
+    g.globalAlpha=cp;
+    [[P.blue,'9.5–10× less KV  ·  V4-Pro','27% FLOPs vs V3.2'],
+     [P.teal,'13–14× less KV  ·  V4-Flash','10% FLOPs vs V3.2']].forEach(([col,lbl,sub],i)=>{
+      const bx=CX+i*440;
+      glow(col,5);rr(bx,bdgY,420,36,8,col+'18',col,1.5);ng();
+      tx(lbl,bx+10,bdgY+16,col,12,'bold');
+      tx(sub,bx+10,bdgY+30,P.muted,9);
+    });
+    g.globalAlpha=1;
+  }
+
+  // Insight box
+  if(prog>.76){
+    const fp=ease(clamp((prog-.76)/.24,0,1));
+    const insY=T+4+3*(barH+barGap)+46;
+    g.globalAlpha=fp;
+    glow(P.green,4);rr(CX,insY,CW,70,10,'rgba(34,197,94,.10)',P.green,1.5);ng();
+    tx('V4-Flash on 1 H100 80 GB: 1M-token context needs only 4.7 GB KV + 13B active weights — it fits.',W/2,insY+20,P.green,12,'bold','center');
+    wr('V3.2 at 1M tokens: 66.7 GB KV alone. V4-Pro: 6.7 GB KV. The report attributes the reduction to hybrid CSA/HCA, low-precision KV storage, and a custom heterogeneous KV-cache layout.',
+       CX+10,insY+38,CW-20,17,P.text,10);
+    mo('DeepSeek-V4 Technical Report · April 2026 · Both variants: MIT license · 1M context window',W/2,insY+62,P.muted,9,'center');
+    g.globalAlpha=1;
+  }
+
+  ex([
+    'V3.2 at 1M tokens = 66.7 GB KV cache (nearly fills an entire H100 — just for cache, not weights).',
+    'V4-Flash at 1M tokens = 4.7 GB KV — roughly one 4K video file. Same context, 14× less memory.',
+  ]);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCENE 10 — Official Inference / KV Cache Management
+   4 cards in 2×2 grid, each card fixed size with no text overflow
+═══════════════════════════════════════════════════════ */
+function sc10(t,fr){
+  hdr('Step 7 — Inference: Heterogeneous KV Cache',
+      'Official report: V4 serving uses a custom KV layout plus on-disk prefix reuse for CSA/HCA/SWA cache types.',P.teal);
+  const prog=ease(clamp(t*1.18,0,1));
+
+  const cards=[
+    {name:'Heterogeneous Layout',col:P.blue,icon:'▦',
+     what:'CSA, HCA, CSA-indexer KV, SWA KV, and tail states use separate cache regions.',
+     gain:'Correct layout per layer'},
+    {name:'State Cache',col:P.green,icon:'◫',
+     what:'Recent SWA tokens and not-yet-compressed tail tokens live in fixed-size state blocks.',
+     gain:'Exact recent context'},
+    {name:'On-Disk Prefix KV',col:P.purple,icon:'◧',
+     what:'Compressed CSA/HCA KV entries can be stored and reused when requests share a prefix.',
+     gain:'Less repeated prefill'},
+    {name:'Kernel Co-Design',col:P.teal,icon:'◇',
+     what:'Sparse-attention kernels and cache blocks are aligned around the CSA/HCA compression ratios.',
+     gain:'Efficient long context'},
+  ];
+
+  const cW=(CW-20)/2,cH=114,cGap=14;
+  cards.forEach((c,i)=>{
+    const col=i%2,row=Math.floor(i/2);
+    const cx=CX+col*(cW+cGap),cy=T+8+row*(cH+cGap);
+    const alpha=ease(clamp((prog-i*.12)/.40,0,1));
+    if(alpha<=0)return;
+    g.globalAlpha=alpha;
+    glow(c.col,5);rr(cx,cy,cW,cH,10,c.col+'0e',c.col,1.8);ng();
+
+    // icon
+    tx(c.icon,cx+20,cy+25,c.col,16,'bold','center');
+    // name (truncated to fit)
+    tx(c.name,cx+38,cy+22,c.col,11,'bold');
+    // what — wrapped inside the card width
+    const innerW=cW-24;
+    wr(c.what,cx+12,cy+38,innerW,15,P.text,10);
+    // gain badge
+    rr(cx+cW-tw(c.gain,9,'bold')-20,cy+cH-22,tw(c.gain,9,'bold')+16,16,5,c.col+'18',c.col+'60',1);
+    tx(c.gain,cx+cW-tw(c.gain,9,'bold')-12,cy+cH-10,c.col,9,'bold');
+    g.globalAlpha=1;
+  });
+
+  // Combined note
+  if(prog>.70){
+    const np=ease(clamp((prog-.70)/.30,0,1));
+    const noteY=T+8+2*(cH+cGap)+10;
+    g.globalAlpha=np;
+    glow(P.teal,6);rr(CX,noteY,CW,54,8,'rgba(20,184,166,.10)',P.teal,1.5);ng();
+    tx('Serving story: small compressed caches help, but layout and prefix reuse make them practical.',W/2,noteY+18,P.teal,12,'bold','center');
+    wr('For shared-prefix requests, compressed KV entries can be read from disk up to the last complete compression block; incomplete tails are recomputed.',
+       CX+10,noteY+34,CW-20,17,P.text,10);
+    g.globalAlpha=1;
+  }
+
+  ex('Example: many users share the same long system prompt. V4 can reuse stored compressed prefix KV, while recomputing only incomplete tail blocks when needed.');
+}
+
+/* ═══════════════════════════════════════════════════════
+   Scene management & UI
+═══════════════════════════════════════════════════════ */
+const SCENES=[
+  {name:'Intro',dur:1260},
+  {name:'Memory Wall',dur:1560},
+  {name:'KV Memory Usage',dur:1680},
+  {name:'Architecture',dur:1560},
+  {name:'Baseline',dur:1620},
+  {name:'CSA',dur:1740},
+  {name:'HCA',dur:1740},
+  {name:'Hybrid Stack',dur:1560},
+  {name:'mHC',dur:1440},
+  {name:'Results',dur:1680},
+  {name:'Inference',dur:1560},
+];
+const DRAWERS=[sc0,sc1,sc2,sc3,sc4,sc5,sc6,sc7,sc8,sc9,sc10];
+
+let scene=0,st=0,frame=0,paused=false;
+
+// HTML dots
+const dotsEl=document.getElementById('dots');
+SCENES.forEach((_,i)=>{
+  const d=document.createElement('div');
+  d.className='dot'+(i===0?' on':'');d.id='d'+i;
+  d.onclick=()=>{scene=i;st=0;paused=true;ui();};
+  dotsEl.appendChild(d);
+});
+document.getElementById('bp').onclick=()=>{scene=(scene-1+SCENES.length)%SCENES.length;st=0;paused=true;ui();};
+document.getElementById('bn').onclick=()=>{scene=(scene+1)%SCENES.length;st=0;paused=true;ui();};
+
+function ui(){
+  document.getElementById('sl').textContent=(scene+1)+' / '+SCENES.length+' — '+SCENES[scene].name;
+  SCENES.forEach((_,i)=>document.getElementById('d'+i).className='dot'+(i===scene?' on':''));
+}
+
+function loop(){
+  frame++;st++;
+  if(!paused&&st>=SCENES[scene].dur){scene=(scene+1)%SCENES.length;st=0;ui();}
+  if(paused&&st>=780){paused=false;}
+  const t=Math.min(st/(paused?780:SCENES[scene].dur),1);
+  bg(frame);
+  DRAWERS[scene](t,frame);
+  pdots(SCENES.length,scene);
+  requestAnimationFrame(loop);
+}
+ui();loop();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+# Research artifacts — local only
+deepseek_v4_*.png
+deepseek_v4_*.html
+KV_Cache_*.md
+KV_Cache_*.html
+output/
+videos/
+video_export/
+*.webm
+*.mp4
+*.gif
+
+# OS
+.DS_Store
+
+# Node
+node_modules/
+package-lock.json

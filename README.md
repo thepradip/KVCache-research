@@ -53,19 +53,19 @@ The problem? **The notepad gets huge.** For a 1-million-token conversation, stor
 | 14 | **KV Cache Quantization** | KIVI (2-bit), KVQuant, TurboQuant, Bonsai 1-bit | ✅ Memory ↓ 4–8× |
 | 15 | **FlashAttention** | Tiled SRAM computation — no KV materialisation | ✅ Speed ↑↑ |
 | 16 | **Model-by-Model Comparison** | LLaMA, Gemma, Qwen, DeepSeek, Kimi, Phi — all verified | Reference |
-| 17 | **Kimi K2.5** | How agentic reasoning changes KV cache needs | Long-context |
-| 18 | **State of the Art 2026** | Where the field stands today and where it's heading | Survey |
-| 19 | **DeepSeek V4** 🔥 | CSA/HCA hybrid — 90% KV reduction at 1M tokens | ✅ Memory ↓ 90% |
-| 20 | **DFlash** ⚡ | Block diffusion speculative decoding — 2–4× speed | ✅ Speed ↑↑ |
-| 21 | **Linear Attention & SSMs** | Mamba, RWKV, RetNet — O(1) KV alternative | ✅ Constant |
-| 22 | **Prefix Caching & RadixAttention** | Reuse KV across requests with SGLang RadixAttention | ✅ Reuse |
-| 23 | **Mixture of Experts & KV Cache** | How sparse MoE routing shrinks effective KV | ✅ Sparse |
-| 24 | **KV Cache Offloading** | FlexGen, InfiniGen — spill KV to CPU/NVMe | ✅ Overflow |
-| 25 | **Disaggregated Prefill & Decode** | Splitwise, DistServe, Mooncake, Ring Attention | ✅ Serving |
+| 17 | **DeepSeek V4** 🔥 | CSA/HCA hybrid — 90% KV reduction at 1M tokens | ✅ Memory ↓ 90% |
+| 18 | **DFlash** ⚡ | Block diffusion speculative decoding — 2–4× speed | ✅ Speed ↑↑ |
+| 19 | **Kimi K2.5** | How agentic reasoning changes KV cache needs | Long-context |
+| 20 | **Linear Attention & SSMs** | Mamba, RWKV, RetNet — O(1) KV alternative | ✅ Constant |
+| 21 | **Prefix Caching & RadixAttention** | Reuse KV across requests with SGLang RadixAttention | ✅ Reuse |
+| 22 | **Mixture of Experts & KV Cache** | How sparse MoE routing shrinks effective KV | ✅ Sparse |
+| 23 | **KV Cache Offloading** | FlexGen, InfiniGen — spill KV to CPU/NVMe | ✅ Overflow |
+| 24 | **Disaggregated Prefill & Decode** | Splitwise, DistServe, Mooncake, Ring Attention | ✅ Serving |
+| 25 | **2026 Summary & Future Directions** | Where the field stands today and where it's heading | Survey |
 
 ---
 
-## 🔥 DeepSeek V4 — The Million-Token Breakthrough (Chapter 19)
+## 🔥 DeepSeek V4 — The Million-Token Breakthrough (Chapter 17)
 
 > *"At one million tokens of context, V4-Pro needs only 10% of the KV cache that V3 required."*
 
@@ -88,7 +88,7 @@ The problem? **The notepad gets huge.** For a 1-million-token conversation, stor
 
 ---
 
-## ⚡ DFlash — Speculative Decoding Meets Diffusion (Chapter 20)
+## ⚡ DFlash — Speculative Decoding Meets Diffusion (Chapter 18)
 
 Normal AI writes one word at a time. **DFlash writes a whole block at once** using a draft model, then verifies the entire block in parallel — reusing the existing KV cache with no extra memory overhead.
 

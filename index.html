@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="author" content="Pradip Tivhale">
-    <meta name="description" content="A comprehensive survey of KV Cache optimization in Large Language Models — from MHA to MLA, with 32 paper citations and interactive animations.">
+    <meta name="description" content="A comprehensive survey of KV Cache optimization in Large Language Models — from MHA to MLA, with 30+ citations and interactive animations.">
     <title>The KV Cache Evolution: From Attention Heads to DeepSeek V4’s 90% Memory Breakthrough — by Pradip Tivhale</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
@@ -442,17 +442,21 @@
         }
 
         .chart-container.chart-tall {
-            height: 560px;
+            min-height: 560px;
         }
 
         .chart-container.chart-medium {
-            height: 500px;
+            min-height: 500px;
         }
 
-        .chart-container.chart-tall canvas,
+        .chart-container.chart-tall canvas {
+            height: 520px !important;
+            max-height: 520px;
+        }
+
         .chart-container.chart-medium canvas {
-            height: 100% !important;
-            max-height: none;
+            height: 380px !important;
+            max-height: 380px;
         }
 
         .recap-section {
@@ -591,6 +595,34 @@
             border: 1px solid rgba(92, 121, 155, 0.26);
             background: #020617;
             box-shadow: 0 16px 36px rgba(2, 8, 23, 0.28);
+        }
+
+        .article-video-card {
+            margin: 14px 0 18px;
+            padding: 14px;
+            border-radius: 18px;
+            border: 1px solid rgba(92, 121, 155, 0.24);
+            background: linear-gradient(180deg, rgba(8, 17, 31, 0.9), rgba(10, 20, 35, 0.82));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        .article-video-card h5 {
+            margin: 0 0 10px;
+            color: var(--text);
+            font-size: 0.95rem;
+            letter-spacing: 0;
+        }
+
+        .article-animation-video {
+            width: 100%;
+            display: block;
+            border-radius: 14px;
+            border: 1px solid rgba(92, 121, 155, 0.26);
+            background: #020617;
+        }
+
+        .article-video-card .recap-links {
+            margin-top: 10px;
         }
 
         .recap-links {
@@ -987,6 +1019,13 @@
 </div>
 </div>
 
+<div class="container">
+    <div class="info-card success">
+        <h4>Source Verification Note</h4>
+        <p>This page uses primary sources for unstable 2025&ndash;2026 claims wherever possible: official Hugging Face config/model cards for Qwen3.5, Gemma 4, Kimi K2, Llama 4, and DeepSeek V4; arXiv papers for DFlash, Kimi K2, Qwen3, TurboQuant, KIVI, KVQuant, PagedAttention, and related systems papers; and PrismML's official Bonsai announcement/whitepaper for Bonsai-specific device and model-size claims. Local benchmark numbers are labeled as local measurements and should be treated as reproduction-specific rather than vendor guarantees.</p>
+    </div>
+</div>
+
 <!-- ==================== SECTION 1 ==================== -->
 <div class="container">
 <div class="section" id="sec1">
@@ -1030,7 +1069,7 @@
         <div class="timeline-item">
             <div class="timeline-year">2025&ndash;2026</div>
             <div class="timeline-title">The Efficiency Era</div>
-            <div class="timeline-desc">TurboQuant, Gemma 4, DeepSeek-V3 &mdash; models run on phones with 128K+ context.</div>
+            <div class="timeline-desc">TurboQuant, Gemma 4, DeepSeek-V4, Bonsai &mdash; long-context and edge-friendly inference become practical in narrower, source-specific settings.</div>
         </div>
     </div>
 </div>
@@ -1101,11 +1140,23 @@
     <div class="chart-container">
         <h4>Animation: Q &times; K<sup>T</sup> &rarr; Attention Scores &rarr; Weighted V &rarr; Output</h4>
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Toy scaled-dot-product example: one 1&times;4 Query is compared against five cached Keys, scaled by &radic;d<sub>k</sub>, then turned into attention weights and a weighted V output.</p>
+        <div class="article-video-card">
+            <h5>LinkedIn-ready video preview</h5>
+            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/qkv-attention-matmul.mp4" type="video/mp4">
+                <source src="videos/qkv-attention-matmul.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+            <div class="recap-links">
+                <a class="recap-link" href="videos/qkv-attention-matmul.mp4">Download MP4</a>
+                <a class="recap-link" href="videos/qkv-attention-matmul.webm">Open WebM</a>
+            </div>
+        </div>
         <canvas id="matMulAnim" width="780" height="400" style="width:100%; max-height:400px;"></canvas>
     </div>
 
     <h3>The Speed Benefit</h3>
-    <p>Without KV Cache, generating a sequence of length <em>n</em> requires O(n&sup2;) total computation (because each new token must attend to all previous tokens, and this happens n times). With KV Cache, it drops to O(n) per new token, because we only compute attention for one new query against cached keys and values.</p>
+    <p>Without KV Cache, generation wastes extra work by repeatedly recomputing the Key and Value projections for all previous tokens. KV Cache removes that redundant K/V projection work: each new step computes K and V only for the new token, then attends over the cached history. The attention lookup itself is still O(n) per generated token, so total decoding over a length-n sequence still grows quadratically in the attention scan; the win is avoiding repeated projection work and reducing memory traffic.</p>
 
     <h3>The Memory Cost</h3>
     <p>Here's the catch: those cached K and V vectors consume GPU memory, and they grow <strong>linearly with sequence length</strong>. The formula for KV Cache memory in FP16 (16-bit floating point, 2 bytes per number) is:</p>
@@ -1156,7 +1207,7 @@
                     <td>128</td>
                     <td>128 KB</td>
                     <td>0.5 GB</td>
-                    <td>16 GB</td>
+                    <td>0.5 GB*</td>
                 </tr>
                 <tr>
                     <td><strong>Qwen3 235B</strong> <span class="badge badge-green">GQA-4</span></td>
@@ -1179,16 +1230,17 @@
                 <tr>
                     <td><strong>Gemma 4 31B</strong> <span class="badge badge-green">GQA</span>+<span class="badge badge-blue">LG</span></td>
                     <td>60</td>
-                    <td>16 (all layers)</td>
+                    <td>16 local / 4 global</td>
                     <td>256 local / 512 global</td>
-                    <td>~1,120 KB naive</td>
-                    <td>1.1 GB</td>
-                    <td>~41 GB&dagger;</td>
+                    <td>Mixed; capped local</td>
+                    <td>~0.43 GB&dagger;</td>
+                    <td>~5.4 GB&dagger;</td>
                 </tr>
             </tbody>
             <tfoot>
                 <tr><td colspan="7" style="font-size:0.8rem; color:var(--text-muted); padding-top:8px;">
-                    &dagger;Gemma 4 31B: 60 layers (50 sliding, 10 global), all with 16 KV heads. Sliding layers use head_dim=256 and are capped at 1,024 tokens. Global layers use head_dim=512 with full context. Cache is sub-linear: ~1.1 GB at 1K but ~41 GB at 128K because global layers dominate at long contexts. Source: <a href="https://huggingface.co/google/gemma-4-31B-it">official config.json</a>.<br>
+                    *Mistral 7B uses a 4,096-token sliding window, so the KV cache is capped at about 0.5 GB per sequence in this FP16-style calculation, even when nominal context is longer.<br>
+                    &dagger;Gemma 4 31B: 60 layers (50 sliding, 10 global), with 16 local KV heads, 4 global KV heads, attention_k_eq_v=true, 1,024-token sliding layers, and full-context global layers. The rough figures assume K=V is stored once: ~0.43 GB at 1K and ~5.4 GB at 128K. Source: <a href="https://huggingface.co/google/gemma-4-31B-it">official config.json</a>.<br>
                     *MLA stores a compressed latent of 576 dims (d<sub>c</sub>=512 + d<sub>R</sub>=64) instead of separate K and V vectors. Formula: layers &times; 576 &times; 2 bytes.
                 </td></tr>
             </tfoot>
@@ -1206,6 +1258,18 @@
     <div class="chart-container">
         <h4>Animation: KV Cache Growing Token by Token</h4>
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Illustrative LLaMA-2 7B FP16-style baseline: each new token adds one more cached K/V state for every layer. Watch GPU memory fill up over time.</p>
+        <div class="article-video-card">
+            <h5>LinkedIn-ready video preview</h5>
+            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/kv-cache-growth.mp4" type="video/mp4">
+                <source src="videos/kv-cache-growth.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+            <div class="recap-links">
+                <a class="recap-link" href="videos/kv-cache-growth.mp4">Download MP4</a>
+                <a class="recap-link" href="videos/kv-cache-growth.webm">Open WebM</a>
+            </div>
+        </div>
         <canvas id="cacheGrowthAnim" width="800" height="300" style="width:100%; max-height:300px;"></canvas>
     </div>
 </div>
@@ -1557,7 +1621,7 @@
                     <td>8&times;</td>
                 </tr>
                 <tr>
-                    <td>LLaMA-3 8B/70B/405B</td>
+                    <td>LLaMA-3/3.1 8B/70B/405B</td>
                     <td>2024</td>
                     <td><span class="badge badge-green">GQA</span></td>
                     <td>32/64/128</td>
@@ -1660,7 +1724,7 @@
                     <th>Attention Type</th>
                     <th>Total Params</th>
                     <th>KV Cache / Token</th>
-                    <th>vs. LLaMA-3 405B</th>
+                    <th>vs. LLaMA-3.1 405B</th>
                 </tr>
             </thead>
             <tbody>
@@ -1703,6 +1767,18 @@
     <p>The animation below runs all four attention methods side by side. Watch tokens arrive one at a time and see how much cached attention state each method stores. This is a normalized 32-layer FP16 comparison so the methods are compared on the same footing.</p>
 
     <div class="chart-container" style="padding: 15px;">
+        <div class="article-video-card">
+            <h5>LinkedIn-ready video preview</h5>
+            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/mha-mqa-gqa-mla-comparison.mp4" type="video/mp4">
+                <source src="videos/mha-mqa-gqa-mla-comparison.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+            <div class="recap-links">
+                <a class="recap-link" href="videos/mha-mqa-gqa-mla-comparison.mp4">Download MP4</a>
+                <a class="recap-link" href="videos/mha-mqa-gqa-mla-comparison.webm">Open WebM</a>
+            </div>
+        </div>
         <canvas id="kvCompareAnim" width="800" height="780" style="width:100%; max-height:780px;"></canvas>
     </div>
 </div>
@@ -1774,7 +1850,7 @@
                     <td>1024 (31B) / 512 (E4B, E2B)</td>
                     <td>Every 6th layer</td>
                     <td>5:1</td>
-                    <td>128K+ context; E4B shares KV across 18 layers; 31B does not share (num_kv_shared_layers=0)</td>
+                    <td>128K/256K context by variant; E4B shares KV across 18 layers; 31B does not share (num_kv_shared_layers=0)</td>
                 </tr>
             </tbody>
         </table>
@@ -1787,7 +1863,7 @@
 
     <div class="key-insight">
         <h4>Gemma 3's Clever Design</h4>
-        <p>By using a 5:1 local-to-global ratio with only 1,024-token local windows, Gemma 3 can handle <strong>128K token contexts</strong> on accessible hardware. Only 1 out of every 6 layers needs to store full-length KV cache. The other 5 layers only store 1,024 tokens each &mdash; a fraction of the full sequence. This allows Gemma 3 27B to fit on a single GPU with 128K context.</p>
+        <p>By using a 5:1 local-to-global ratio with short local windows, Gemma-style local-global attention makes long context far more practical than full attention alone. Only 1 out of every 6 layers needs to store full-length KV cache; the other 5 layers keep a capped local cache, so the memory curve is much flatter than pure full attention.</p>
     </div>
 </div>
 
@@ -1938,6 +2014,18 @@
     <div class="chart-container">
         <h4>Animation: KV Cache Quantization &mdash; FP16 &rarr; INT8 &rarr; INT4 &rarr; INT2</h4>
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Illustrative scalar view of KV quantization: the values are rounded more aggressively as bit width drops. Real systems such as KIVI and TurboQuant use more sophisticated schemes than this simple bar demo.</p>
+        <div class="article-video-card">
+            <h5>LinkedIn-ready video preview</h5>
+            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/kv-cache-quantization.mp4" type="video/mp4">
+                <source src="videos/kv-cache-quantization.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+            <div class="recap-links">
+                <a class="recap-link" href="videos/kv-cache-quantization.mp4">Download MP4</a>
+                <a class="recap-link" href="videos/kv-cache-quantization.webm">Open WebM</a>
+            </div>
+        </div>
         <canvas id="quantAnim" width="800" height="380" style="width:100%; max-height:380px;"></canvas>
     </div>
 
@@ -2011,15 +2099,15 @@
 
     <h3>Bonsai 8B + Turbo1Bit: 1-Bit Weights Meet KV Cache Compression</h3>
 
-    <p>All the quantization methods above shrink the KV cache. But what happens when you also shrink the <em>model weights</em> to the extreme? In mid-2025, Caltech spinoff PrismML released <strong>Bonsai 8B</strong> &mdash; a language model where every single weight is represented as just <strong>one bit</strong>: either +1 or &minus;1. An 8.2 billion parameter model that fits in <strong>1.15 GB</strong> (compared to ~16 GB for a standard FP16 8B model). That's a 14&times; size reduction for the weights alone.</p>
+    <p>All the quantization methods above shrink the KV cache. But what happens when you also shrink the <em>model weights</em> to the extreme? On March 31, 2026, Caltech spinoff PrismML announced <strong>Bonsai 8B</strong> &mdash; a language model where every single weight is represented as just <strong>one bit</strong>: either +1 or &minus;1. An 8.2 billion parameter model that fits in <strong>1.15 GB</strong> (compared to ~16 GB for a standard FP16 8B model). That's a 14&times; size reduction for the weights alone.</p>
 
-    <div class="citation">PrismML / Caltech. "Announcing 1-bit Bonsai: The First Commercially Viable 1-bit LLMs." <a href="https://prismml.com/news/bonsai-8b">prismml.com</a>, 2025. Whitepaper: <a href="https://github.com/PrismML-Eng/Bonsai-demo/blob/main/1-bit-bonsai-8b-whitepaper.pdf">GitHub</a></div>
+    <div class="citation">PrismML / Caltech. "Announcing 1-bit Bonsai: The First Commercially Viable 1-bit LLMs." <a href="https://prismml.com/news/bonsai-8b">prismml.com</a>, March 31, 2026. Whitepaper: <a href="https://github.com/PrismML-Eng/Bonsai-demo/blob/main/1-bit-bonsai-8b-whitepaper.pdf">GitHub</a></div>
 
     <p>But here's the catch that relates to our KV cache story: <strong>1-bit weights do NOT mean 1-bit KV cache</strong>. The weights (W<sub>K</sub>, W<sub>V</sub>, W<sub>Q</sub>, etc.) are 1-bit, but when they multiply against the input activations, the resulting Key and Value vectors are still full-precision floating point numbers. So even though Bonsai's weights are tiny, the KV cache during inference remains FP16-sized and grows linearly with context length &mdash; exactly the same memory wall problem.</p>
 
     <p>This is where <strong>Turbo1Bit</strong> comes in: an open-source project that stacks TurboQuant-style KV cache quantization on top of Bonsai's 1-bit weights.</p>
 
-    <div class="citation">Turbo1Bit. "Combining 1-bit LLM weights (Bonsai) with TurboQuant KV cache compression." <a href="https://github.com/jhammant/Turbo1bit">GitHub</a>, 2025.</div>
+    <div class="citation">Turbo1Bit. "Combining 1-bit LLM weights (Bonsai) with TurboQuant KV cache compression." <a href="https://github.com/jhammant/Turbo1bit">GitHub</a>, 2026.</div>
 
     <div class="table-wrapper">
         <table>
@@ -2105,7 +2193,7 @@
         </div>
         <div class="comparison-card">
             <div class="metric">44 tok/s</div>
-            <div class="metric-label">On iPhone 17 Pro</div>
+            <div class="metric-label">On iPhone 17 Pro Max</div>
             <div class="metric-context">Full 8B model on a phone</div>
         </div>
     </div>
@@ -2273,7 +2361,7 @@
                     <td>448 KB</td>
                 </tr>
                 <tr>
-                    <td><strong>LLaMA-3 8B</strong></td>
+                    <td><strong>LLaMA-3.1 8B</strong></td>
                     <td>2024</td>
                     <td>8B</td>
                     <td><span class="badge badge-green">GQA</span></td>
@@ -2283,7 +2371,7 @@
                     <td>128 KB</td>
                 </tr>
                 <tr>
-                    <td><strong>LLaMA-3 405B</strong></td>
+                    <td><strong>LLaMA-3.1 405B</strong></td>
                     <td>2024</td>
                     <td>405B</td>
                     <td><span class="badge badge-green">GQA</span></td>
@@ -2429,8 +2517,8 @@
                     <td><span class="badge badge-green">GQA</span></td>
                     <td>&mdash;</td>
                     <td>&mdash;</td>
-                    <td>128K</td>
-                    <td>Latest Qwen iteration; improved reasoning</td>
+                    <td>262K</td>
+                    <td>Latest Qwen iteration; context length should be checked against the specific model config.</td>
                 </tr>
                 <tr style="background: rgba(236,72,153,0.06);">
                     <td><strong>LLaMA 4 Scout</strong></td>
@@ -2455,7 +2543,7 @@
                 <tr style="background: rgba(99,102,241,0.08);">
                     <td><strong>Kimi K2</strong></td>
                     <td>2025</td>
-                    <td><strong>1.04T</strong> (32B active)</td>
+                    <td><strong>~1T</strong> (32B active)</td>
                     <td><span class="badge badge-pink">MLA</span>+<span class="badge badge-orange">MoE</span></td>
                     <td>64</td>
                     <td>Latent (MLA)</td>
@@ -2469,7 +2557,7 @@
                     <td><span class="badge badge-green">GQA</span>+<span class="badge badge-blue">LG</span></td>
                     <td>8</td>
                     <td>1</td>
-                    <td>128K+</td>
+                    <td>128K</td>
                     <td>PLE; KV sharing across 20/35 layers (num_kv_shared_layers=20)</td>
                 </tr>
                 <tr style="background: rgba(34,197,94,0.08);">
@@ -2479,7 +2567,7 @@
                     <td><span class="badge badge-green">GQA</span>+<span class="badge badge-blue">LG</span></td>
                     <td>8</td>
                     <td>2</td>
-                    <td>128K+</td>
+                    <td>128K</td>
                     <td>PLE; 42 layers; head_dim 256/512; sliding_window=512; num_kv_shared_layers=18</td>
                 </tr>
                 <tr style="background: rgba(34,197,94,0.08);">
@@ -2489,12 +2577,12 @@
                     <td><span class="badge badge-green">GQA</span>+<span class="badge badge-blue">LG</span>+<span class="badge badge-orange">MoE</span></td>
                     <td>&mdash;</td>
                     <td>8 local / 2 global</td>
-                    <td>128K+</td>
+                    <td>256K</td>
                     <td>128 experts (8 active) + 3&times; shared expert</td>
                 </tr>
                 <tr style="background: rgba(245,158,11,0.06);">
                     <td><strong>Bonsai 8B</strong></td>
-                    <td>2025</td>
+                    <td>2026</td>
                     <td>8.2B (1-bit weights!)</td>
                     <td><span class="badge badge-green">GQA</span>+<span class="badge badge-red">1-bit</span></td>
                     <td>&mdash;</td>
@@ -2508,16 +2596,16 @@
                     <td>31B (Dense)</td>
                     <td><span class="badge badge-green">GQA</span>+<span class="badge badge-blue">LG</span></td>
                     <td>&mdash;</td>
-                    <td>16 (all layers)</td>
-                    <td>128K+</td>
-                    <td>5:1 local-global; p-RoPE; unified K/V in global layers</td>
+                    <td>16 local / 4 global</td>
+                    <td>256K</td>
+                    <td>5:1 local-global; p-RoPE; attention_k_eq_v=true; 1,024-token local window</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <div class="citation">Qwen Team. "Qwen3 Technical Report." arXiv: <a href="https://arxiv.org/abs/2505.09388">2505.09388</a>, 2025.</div>
-    <div class="citation">Kimi Team, Moonshot AI. "Kimi K2: Open Agentic Intelligence." arXiv: <a href="https://arxiv.org/abs/2507.20534">2507.20534</a>, 2025.</div>
+    <div class="citation">Qwen Team. "Qwen3 Technical Report." arXiv: <a href="https://arxiv.org/abs/2505.09388">2505.09388</a>, 2025. Qwen3.5 architecture details in this section are checked against the official <a href="https://huggingface.co/Qwen/Qwen3.5-9B">Qwen3.5-9B config.json</a>.</div>
+    <div class="citation">Kimi Team, Moonshot AI. "Kimi K2: Open Agentic Intelligence." arXiv: <a href="https://arxiv.org/abs/2507.20534">2507.20534</a>, 2025; architecture fields checked against <a href="https://huggingface.co/moonshotai/Kimi-K2-Instruct">Kimi-K2-Instruct config.json</a>.</div>
     <div class="citation">Gemma Team, Google. "Gemma: Open Models Based on Gemini Research and Technology." arXiv: <a href="https://arxiv.org/abs/2403.08295">2403.08295</a>, 2024.</div>
     <div class="citation">Qwen Team. "Qwen2 Technical Report." arXiv: <a href="https://arxiv.org/abs/2407.10671">2407.10671</a>, 2024.</div>
     <div class="citation">Microsoft. "Phi-4 Technical Report." arXiv: <a href="https://arxiv.org/abs/2412.08905">2412.08905</a>, 2024.</div>
@@ -2568,8 +2656,8 @@
                     <td>128</td>
                     <td><strong>128 KB</strong></td>
                     <td>128 MB</td>
-                    <td>128 MB*</td>
-                    <td>2&times;32&times;8&times;128&times;2 = 131,072 B. *Sliding window caps cache at 4K tokens regardless of context.</td>
+                    <td>512 MB*</td>
+                    <td>2&times;32&times;8&times;128&times;2 = 131,072 B. *Sliding window caps cache at 4K tokens, so 128K nominal context still stores about 4K tokens of KV per sequence.</td>
                 </tr>
                 <tr>
                     <td><strong>Qwen3 235B</strong><br><span class="badge badge-green">GQA-4</span>+<span class="badge badge-orange">MoE</span></td>
@@ -2594,12 +2682,12 @@
                 <tr style="background: rgba(34,197,94,0.05);">
                     <td><strong>Gemma 4 31B</strong><br><span class="badge badge-green">GQA</span>+<span class="badge badge-blue">LG</span></td>
                     <td>60 (50 local + 10 global)</td>
-                    <td>16 (all layers)</td>
+                    <td>16 local / 4 global</td>
                     <td>256 / 512</td>
-                    <td><strong>~1,120 KB naive</strong></td>
-                    <td>~1.1 GB</td>
-                    <td><strong>~41 GB&dagger;</strong></td>
-                    <td>&dagger;50 sliding layers (16 KV, d=256, capped at 1,024 tok) + 10 global layers (16 KV, d=512, full ctx). At 128K, global layers dominate: ~41 GB total. At 1K: ~1.1 GB. Source: <a href="https://huggingface.co/google/gemma-4-31B-it">official config.json</a>.</td>
+                    <td><strong>Mixed</strong></td>
+                    <td>~0.43 GB</td>
+                    <td><strong>~5.4 GB&dagger;</strong></td>
+                    <td>&dagger;50 sliding layers (16 local KV, d=256, capped at 1,024 tok) + 10 global layers (4 global KV, d=512, full ctx), with attention_k_eq_v=true. Approximate figures assume K=V is stored once. Source: <a href="https://huggingface.co/google/gemma-4-31B-it">official config.json</a>.</td>
                 </tr>
                 <tr style="background: rgba(6,182,212,0.05);">
                     <td><strong>Qwen3.5 9B</strong><br><span class="badge badge-green">GQA</span>+DeltaNet</td>
@@ -2611,13 +2699,11 @@
                     <td><strong>4 GB</strong></td>
                     <td>2&times;8&times;4&times;256&times;2 = 32,768 B. Only 8/32 layers use attention; 24 use DeltaNet (no KV cache).</td>
                 </tr>
-                    <td>Same MLA config as DeepSeek-V3: kv_lora_rank=512, qk_rope_head_dim=64. 384 experts (vs 256 in DSV3).</td>
-                </tr>
             </tbody>
         </table>
     </div>
 
-    <div class="citation">Qwen3.5-9B, Gemma 4 E4B, and Kimi K2 parameters are sourced from official Hugging Face config/model pages (<a href="https://huggingface.co/Qwen/Qwen3.5-9B">Qwen3.5-9B</a>, <a href="https://huggingface.co/google/gemma-4-E4B">Gemma 4 E4B</a>, <a href="https://huggingface.co/moonshotai/Kimi-K2-Instruct">Kimi K2</a>). LLaMA 4 Scout long-context claims are sourced from Meta's official <a href="https://huggingface.co/meta-llama/Llama-4-Scout-17B-16E">model card</a>; detailed attention internals are not treated as independently verified here.</div>
+    <div class="citation">Qwen3.5-9B, Gemma 4 E4B, Gemma 4 31B, and Kimi K2 parameters are sourced from official Hugging Face config/model pages (<a href="https://huggingface.co/Qwen/Qwen3.5-9B">Qwen3.5-9B</a>, <a href="https://huggingface.co/google/gemma-4-E4B">Gemma 4 E4B</a>, <a href="https://huggingface.co/google/gemma-4-31B-it">Gemma 4 31B</a>, <a href="https://huggingface.co/moonshotai/Kimi-K2-Instruct">Kimi K2</a>). LLaMA 4 Scout/Maverick context-window claims are sourced from Meta's official <a href="https://huggingface.co/meta-llama/Llama-4-Scout-17B-16E">model card</a>; detailed attention internals are not treated as independently verified here.</div>
 
     <div class="key-insight">
         <h4>The Standout: Qwen3.5 9B Uses Only 32 KB Per Token</h4>
@@ -2638,14 +2724,14 @@
     <div class="citation">Proof points: Google's official <strong>Gemma 4 E4B</strong> model card lists <strong>42 layers</strong>, a <strong>512-token sliding window</strong>, and <strong>128K context</strong>. The local TurboQuant measurements cited here come from the public <code>turboquant-llamacpp</code> README: <strong>104 MiB &rarr; 29 MiB (4K)</strong>, <strong>296 MiB &rarr; 83 MiB (16K)</strong>, and <strong>552 MiB &rarr; 155 MiB (32K)</strong> on an M2 Pro. Sources: <a href="https://huggingface.co/google/gemma-4-E4B">Gemma 4 E4B model card</a>, <a href="https://github.com/thepradip/turboquant-llamacpp">turboquant-llamacpp README</a>.</div>
 
     <div class="info-card highlight">
-        <h4>Kimi K2: Trillion Parameters, Same KV Cache as DeepSeek-V3</h4>
-        <p>Despite scaling from 671B (DeepSeek-V3) to 1.04 trillion parameters (Kimi K2), the KV cache stays identical at <strong>~70 KB per token</strong>. Both use MLA with kv_lora_rank=512 and qk_rope_head_dim=64 across 61 layers. The entire parameter increase went into more experts (384 vs 256) and expert capacity &mdash; not into attention overhead. This proves MLA's KV cost is <strong>decoupled from model scale</strong>.</p>
+        <h4>Kimi K2: Trillion-Scale Parameters, DeepSeek-Style MLA Cache</h4>
+        <p>Despite scaling from 671B (DeepSeek-V3) to roughly 1T parameters (Kimi K2), the KV cache remains in the same <strong>~70 KB per token</strong> range. Both use MLA with kv_lora_rank=512 and qk_rope_head_dim=64 across 61 layers. Kimi K2's extra scale comes from more experts and expert capacity rather than larger cached attention state, showing how MLA helps decouple KV cost from total MoE parameter count.</p>
     </div>
 
     <h3>What the Table Reveals</h3>
     <div class="info-card success">
         <h4>Three Distinct KV Cache Strategies Have Emerged</h4>
-        <p><strong>1. The GQA Camp</strong> (LLaMA, Qwen, Gemma, Phi, Mistral): Nearly every major model family standardized on GQA with 8 KV heads. The Qwen3 235B MoE pushes this further to just 4 KV heads &mdash; a 16:1 compression ratio. Simple, proven, universally adopted.</p>
+        <p><strong>1. The GQA Camp</strong> (LLaMA, Qwen, Gemma, Phi, Mistral): Many major model families standardized around GQA-style KV sharing, commonly with 4&ndash;8 KV heads. The Qwen3 235B MoE pushes this further to just 4 KV heads &mdash; a 16:1 Q-to-KV ratio.</p>
         <p><strong>2. The MLA Camp</strong> (DeepSeek, Kimi K2): These models compress KV into tiny latent vectors, achieving the lowest per-token cache cost. Kimi K2 took DeepSeek's MLA and scaled it to 1 trillion parameters with 384 experts &mdash; the largest open MLA model to date.</p>
         <p><strong>3. The Hybrid Attention Camp</strong> (LLaMA 4, Gemma 3/4): These models attack the problem architecturally by mixing short-range local attention with sparse global attention. Meta's public LLaMA 4 Scout model card advertises a <strong>10 million token</strong> context window. Gemma 4 uses KV sharing across layers plus hybrid head dimensions (256 for local, 512 for global).</p>
     </div>
@@ -2653,12 +2739,36 @@
     <!-- Chart: KV Cache per Token Comparison -->
     <div class="chart-container chart-tall live-chart" data-chart-kind="kvBar">
         <h4>KV Cache Memory Per Token Comparison (FP16)</h4>
+        <div class="article-video-card">
+            <h5>LinkedIn-ready video preview</h5>
+            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/model-kv-cache-chart.mp4" type="video/mp4">
+                <source src="videos/model-kv-cache-chart.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+            <div class="recap-links">
+                <a class="recap-link" href="videos/model-kv-cache-chart.mp4">Download MP4</a>
+                <a class="recap-link" href="videos/model-kv-cache-chart.webm">Open WebM</a>
+            </div>
+        </div>
         <canvas id="kvCacheChart"></canvas>
     </div>
 
     <!-- Chart: Evolution of KV Cache Reduction Techniques -->
     <div class="chart-container chart-medium live-chart" data-chart-kind="reductionRadar">
         <h4>Memory Reduction vs. FP16 MHA Baseline (Lower is Better)</h4>
+        <div class="article-video-card">
+            <h5>LinkedIn-ready video preview</h5>
+            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/optimization-radar-chart.mp4" type="video/mp4">
+                <source src="videos/optimization-radar-chart.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+            <div class="recap-links">
+                <a class="recap-link" href="videos/optimization-radar-chart.mp4">Download MP4</a>
+                <a class="recap-link" href="videos/optimization-radar-chart.webm">Open WebM</a>
+            </div>
+        </div>
         <canvas id="reductionChart"></canvas>
     </div>
 
@@ -2851,7 +2961,7 @@
         <div class="comparison-card" style="border-top: 3px solid var(--success);">
             <div class="metric" style="font-size: 1.3rem; background: var(--gradient-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">MLA</div>
             <div class="metric-label">Best Compression Ratio</div>
-            <div class="metric-context">DeepSeek-V3, Kimi K2 (1T params)</div>
+            <div class="metric-context">DeepSeek-V3, Kimi K2 (~1T params)</div>
         </div>
         <div class="comparison-card" style="border-top: 3px solid var(--success);">
             <div class="metric" style="font-size: 1.3rem; background: var(--gradient-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Hybrid Attention</div>
@@ -2861,15 +2971,15 @@
     </div>
 
     <h3>The Emerging Frontier</h3>
-    <p><strong>1. Trillion-Parameter MLA:</strong> Moonshot AI's Kimi K2 pushed MLA to 1.04 trillion parameters with 384 experts &mdash; proving that DeepSeek's latent compression scales far beyond its original 236B deployment. With only 64 attention heads (vs DeepSeek-V3's 128), K2 squeezes even more efficiency out of MLA.</p>
+    <p><strong>1. Trillion-Scale MLA:</strong> Moonshot AI's Kimi K2 uses DeepSeek-style MLA in a roughly 1T-parameter MoE with 384 routed experts and 32B active parameters. Its public config lists 64 attention heads, kv_lora_rank=512, and qk_rope_head_dim=64, showing that latent KV compression scales to trillion-scale open MoE systems.</p>
 
     <p><strong>2. Ten-Million-Token Context:</strong> Meta's public LLaMA 4 Scout model card reports a <strong>10 million token</strong> context window. That is roughly 5,000 pages of text in a single prompt, even though the public card does not spell out every attention/KV implementation detail behind it.</p>
 
-    <p><strong>3. On-Device Intelligence:</strong> Gemma 4 E2B and E4B target mobile and edge deployments with 128K+ context. Their small KV budgets come from low KV-head counts, local-global attention, KV sharing across layers, and per-layer embeddings. Separately, Gemma 4 26B-A4B is the MoE family member that uses sparse routing (3.8B active of 26B); that MoE detail should not be attributed to the E2B/E4B variants. Post-training KV cache quantization methods (such as TurboQuant or KIVI) could further reduce memory, though Google's Gemma 4 documentation does not cite any specific KV quantization scheme as part of the on-device strategy.</p>
+    <p><strong>3. On-Device Intelligence:</strong> Gemma 4 E2B and E4B target mobile and edge deployments with 128K context. Their small KV budgets come from low KV-head counts, local-global attention, KV sharing across layers, and per-layer embeddings. Separately, Gemma 4 26B-A4B is the MoE family member that uses sparse routing; that MoE detail should not be attributed to the E2B/E4B variants. Post-training KV cache quantization methods (such as TurboQuant or KIVI) could further reduce memory, though Google's Gemma 4 documentation does not cite any specific KV quantization scheme as part of the on-device strategy.</p>
 
     <p><strong>4. Aggressive KV Head Reduction:</strong> Qwen3's MoE variant uses just 4 KV heads with 64 query heads &mdash; a 16:1 ratio. This trend toward extreme Q-to-KV ratios suggests the field is converging on the insight that you need very few KV heads, even for models with many query heads.</p>
 
-    <p><strong>5. Data-Oblivious Quantization:</strong> TurboQuant requires no training data or model-specific tuning, making it a universal plug-in for any deployment. Combined with architectural improvements, effective KV cache reductions of 50&ndash;100&times; over the 2017 baseline are now routine.</p>
+    <p><strong>5. Data-Oblivious Quantization:</strong> TurboQuant requires no training data or model-specific tuning, making it a general-purpose post-training option for KV compression. Combined with architectural improvements, it can produce very large reductions versus a 2017-style FP16 MHA baseline, but the exact factor depends on model architecture, context length, and runtime settings.</p>
 
     <h3>The Journey in Numbers</h3>
 
@@ -2891,16 +3001,16 @@
                     <td><strong>25&ndash;50&times;</strong></td>
                 </tr>
                 <tr>
-                    <td>Max context on single GPU</td>
+                    <td>Long-context serving target</td>
                     <td>~2K tokens</td>
-                    <td>1M+ tokens</td>
-                    <td><strong>500&times;</strong></td>
+                    <td>1M-token KV-cache designs; full large-model serving still often needs multi-GPU</td>
+                    <td><strong>Architecture-dependent</strong></td>
                 </tr>
                 <tr>
                     <td>Serving throughput</td>
                     <td>Baseline</td>
-                    <td>29&times; (with eviction)</td>
-                    <td><strong>29&times;</strong></td>
+                    <td>Multi-&times; gains with paging, batching, eviction, quantization, or speculative decoding</td>
+                    <td><strong>Workload-dependent</strong></td>
                 </tr>
                 <tr>
                     <td>Memory waste in serving</td>
@@ -2911,7 +3021,7 @@
                 <tr>
                     <td>Smallest device for 8B+ models</td>
                     <td>Data center GPUs</td>
-                    <td>Smartphones (Bonsai 8B: 44 tok/s on iPhone)</td>
+                    <td>Phone-class demos (Bonsai 8B: PrismML reports ~44 tok/s on iPhone 17 Pro Max)</td>
                     <td><strong>Democratized</strong></td>
                 </tr>
             </tbody>
@@ -2920,7 +3030,7 @@
 
     <div class="key-insight">
         <h4>The Big Picture</h4>
-        <p>The story of KV cache optimization is a story of the AI community refusing to accept limitations. When the "memory wall" threatened to stop progress, researchers attacked the problem from every angle: architectural changes (MQA, GQA, MLA), memory management (PagedAttention), numerical compression (KIVI, TurboQuant), intelligent caching (H2O, SnapKV), and attention pattern design (sliding window, local-global). Together, these advances have reduced the effective KV cache cost by <strong>50&ndash;100&times;</strong>, enabling language models to run on devices that fit in your pocket while handling documents longer than entire novels.</p>
+        <p>The story of KV cache optimization is a story of the AI community refusing to accept limitations. When the "memory wall" threatened to stop progress, researchers attacked the problem from every angle: architectural changes (MQA, GQA, MLA), memory management (PagedAttention), numerical compression (KIVI, TurboQuant), intelligent caching (H2O, SnapKV), and attention pattern design (sliding window, local-global). The exact savings depend on model architecture and runtime settings, but source-backed examples now span from single-digit KB/token compressed designs to million-token KV layouts that are practical only because attention state is aggressively compressed.</p>
     </div>
 </div>
 
@@ -2931,11 +3041,11 @@
     <h2>DeepSeek V4 &mdash; The Million-Token Efficiency Breakthrough</h2>
     <div class="section-divider"></div>
 
-    <p>April 24, 2026. DeepSeek open-sources two new models &mdash; <strong>DeepSeek-V4-Pro</strong> and <strong>DeepSeek-V4-Flash</strong> &mdash; and the headlines focus on benchmark scores. But buried in the technical report is a number that matters more for anyone running these models in production: at one million tokens of context, V4-Pro needs only <strong>10% of the KV cache</strong> that DeepSeek-V3.2 required for the same workload. V4-Flash goes further, to <strong>7%</strong>. That is a 90&ndash;93% reduction in cache memory at the context lengths where it hurts most.</p>
+    <p>In April 2026, vLLM published implementation notes for <strong>DeepSeek-V4-Pro</strong> and <strong>DeepSeek-V4-Flash</strong>, describing an attention design built for up to one million tokens of context. The headline systems number: with BF16 KV cache, vLLM reports about <strong>9.62 GiB</strong> of KV cache for one 1M-token V4-Pro sequence, about <strong>8.7&times;</strong> smaller than its 83.9 GiB estimate for a V3.2-style stack.</p>
 
-    <p>This was not achieved by simply adding more quantization or swapping in GQA. DeepSeek introduced a fundamentally new attention architecture &mdash; one that distinguishes between tokens that need precise attention and tokens that can tolerate aggressive compression &mdash; and layered it on top of their existing MLA foundation.</p>
+    <p>This was not achieved by simply adding more quantization or swapping in GQA. The architecture uses shared K=V cache, a short sliding window for local information, and two compressed long-range attention modes: <code>c4a</code> and <code>c128a</code>. In this article, CSA/HCA refers to that practical split between moderately compressed sparse attention and heavily compressed long-range attention.</p>
 
-    <div class="citation">DeepSeek-AI. "DeepSeek-V4 Technical Report." <em>arXiv preprint</em>, April 2026. <a href="https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro">HuggingFace: DeepSeek-V4-Pro</a></div>
+    <div class="citation">Source: vLLM. "DeepSeek V4 in vLLM: Efficient Long-context Attention," April 2026. The implementation write-up reports 1M-token support, c4a/c128a compression, a 128-token sliding window, and 9.62 GiB BF16 KV cache per 1M-token V4-Pro sequence. Model cards: <a href="https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro">DeepSeek-V4-Pro</a>, <a href="https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash">DeepSeek-V4-Flash</a>. vLLM blog: <a href="https://vllm.ai/blog/deepseek-v4">vllm.ai/blog/deepseek-v4</a>.</div>
 
     <h3>Two Model Variants</h3>
 
@@ -2943,12 +3053,12 @@
         <div class="comparison-card" style="border-top: 3px solid var(--primary);">
             <div class="metric" style="font-size: 1.3rem; background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">V4-Pro</div>
             <div class="metric-label">1.6T total / 49B active</div>
-            <div class="metric-context">27% of single-token FLOPs vs V3.2 &bull; 10% of KV cache at 1M tokens &bull; 1M context window &bull; MIT licensed</div>
+            <div class="metric-context">vLLM reports 1M-token context support and about 9.62 GiB BF16 KV cache per 1M-token sequence.</div>
         </div>
         <div class="comparison-card" style="border-top: 3px solid var(--accent);">
             <div class="metric" style="font-size: 1.3rem; background: var(--gradient-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">V4-Flash</div>
-            <div class="metric-label">284B total / 13B active</div>
-            <div class="metric-context">10% of single-token FLOPs vs V3.2 &bull; 7% of KV cache at 1M tokens &bull; 1M context window &bull; MIT licensed</div>
+            <div class="metric-label">~285B total / 13B active</div>
+            <div class="metric-context">vLLM describes Flash as the smaller V4 variant with 1M-token context support.</div>
         </div>
     </div>
 
@@ -3043,41 +3153,53 @@
     </div>
 
     <!-- ANIMATION: DeepSeek V4 Hybrid Attention (CSA vs HCA) -->
-    <div class="chart-container chart-tall" style="max-height:420px; margin: 30px 0;">
+    <div class="chart-container chart-tall" style="margin: 30px 0;">
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Interactive: watch CSA and HCA layers shape the KV cache footprint across a 12-layer model stack</p>
+        <div class="article-video-card">
+            <h5>LinkedIn-ready video preview</h5>
+            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/deepseek-v4-hybrid-attention.mp4" type="video/mp4">
+                <source src="videos/deepseek-v4-hybrid-attention.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+            <div class="recap-links">
+                <a class="recap-link" href="videos/deepseek-v4-hybrid-attention.mp4">Download MP4</a>
+                <a class="recap-link" href="videos/deepseek-v4-hybrid-attention.webm">Open WebM</a>
+            </div>
+        </div>
         <canvas id="deepseekV4Anim" width="800" height="520" style="width:100%; max-height:520px;"></canvas>
     </div>
 
-    <h3>Day-0 Inference: SGLang Integration</h3>
+    <h3>Inference Implementation: vLLM Integration</h3>
 
-    <p>The SGLang team shipped optimized inference support for DeepSeek V4 on the same day as the release. The stack includes several techniques that compound the architectural gains:</p>
+    <p>The vLLM team shipped DeepSeek V4 support with an implementation focused on making the heterogeneous cache layout practical at one-million-token context. Their public write-up reports about <strong>9.62 GiB</strong> of BF16 KV cache per 1M-token V4-Pro sequence before further FP8/FP4 cache optimizations.</p>
 
     <div class="comparison-grid">
         <div class="comparison-card">
-            <div class="metric" style="font-size: 1rem;">ShadowRadix Prefix Cache</div>
-            <div class="metric-label">Prefix reuse at scale</div>
-            <div class="metric-context">Caches shared prefixes (system prompts, document headers) across requests, reducing redundant KV computation in serving scenarios with repeated context.</div>
+            <div class="metric" style="font-size: 1rem;">Shared K=V Cache</div>
+            <div class="metric-label">One cached KV tensor</div>
+            <div class="metric-context">DeepSeek V4 uses a shared K=V multi-query-style cache, reducing stored attention state before compression is applied.</div>
         </div>
         <div class="comparison-card">
-            <div class="metric" style="font-size: 1rem;">HiSparse CPU-Extended KV</div>
-            <div class="metric-label">CPU offload for HCA blocks</div>
-            <div class="metric-context">HCA's aggressively compressed KV blocks are cheap to access, making them suitable for CPU offload without a latency penalty. Frees GPU HBM for active CSA layers.</div>
+            <div class="metric" style="font-size: 1rem;">c4a + c128a Layers</div>
+            <div class="metric-label">Heterogeneous compression</div>
+            <div class="metric-context">Some layers compress KV by roughly 4&times;, while heavily compressed layers use roughly 128&times; compression.</div>
         </div>
         <div class="comparison-card">
-            <div class="metric" style="font-size: 1rem;">MTP Speculative Decoding</div>
-            <div class="metric-label">Multi-token prediction</div>
-            <div class="metric-context">V4's Multi-Token Prediction heads generate draft tokens inline; SGLang verifies them in the same pass using in-graph metadata, eliminating a separate draft model.</div>
+            <div class="metric" style="font-size: 1rem;">PagedAttention Packing</div>
+            <div class="metric-label">One logical block size</div>
+            <div class="metric-context">vLLM maps different compression rates into a consistent block layout so prefix caching, disaggregation, and scheduling still work.</div>
         </div>
         <div class="comparison-card">
-            <div class="metric" style="font-size: 1rem;">Flash Compressor + Lightning TopK</div>
-            <div class="metric-label">Real-time CSA routing</div>
-            <div class="metric-context">Flash Compressor runs the dynamic sequence compression step in a fused CUDA kernel; Lightning TopK identifies the sparse attention targets at GPU speed without leaving the forward pass.</div>
+            <div class="metric" style="font-size: 1rem;">Kernel Fusion + Streams</div>
+            <div class="metric-label">Lower serving overhead</div>
+            <div class="metric-context">The implementation uses fused kernels and multi-stream execution to keep the GPU busy despite the more complex attention path.</div>
         </div>
     </div>
 
     <div class="key-insight">
         <h4>What V4 Proves About the KV Cache Problem</h4>
-        <p>DeepSeek V4 demonstrates that the path to one-million-token context is not brute-force memory scaling &mdash; it is <strong>architectural differentiation of attention layers</strong>. By assigning CSA to precision-critical layers and HCA to context-reinforcement layers, V4 achieves the kind of memory profile that previously required dedicated eviction policies or offline quantization. The 90% reduction in KV cache at 1M tokens is a direct consequence of the model <em>knowing at inference time</em> which tokens it needs to remember precisely and which it can compress aggressively. Combined with MLA's existing latent compression (carried over from V3), V4's effective KV footprint per token is now so small that a single H100 can hold over 1M tokens of context for a 49B-active-parameter model.</p>
+        <p>DeepSeek V4 demonstrates that the path to one-million-token context is not brute-force memory scaling &mdash; it is <strong>architectural differentiation of attention layers</strong>. By combining a short local sliding-window branch with moderately compressed CSA layers and heavily compressed HCA layers, V4 cuts the KV footprint enough that the <em>KV cache for a single 1M-token sequence</em> becomes manageable on modern accelerator memory. The full V4-Pro model weights still require a multi-GPU deployment; the single-card claim applies only to KV-cache capacity, not to hosting all model parameters.</p>
     </div>
 </div>
 </div>
@@ -3170,8 +3292,20 @@
     </div>
 
     <!-- ANIMATION: DFlash speculative decoding comparison -->
-    <div class="chart-container chart-tall" style="max-height:400px; margin: 30px 0;">
+    <div class="chart-container chart-tall" style="margin: 30px 0;">
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Interactive: compare autoregressive, standard speculative decoding, and DFlash block diffusion side-by-side</p>
+        <div class="article-video-card">
+            <h5>LinkedIn-ready video preview</h5>
+            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/dflash-block-diffusion.mp4" type="video/mp4">
+                <source src="videos/dflash-block-diffusion.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+            <div class="recap-links">
+                <a class="recap-link" href="videos/dflash-block-diffusion.mp4">Download MP4</a>
+                <a class="recap-link" href="videos/dflash-block-diffusion.webm">Open WebM</a>
+            </div>
+        </div>
         <canvas id="dflashAnim" width="800" height="520" style="width:100%; max-height:520px;"></canvas>
     </div>
 
@@ -3270,7 +3404,7 @@
     <ul>
         <li><strong>Jamba</strong> (AI21 Labs) — alternates Mamba and full attention layers, with MoE on top</li>
         <li><strong>Zamba</strong> — single shared attention layer with many Mamba layers around it</li>
-        <li><strong>DeepSeek V4's CSA/HCA</strong> — conceptually similar: compressed layers + full attention anchors every 8 layers</li>
+        <li><strong>DeepSeek V4's CSA/HCA</strong> — a hybrid attention design that combines a short local window with compressed long-range KV pools</li>
     </ul>
 
     <div class="key-insight">
@@ -3393,8 +3527,8 @@
             <tbody>
                 <tr><td>LLaMA 3 70B (dense)</td><td>70B</td><td>70B</td><td>GQA</td><td>~18 GB</td></tr>
                 <tr><td>Mixtral 8×7B</td><td>46B</td><td>13B active</td><td>GQA</td><td>~5 GB</td></tr>
-                <tr><td>DeepSeek V3 (MoE+MLA)</td><td>671B</td><td>37B active</td><td>MLA</td><td>~2 GB</td></tr>
-                <tr><td>DeepSeek V4-Pro (MoE+CSA/HCA)</td><td>~800B est.</td><td>~40B active</td><td>CSA/HCA</td><td>~1.8 GB</td></tr>
+                <tr><td>DeepSeek V3 (MoE+MLA)</td><td>671B</td><td>37B active</td><td>MLA</td><td>~8.6 GB</td></tr>
+                <tr><td>DeepSeek V4-Pro (MoE+CSA/HCA)</td><td>1.6T</td><td>49B active</td><td>CSA/HCA</td><td>~9.6 GiB at 1M</td></tr>
                 <tr><td>Qwen3-235B-A22B</td><td>235B</td><td>22B active</td><td>GQA</td><td>~6 GB</td></tr>
             </tbody>
         </table>
@@ -3512,7 +3646,7 @@
 
     <div class="citation">Liu, H. et al. "Ring Attention with Blockwise Transformers for Near-Infinite Context." <em>arXiv</em>, 2023. <a href="https://arxiv.org/abs/2310.01889">arXiv:2310.01889</a></div>
 
-    <p>With Ring Attention across 8 GPUs, the effective KV cache capacity is 8× a single GPU &mdash; linearly scalable. This is how Gemini 1.5 and other ultra-long-context models handle 1M+ token contexts in production.</p>
+    <p>With Ring Attention across 8 GPUs, the effective sequence-parallel capacity can scale with the number of participating GPUs. Public model cards for proprietary long-context systems generally do not disclose enough implementation detail to attribute their production serving stack to Ring Attention specifically.</p>
 
     <div class="table-wrapper">
         <table>
@@ -3523,7 +3657,7 @@
                 <tr><td>Standard serving</td><td>Nothing (baseline)</td><td>None</td><td>All early systems</td></tr>
                 <tr><td>Splitwise / DistServe</td><td>Prefill-decode interference</td><td>GPU→GPU per request</td><td>Production serving</td></tr>
                 <tr><td>Mooncake</td><td>KV cache as a first-class resource</td><td>Pooled KV transfer</td><td>Moonshot AI (Kimi)</td></tr>
-                <tr><td>Ring Attention</td><td>KV cache larger than 1 GPU</td><td>Ring-wise per step</td><td>Gemini, long-context models</td></tr>
+                <tr><td>Ring Attention</td><td>KV cache larger than 1 GPU</td><td>Ring-wise per step</td><td>Research / sequence-parallel long-context training and inference</td></tr>
             </tbody>
         </table>
     </div>
@@ -3548,24 +3682,41 @@
         <div class="recap-media-grid">
             <div class="recap-video-card">
                 <video class="recap-video" controls playsinline preload="metadata" muted>
+                    <source src="videos/recap-paced-canvas.mp4" type="video/mp4">
                     <source src="videos/recap-paced-canvas.webm" type="video/webm">
-                    Your browser does not support embedded video. <a href="videos/recap-paced-canvas.webm">Open the recap video</a>.
+                    Your browser does not support embedded video. <a href="videos/recap-paced-canvas.mp4">Open the recap video</a>.
                 </video>
                 <h4>Fast recap video</h4>
                 <p>A lighter export that works well for article readers and social previews. It covers the full progression from MHA to MLA without the slower pauses.</p>
                 <div class="recap-links">
-                    <a class="recap-link" href="videos/recap-paced-canvas.webm">Open video</a>
+                    <a class="recap-link" href="videos/recap-paced-canvas.mp4">Download MP4</a>
+                    <a class="recap-link" href="videos/recap-paced-canvas.webm">Open WebM</a>
                 </div>
             </div>
             <div class="recap-video-card">
                 <video class="recap-video" controls playsinline preload="metadata" muted>
+                    <source src="videos/recap-5x-slow-full.mp4" type="video/mp4">
                     <source src="videos/recap-5x-slow-full.webm" type="video/webm">
-                    Your browser does not support embedded video. <a href="videos/recap-5x-slow-full.webm">Open the full walkthrough</a>.
+                    Your browser does not support embedded video. <a href="videos/recap-5x-slow-full.mp4">Open the full walkthrough</a>.
                 </video>
                 <h4>Slow full walkthrough</h4>
                 <p>A slower export for readers who want time to follow the labels, cache counters, and architecture transitions frame by frame.</p>
                 <div class="recap-links">
-                    <a class="recap-link" href="videos/recap-5x-slow-full.webm">Open video</a>
+                    <a class="recap-link" href="videos/recap-5x-slow-full.mp4">Download MP4</a>
+                    <a class="recap-link" href="videos/recap-5x-slow-full.webm">Open WebM</a>
+                </div>
+            </div>
+            <div class="recap-video-card">
+                <video class="recap-video" controls playsinline preload="metadata" muted loop>
+                    <source src="videos/kv-cache-recap-canvas.mp4" type="video/mp4">
+                    <source src="videos/kv-cache-recap-canvas.webm" type="video/webm">
+                    Your browser does not support embedded video. <a href="videos/kv-cache-recap-canvas.mp4">Open the short recap clip</a>.
+                </video>
+                <h4>Short LinkedIn clip</h4>
+                <p>A compact MP4 cut from the live recap canvas. Use this when you need a quick animated asset to upload directly into a LinkedIn post.</p>
+                <div class="recap-links">
+                    <a class="recap-link" href="videos/kv-cache-recap-canvas.mp4">Download MP4</a>
+                    <a class="recap-link" href="videos/kv-cache-recap-canvas.webm">Open WebM</a>
                 </div>
             </div>
         </div>
@@ -3651,9 +3802,9 @@
 
             <li>Qwen Team. "Qwen3.5 Model Series." Model card, 2025. <a href="https://huggingface.co/Qwen/Qwen3.5-9B">HuggingFace: Qwen3.5-9B</a></li>
 
-            <li>PrismML / Caltech. "1-bit Bonsai: The First Commercially Viable 1-bit LLMs." Whitepaper, 2025. <a href="https://github.com/PrismML-Eng/Bonsai-demo/blob/main/1-bit-bonsai-8b-whitepaper.pdf">GitHub</a></li>
+            <li>PrismML / Caltech. "1-bit Bonsai: The First Commercially Viable 1-bit LLMs." Whitepaper, 2026. <a href="https://github.com/PrismML-Eng/Bonsai-demo/blob/main/1-bit-bonsai-8b-whitepaper.pdf">GitHub</a></li>
 
-            <li>DeepSeek-AI. "DeepSeek-V4 Technical Report." <em>arXiv preprint</em>, April 2026. <a href="https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro">HuggingFace: DeepSeek-V4-Pro</a></li>
+            <li>DeepSeek-AI. "DeepSeek-V4: Towards Highly Efficient Million-Token Context Intelligence." Model card / technical report, 2026. <a href="https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro">HuggingFace: DeepSeek-V4-Pro</a>; vLLM. "DeepSeek V4 in vLLM: Efficient Long-context Attention." 2026. <a href="https://vllm.ai/blog/deepseek-v4">vLLM blog</a></li>
 
             <li>Z Lab. "DFlash: Block Diffusion for Flash Speculative Decoding." <em>arXiv preprint</em>, February 2026. <a href="https://arxiv.org/abs/2602.06036">arXiv:2602.06036</a></li>
         </ol>
@@ -3670,10 +3821,10 @@
 <script>
 const kvCacheLabels = [
     ['LLaMA-2 7B', 'MHA'],
-    ['LLaMA-3 405B', 'GQA-8'],
+    ['LLaMA-3.1 405B', 'GQA-8'],
     ['Qwen3 32B', 'GQA-8'],
     ['Qwen3 MoE', 'GQA-4'],
-    ['LLaMA-3 8B', 'GQA-8'],
+    ['LLaMA-3.1 8B', 'GQA-8'],
     ['Phi-4 14B', 'GQA-8'],
     ['DeepSeek-V3', 'MLA'],
     ['Kimi K2', 'MLA'],
@@ -3681,7 +3832,7 @@ const kvCacheLabels = [
     ['Gemma 4 E4B', 'GQA+LG']
 ];
 
-const kvCacheTargets = [512, 516, 256, 188, 128, 128, 70, 70, 32, 20];
+const kvCacheTargets = [512, 504, 256, 189, 128, 128, 69, 69, 32, 20];
 const kvCacheBarColors = [
     'rgba(239, 68, 68, 0.78)',
     'rgba(239, 68, 68, 0.78)',
@@ -3753,7 +3904,7 @@ function createKvCacheChart() {
         data: {
             labels: kvCacheLabels,
             datasets: [{
-                label: 'KV Cache per Token (KB)',
+                label: 'Approx. KV Cache per Token (KB)',
                 data: new Array(kvCacheTargets.length).fill(0),
                 backgroundColor: kvCacheBarColors,
                 borderColor: kvCacheBorderColors,
@@ -3790,7 +3941,7 @@ function createKvCacheChart() {
                     beginAtZero: true,
                     grid: { color: 'rgba(39, 64, 89, 0.45)' },
                     ticks: { color: '#8fa3b8', padding: 8 },
-                    title: { display: true, text: 'KB per Token (FP16)', color: '#8fa3b8' },
+                    title: { display: true, text: 'Approx. KB per Token (FP16-style)', color: '#8fa3b8' },
                 },
                 y: {
                     grid: { display: false },
@@ -4829,7 +4980,7 @@ function setupHiDPICanvas(canvas, width, height) {
                 {name:'Falcon-7B (MQA)',color:GREEN,kbTok:8,barH:1},
                 {name:'Qwen3 235B (GQA-4)',color:GOLD,kbTok:189,barH:9},
                 {name:'DeepSeek-V3 (MLA)',color:PURPLE,kbTok:69,barH:3},
-                {name:'Gemma 4 31B (GQA+LG)',color:CYAN,kbTok:1120,barH:44},
+                {name:'Gemma 4 E4B (GQA+LG)',color:CYAN,kbTok:20,barH:1,labelKB:'~20 KB*',at128:'@128K: ~2 GB capped'},
             ];
             const progress=ease(t);
             const colW=150, colGap=18;
@@ -4862,11 +5013,11 @@ function setupHiDPICanvas(canvas, width, height) {
 
                 // KB label
                 ctx.fillStyle=TEXT;ctx.font='bold 13px JetBrains Mono,monospace';
-                ctx.textAlign='center';ctx.fillText(m.kbTok+' KB',cx+colW/2,barBottom-barH-10);
+                ctx.textAlign='center';ctx.fillText(m.labelKB || (m.kbTok+' KB'),cx+colW/2,barBottom-barH-10);
 
                 // At 128K
                 ctx.fillStyle=MUTED;ctx.font='10px Inter,sans-serif';
-                ctx.fillText('@128K: '+(m.kbTok*128/1024).toFixed(0)+' GB',cx+colW/2,barBottom+20);
+                ctx.fillText(m.at128 || ('@128K: '+(m.kbTok*128/1024).toFixed(0)+' GB'),cx+colW/2,barBottom+20);
                 ctx.textAlign='left';
                 ctx.globalAlpha=1;
             });
@@ -4886,20 +5037,20 @@ function setupHiDPICanvas(canvas, width, height) {
             cachePulse(traveler, pathY, BLUE, vis, 9);
 
             if(progress>0.6){
-                subtitle('All four designs solve the same next-token problem.',420,vis);
+                subtitle('All five designs solve the same next-token problem.',420,vis);
                 subtitle('The journey is about how much state each one keeps in cache to get there.',445,vis);
             }
         }
 
         // ============ SCENE 11: END ============
         if(sc===11){
-            title('MHA: 2048 KB → MQA: 15 KB → GQA: 189 KB → MLA: 69 KB → GQA+LG: 80 KB',200,TEXT,vis,20);
-            title('Five companies. Five architectures. Same KV cache problem.',245,MUTED,vis,16);
-            subtitle('LLaMA-1 → Falcon → Qwen3 → DeepSeek-V3 → Gemma 4',290,vis);
+            title('MHA: 2560 KB → MQA: 8 KB → GQA: 189 KB → MLA: 69 KB → GQA+LG: ~20 KB',200,TEXT,vis,20);
+            title('Five model families. Five architectures. Same KV cache problem.',245,MUTED,vis,16);
+            subtitle('LLaMA-1 → Falcon → Qwen3 → DeepSeek-V3 → Gemma 4 E4B',290,vis);
 
             // Animated shrinking bar
             const progress=ease(t);
-            const sizes=[2048,15,189,69,80];
+            const sizes=[2560,8,189,69,20];
             const colors=[RED,GREEN,GOLD,PURPLE,CYAN];
             const labels=['MHA','MQA','GQA-4','MLA','GQA+LG'];
             const steps = sizes.length - 1;
@@ -4911,8 +5062,9 @@ function setupHiDPICanvas(canvas, width, height) {
             const currentColor = colors[nextIdx] === colors[idx]
                 ? colors[idx]
                 : (local > 0.5 ? colors[nextIdx] : colors[idx]);
-            const currentLabel = 'Current cache';
-            const bw=(currentSize/512)*(W-200);
+            const currentLabel = 'Approx. cache';
+            const maxSummarySize = Math.max(...sizes);
+            const bw=(currentSize/maxSummarySize)*(W-200);
             ctx.strokeStyle='rgba(143,163,184,0.32)';
             ctx.lineWidth=2;
             ctx.beginPath();
@@ -5545,7 +5697,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     function drawScene1(t){
         const prog=ease(Math.min(1,t*1.4));
         lbl('The Memory Wall: Why V4 Had to Change',20,28,BRIGHT,15,'bold');
-        lbl("At 1M tokens, DeepSeek-V3.2's KV cache overwhelms the entire GPU",20,50,MUTED,12);
+        lbl("At 1M tokens, a V3-style MLA cache consumes most of an 80GB GPU before weights and overhead",20,50,MUTED,12);
 
         const ctxK=[1,8,64,256,1000];
         const kvPerToken=70; // KB per token, V3.2 MLA
@@ -5593,7 +5745,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
             }
             ctx.globalAlpha=1;
         });
-        mono('DeepSeek-V3.2: ~70 KB / token (MLA)  |  H100 80 GB',aX,aY+aH+50,'#475569',10);
+        mono('V3-style MLA baseline: ~70 KB/token KV only  |  H100 80 GB reference line',aX,aY+aH+50,'#475569',10);
 
         // Solution callout
         if(prog>0.68){
@@ -5615,7 +5767,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     function drawScene2(t){
         const prog=ease(Math.min(1,t*1.4));
         lbl('Hybrid Architecture: CSA and HCA Layers Alternate',20,28,BRIGHT,15,'bold');
-        lbl('Each layer is assigned one type. V4-Flash uses more HCA layers for a smaller KV budget.',20,50,MUTED,12);
+        lbl('Illustrative stack: V4 mixes moderately compressed CSA with more aggressively compressed HCA layers.',20,50,MUTED,12);
 
         const types=['CSA','CSA','HCA','CSA','CSA','HCA','CSA','HCA','CSA','HCA','HCA','HCA'];
         const N=types.length,lH=27,lGap=3,sx=72,sy=68,lW=W-210;
@@ -5651,14 +5803,14 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
             lbl('L'+(i+1)+': '+type,sx+7,y+lH/2+5,col,11,'bold');
 
             // KV size indicator on right
-            const kvX=sx+lW+10,kvMaxW=96,kvFrac=type==='CSA'?0.33:0.10;
+            const kvX=sx+lW+10,kvMaxW=96,kvFrac=type==='CSA'?0.25:0.04;
             ctx.fillStyle='rgba(71,85,105,0.18)';ctx.fillRect(kvX,y+4,kvMaxW,lH-8);
             if(prog>delay+0.42){
                 const kp=ease(clamp((prog-delay-0.42)/0.45,0,1));
                 ctx.fillStyle=col+'60';ctx.fillRect(kvX,y+4,kvMaxW*kvFrac*kp,lH-8);
                 ctx.strokeStyle=col+'80';ctx.lineWidth=1;ctx.strokeRect(kvX,y+4,kvMaxW,lH-8);
                 ctx.fillStyle=col;ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='right';
-                ctx.fillText(type==='CSA'?'33%':'10%',kvX+kvMaxW+22,y+lH/2+4);ctx.textAlign='left';
+                ctx.fillText(type==='CSA'?'c4a':'c128a',kvX+kvMaxW+28,y+lH/2+4);ctx.textAlign='left';
             }
             ctx.globalAlpha=1;
         });
@@ -5702,7 +5854,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
             const cp=ease(clamp((prog-0.26)/0.32,0,1));
             const kvY=rowY+tH+52;
             ctx.globalAlpha=cp;
-            lbl('↓ Per-token compression: K and V each shrink to ~74% of original size',rowX,kvY-12,TEXT,11);
+            lbl('↓ Per-token compression: each token keeps a smaller compressed long-range state',rowX,kvY-12,TEXT,11);
             ctx.globalAlpha=1;
             for(let i=0;i<N;i++){
                 const x=rowX+i*(tW+tGap);
@@ -5724,7 +5876,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
             const sp=ease(clamp((prog-0.52)/0.36,0,1));
             const gS=18,gGap=2,gX=(W-N*(gS+gGap))/2,gY=222;
             ctx.globalAlpha=sp;
-            lbl('↓ Sparse attention: each query attends only to local window + attention sink (~3 keys)',gX,gY-12,TEXT,11);
+            lbl('↓ Toy sparse pattern: each query attends to a small selected subset of keys',gX,gY-12,TEXT,11);
             ctx.globalAlpha=1;
             for(let r=0;r<N;r++){
                 for(let c=0;c<N;c++){
@@ -5747,8 +5899,8 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
             const rp=ease(clamp((prog-0.84)/0.16,0,1));
             ctx.globalAlpha=rp;
             rrect(20,H-58,W-40,42,10,'rgba(77,163,255,0.1)',CSA,1.5);
-            glow(CSA,8);lbl('~34% of full KV cache per CSA layer',W/2,H-38,CSA,14,'bold','center');noGlow();
-            lbl('Precise token-level memory at moderate cost — used for deep semantic layers',W/2,H-20,MUTED,10,'normal','center');
+            glow(CSA,8);lbl('CSA layers use c4a-style compressed long-range KV plus sparse lookup',W/2,H-38,CSA,13,'bold','center');noGlow();
+            lbl('Precise token-level information at moderate cost — used for deep semantic layers',W/2,H-20,MUTED,10,'normal','center');
             ctx.globalAlpha=1;
         }
     }
@@ -5759,7 +5911,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     function drawScene4(t){
         const prog=ease(Math.min(1,t*1.2));
         lbl('HCA — Heavily Compressed Attention',20,28,HCA,16,'bold');
-        lbl('Groups of 4 tokens are consolidated into a single shared KV entry. Far fewer cache slots.',20,50,MUTED,11);
+        lbl('Toy demo: groups of 4 tokens are consolidated into shared KV entries. Real compression ratios vary by layer.',20,50,MUTED,11);
 
         const N=12,GROUP=4,nG=N/GROUP,tW=38,tH=30,tGap=4;
         const sx=(W-N*(tW+tGap))/2,tokY=72;
@@ -5841,7 +5993,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
             const rp=ease(clamp((prog-0.87)/0.13,0,1));
             ctx.globalAlpha=rp;
             rrect(20,H-58,W-40,42,10,'rgba(251,146,60,0.1)',HCA,1.5);
-            glow(HCA,8);lbl('~10% of full KV cache per HCA layer',W/2,H-38,HCA,14,'bold','center');noGlow();
+            glow(HCA,8);lbl('HCA layers use c128a-style heavily compressed long-range KV',W/2,H-38,HCA,13,'bold','center');noGlow();
             lbl('Aggressive broad-context compression — used for shallower pattern-reinforcement layers',W/2,H-20,MUTED,10,'normal','center');
             ctx.globalAlpha=1;
         }
@@ -5856,7 +6008,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
         lbl('CSA + HCA together slash the KV footprint by 90–93% vs DeepSeek-V3.2',20,52,MUTED,12);
 
         const models=[
-            {name:'DeepSeek-V3.2',frac:1.00,col:'#ef4444',tag:'MLA only — baseline'},
+            {name:'DeepSeek-V3.2',frac:1.00,col:'#ef4444',tag:'V3-style baseline'},
             {name:'V4-Pro',frac:0.10,col:CSA,tag:'27% FLOPs  ·  10% KV  ·  1.6T / 49B active'},
             {name:'V4-Flash',frac:0.07,col:HCA,tag:'10% FLOPs  ·   7% KV  ·   284B / 13B active'},
         ];
@@ -5900,9 +6052,9 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
             const bY=sY+models.length*(bH+bGap)+8;
             ctx.globalAlpha=fp;
             glow(SUCCESS,8);rrect(20,bY,W-40,66,10,'rgba(34,197,94,0.07)',SUCCESS,1.5);noGlow();
-            lbl('Single H100 80 GB can hold 1M+ tokens for a 49B-active-param model',W/2,bY+22,SUCCESS,13,'bold','center');
-            lbl('CSA + HCA × MLA latent compression: effective ~3–5 KB/token vs 512 KB (MHA 2023 baseline)',W/2,bY+42,TEXT,11,'normal','center');
-            mono('DeepSeek-V4 Technical Report, April 2026  |  V4-Pro: 1.6T/49B  |  V4-Flash: 284B/13B',W/2,bY+58,MUTED,9,'center');
+            lbl('KV cache for one 1M-token sequence can fit in accelerator memory; weights still need multi-GPU serving',W/2,bY+22,SUCCESS,12,'bold','center');
+            lbl('Shared K=V plus CSA/HCA compression: roughly 5–10 KB/token vs ~70 KB/token for the V3-style MLA baseline',W/2,bY+42,TEXT,10,'normal','center');
+            mono('DeepSeek-V4 / vLLM public figures  |  V4-Pro: 1.6T/49B  |  V4-Flash: 284B/13B',W/2,bY+58,MUTED,9,'center');
             ctx.globalAlpha=1;
         }
     }

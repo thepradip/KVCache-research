@@ -560,99 +560,6 @@
             color: var(--text-muted);
         }
 
-        .recap-media-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 18px;
-            margin-bottom: 22px;
-        }
-
-        .recap-video-card {
-            position: relative;
-            z-index: 1;
-            border-radius: 22px;
-            padding: 16px;
-            border: 1px solid rgba(92, 121, 155, 0.24);
-            background: linear-gradient(180deg, rgba(8, 17, 31, 0.94), rgba(10, 20, 35, 0.9));
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-        }
-
-        .recap-video-card h4 {
-            margin: 14px 0 10px;
-            font-size: 1.05rem;
-        }
-
-        .recap-video-card p {
-            margin-bottom: 0;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-
-        .recap-video {
-            width: 100%;
-            display: block;
-            border-radius: 16px;
-            border: 1px solid rgba(92, 121, 155, 0.26);
-            background: #020617;
-            box-shadow: 0 16px 36px rgba(2, 8, 23, 0.28);
-        }
-
-        .article-video-card {
-            margin: 14px 0 18px;
-            padding: 14px;
-            border-radius: 18px;
-            border: 1px solid rgba(92, 121, 155, 0.24);
-            background: linear-gradient(180deg, rgba(8, 17, 31, 0.9), rgba(10, 20, 35, 0.82));
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-        }
-
-        .article-video-card h5 {
-            margin: 0 0 10px;
-            color: var(--text);
-            font-size: 0.95rem;
-            letter-spacing: 0;
-        }
-
-        .article-animation-video {
-            width: 100%;
-            display: block;
-            border-radius: 14px;
-            border: 1px solid rgba(92, 121, 155, 0.26);
-            background: #020617;
-        }
-
-        .article-video-card .recap-links {
-            margin-top: 10px;
-        }
-
-        .recap-links {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 14px;
-        }
-
-        .recap-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 14px;
-            border-radius: 999px;
-            border: 1px solid rgba(77, 163, 255, 0.22);
-            background: rgba(77, 163, 255, 0.08);
-            color: #cde4ff;
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 600;
-            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-        }
-
-        .recap-link:hover {
-            transform: translateY(-1px);
-            background: rgba(77, 163, 255, 0.14);
-            border-color: rgba(77, 163, 255, 0.34);
-        }
-
         .recap-canvas {
             display: block;
             width: 100%;
@@ -931,14 +838,13 @@
             h2 { font-size: 1.8rem; }
             .comparison-grid { grid-template-columns: 1fr; }
             .toc { padding: 20px; }
-            .chart-container.chart-tall { height: 640px; }
-            .chart-container.chart-medium { height: 420px; }
+            .chart-container.chart-tall { min-height: 640px; }
+            .chart-container.chart-medium { min-height: 420px; }
             .counter-item { min-width: 140px; padding: 16px 10px; }
             .counter-value { font-size: 2.35rem; }
             .recap-shell { padding: 20px 16px; border-radius: 22px; }
             .recap-title { font-size: 1.9rem; }
             .recap-copy { margin-bottom: 20px; }
-            .recap-video-card { padding: 14px; }
             .recap-frame { padding: 12px; }
         }
 
@@ -998,6 +904,7 @@
         <li><a href="#sec6">Multi-Query Attention (MQA) &mdash; The First Big Fix</a></li>
         <li><a href="#sec7">Grouped-Query Attention (GQA) &mdash; The Best of Both Worlds</a></li>
         <li><a href="#sec8">Multi-Head Latent Attention (MLA) &mdash; DeepSeek's Breakthrough</a></li>
+        <li><a href="#sec8-live">Live Visual Comparison &mdash; MHA vs MQA vs GQA vs MLA</a></li>
         <li><a href="#sec9">Cross-Layer Attention (CLA) &mdash; Sharing Across Layers</a></li>
         <li><a href="#sec10">Sliding Window &amp; Local-Global Attention</a></li>
         <li><a href="#sec11">PagedAttention &mdash; Virtual Memory for AI</a></li>
@@ -1005,15 +912,16 @@
         <li><a href="#sec13">KV Cache Quantization &mdash; Shrinking Each Number</a></li>
         <li><a href="#sec14">FlashAttention &mdash; Making Hardware Work Smarter</a></li>
         <li><a href="#sec15">Model-by-Model Comparison &mdash; The Complete Picture</a></li>
-        <li><a href="#sec16">Kimi K2.5 &mdash; How Reasoning Changes for AI Agents</a></li>
-        <li><a href="#sec17">The State of the Art (2026) &amp; Future Directions</a></li>
-        <li><a href="#sec18">DeepSeek V4 &mdash; The Million-Token Efficiency Breakthrough</a></li>
-        <li><a href="#sec19">DFlash &mdash; Block Diffusion for Flash Speculative Decoding</a></li>
-        <li><a href="#sec20">Linear Attention &amp; SSMs &mdash; The O(1) KV Cache Alternative</a></li>
-        <li><a href="#sec21">Prefix Caching &amp; RadixAttention &mdash; Reuse Across Requests</a></li>
-        <li><a href="#sec22">Mixture of Experts &amp; KV Cache &mdash; Sparse Activation</a></li>
-        <li><a href="#sec23">KV Cache Offloading &mdash; CPU &amp; NVMe as Overflow</a></li>
-        <li><a href="#sec24">Disaggregated Prefill &amp; Decode &mdash; The New Serving Paradigm</a></li>
+        <li><a href="#sec16">DFlash &mdash; Block Diffusion for Flash Speculative Decoding</a></li>
+        <li><a href="#sec17">DeepSeek V4 &mdash; The Million-Token Efficiency Breakthrough</a></li>
+        <li><a href="#sec18">Kimi K2.5 &mdash; How Reasoning Changes for AI Agents</a></li>
+        <li><a href="#sec19">Linear Attention &amp; SSMs &mdash; The O(1) KV Cache Alternative</a></li>
+        <li><a href="#sec20">Prefix Caching &amp; RadixAttention &mdash; Reuse Across Requests</a></li>
+        <li><a href="#sec21">Mixture of Experts &amp; KV Cache &mdash; Sparse Activation</a></li>
+        <li><a href="#sec22">KV Cache Offloading &mdash; CPU &amp; NVMe as Overflow</a></li>
+        <li><a href="#sec23">Disaggregated Prefill &amp; Decode &mdash; The New Serving Paradigm</a></li>
+        <li><a href="#sec24">2026 Summary &amp; Future Directions</a></li>
+        <li><a href="#visual-recap">Visual Recap &mdash; Interactive Canvas</a></li>
         <li><a href="#sec25">References</a></li>
     </ol>
 </div>
@@ -1140,18 +1048,7 @@
     <div class="chart-container">
         <h4>Animation: Q &times; K<sup>T</sup> &rarr; Attention Scores &rarr; Weighted V &rarr; Output</h4>
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Toy scaled-dot-product example: one 1&times;4 Query is compared against five cached Keys, scaled by &radic;d<sub>k</sub>, then turned into attention weights and a weighted V output.</p>
-        <div class="article-video-card">
-            <h5>LinkedIn-ready video preview</h5>
-            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/qkv-attention-matmul.mp4" type="video/mp4">
-                <source src="videos/qkv-attention-matmul.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-            <div class="recap-links">
-                <a class="recap-link" href="videos/qkv-attention-matmul.mp4">Download MP4</a>
-                <a class="recap-link" href="videos/qkv-attention-matmul.webm">Open WebM</a>
-            </div>
-        </div>
+        
         <canvas id="matMulAnim" width="780" height="400" style="width:100%; max-height:400px;"></canvas>
     </div>
 
@@ -1258,18 +1155,7 @@
     <div class="chart-container">
         <h4>Animation: KV Cache Growing Token by Token</h4>
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Illustrative LLaMA-2 7B FP16-style baseline: each new token adds one more cached K/V state for every layer. Watch GPU memory fill up over time.</p>
-        <div class="article-video-card">
-            <h5>LinkedIn-ready video preview</h5>
-            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/kv-cache-growth.mp4" type="video/mp4">
-                <source src="videos/kv-cache-growth.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-            <div class="recap-links">
-                <a class="recap-link" href="videos/kv-cache-growth.mp4">Download MP4</a>
-                <a class="recap-link" href="videos/kv-cache-growth.webm">Open WebM</a>
-            </div>
-        </div>
+        
         <canvas id="cacheGrowthAnim" width="800" height="300" style="width:100%; max-height:300px;"></canvas>
     </div>
 </div>
@@ -1760,25 +1646,14 @@
 </div>
 
 <!-- ==================== LIVE COMPARISON ANIMATION ==================== -->
-<div class="section">
+<div class="section" id="sec8-live">
     <div class="section-number">Interactive Comparison</div>
-    <h2>Live: How KV Cache Works in MHA vs MQA vs GQA vs MLA</h2>
+    <h2>Live Visual Comparison &mdash; MHA vs MQA vs GQA vs MLA</h2>
     <div class="section-divider"></div>
     <p>The animation below runs all four attention methods side by side. Watch tokens arrive one at a time and see how much cached attention state each method stores. This is a normalized 32-layer FP16 comparison so the methods are compared on the same footing.</p>
 
     <div class="chart-container" style="padding: 15px;">
-        <div class="article-video-card">
-            <h5>LinkedIn-ready video preview</h5>
-            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/mha-mqa-gqa-mla-comparison.mp4" type="video/mp4">
-                <source src="videos/mha-mqa-gqa-mla-comparison.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-            <div class="recap-links">
-                <a class="recap-link" href="videos/mha-mqa-gqa-mla-comparison.mp4">Download MP4</a>
-                <a class="recap-link" href="videos/mha-mqa-gqa-mla-comparison.webm">Open WebM</a>
-            </div>
-        </div>
+        
         <canvas id="kvCompareAnim" width="800" height="780" style="width:100%; max-height:780px;"></canvas>
     </div>
 </div>
@@ -2014,18 +1889,7 @@
     <div class="chart-container">
         <h4>Animation: KV Cache Quantization &mdash; FP16 &rarr; INT8 &rarr; INT4 &rarr; INT2</h4>
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Illustrative scalar view of KV quantization: the values are rounded more aggressively as bit width drops. Real systems such as KIVI and TurboQuant use more sophisticated schemes than this simple bar demo.</p>
-        <div class="article-video-card">
-            <h5>LinkedIn-ready video preview</h5>
-            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/kv-cache-quantization.mp4" type="video/mp4">
-                <source src="videos/kv-cache-quantization.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-            <div class="recap-links">
-                <a class="recap-link" href="videos/kv-cache-quantization.mp4">Download MP4</a>
-                <a class="recap-link" href="videos/kv-cache-quantization.webm">Open WebM</a>
-            </div>
-        </div>
+        
         <canvas id="quantAnim" width="800" height="380" style="width:100%; max-height:380px;"></canvas>
     </div>
 
@@ -2739,36 +2603,14 @@
     <!-- Chart: KV Cache per Token Comparison -->
     <div class="chart-container chart-tall live-chart" data-chart-kind="kvBar">
         <h4>KV Cache Memory Per Token Comparison (FP16)</h4>
-        <div class="article-video-card">
-            <h5>LinkedIn-ready video preview</h5>
-            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/model-kv-cache-chart.mp4" type="video/mp4">
-                <source src="videos/model-kv-cache-chart.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-            <div class="recap-links">
-                <a class="recap-link" href="videos/model-kv-cache-chart.mp4">Download MP4</a>
-                <a class="recap-link" href="videos/model-kv-cache-chart.webm">Open WebM</a>
-            </div>
-        </div>
+        
         <canvas id="kvCacheChart"></canvas>
     </div>
 
     <!-- Chart: Evolution of KV Cache Reduction Techniques -->
     <div class="chart-container chart-medium live-chart" data-chart-kind="reductionRadar">
         <h4>Memory Reduction vs. FP16 MHA Baseline (Lower is Better)</h4>
-        <div class="article-video-card">
-            <h5>LinkedIn-ready video preview</h5>
-            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/optimization-radar-chart.mp4" type="video/mp4">
-                <source src="videos/optimization-radar-chart.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-            <div class="recap-links">
-                <a class="recap-link" href="videos/optimization-radar-chart.mp4">Download MP4</a>
-                <a class="recap-link" href="videos/optimization-radar-chart.webm">Open WebM</a>
-            </div>
-        </div>
+        
         <canvas id="reductionChart"></canvas>
     </div>
 
@@ -2782,9 +2624,291 @@
     </div>
 </div>
 
-<!-- ==================== SECTION 16: KIMI K2.5 AGENTIC ==================== -->
+<!-- ==================== SECTION 16: DEEPSEEK V4 ==================== -->
+<div class="container">
 <div class="section" id="sec16">
     <div class="section-number">Chapter 16</div>
+    <h2>DFlash &mdash; Block Diffusion for Flash Speculative Decoding</h2>
+    <div class="section-divider"></div>
+
+    <p>Architectural changes like MLA, GQA, and HCA reduce how <em>much</em> KV cache you need to store. But there is a complementary problem: how fast can you <em>generate</em> tokens given whatever cache you have? This is the domain of speculative decoding &mdash; and in February 2026, Z Lab published <strong>DFlash</strong>, which pushes speculative decoding to a new level by replacing the autoregressive draft model with a block diffusion model.</p>
+
+    <div class="citation">Z Lab. "DFlash: Block Diffusion for Flash Speculative Decoding." <em>arXiv preprint</em>, February 2026. <a href="https://arxiv.org/abs/2602.06036">arXiv:2602.06036</a></div>
+
+    <h3>The Speculative Decoding Bottleneck</h3>
+
+    <p>Standard autoregressive decoding generates one token per forward pass. Even with a fully optimized KV cache, the decode step is memory-bandwidth-bound: each new token requires loading the entire KV cache from HBM, computing attention, and writing one output token. GPU utilization hovers around 20&ndash;40% during decode &mdash; most of the hardware is idle.</p>
+
+    <p><strong>Speculative decoding</strong> addresses this by using a fast, small <em>draft model</em> to generate a block of candidate tokens, then verifying all of them in a single forward pass of the large <em>target model</em>. If k draft tokens are accepted, you effectively get k tokens of output from one target-model forward pass. The catch: conventional draft models are themselves autoregressive, so drafting k tokens still requires k sequential forward passes of the draft model. The bottleneck moves, but does not disappear.</p>
+
+    <p>DFlash eliminates this remaining bottleneck by using a <strong>block diffusion model</strong> as the drafter. A diffusion model generates an entire block of tokens in a single forward pass &mdash; non-autoregressively. No sequential chain. The full draft block is ready in one shot.</p>
+
+    <h3>How DFlash Works</h3>
+
+    <h4>Step 1: Context Feature Extraction</h4>
+
+    <p>After each prefill or verification step, DFlash extracts hidden-state features from the target model. Rather than using only the final layer's output, it samples from layers distributed uniformly across the target model's depth &mdash; capturing both low-level syntax patterns (early layers) and high-level semantic intent (late layers). These features are fused via a lightweight projection.</p>
+
+    <h4>Step 2: KV Cache Injection into the Draft Model</h4>
+
+    <p>This is DFlash's key technical contribution. The fused context features are injected directly into the <strong>Key/Value projections of every layer in the draft model</strong> and stored in the draft model's own KV cache. This means the draft model has persistent access to the target model's understanding of the full context throughout the diffusion process &mdash; not just a summary passed in at the start.</p>
+
+    <div class="flow-diagram">
+        <div class="flow-box input">Target Model Prefill</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box process">Extract Hidden States (all depths)</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box process">Fuse &amp; Project Features</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box cache">Inject into Draft KV Cache</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box output">Block Diffusion Draft (1 pass)</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box process">Target Model Verification (1 pass)</div>
+    </div>
+
+    <h4>Step 3: Parallel Verification</h4>
+
+    <p>The block of draft tokens is verified by the target model in a single forward pass. Tokens that match are accepted; the first mismatch is corrected and the remaining draft tokens are discarded. Because the target model's KV cache already covers the full prior context, verification is as fast as a single decode step &mdash; regardless of block size.</p>
+
+    <div class="info-card success">
+        <h4>Why KV Cache Injection Matters for Acceptance Rate</h4>
+        <p>The key advantage of injecting context into <em>every draft layer's KV cache</em> is that the draft model remains coherent with the target model throughout the entire diffusion process. Earlier speculative methods conditioned the draft model only at the start (via a summary or the last hidden state). DFlash's persistent conditioning means draft tokens remain on-distribution with the target model even for long block lengths, resulting in higher acceptance rates &mdash; which is the primary driver of end-to-end speedup.</p>
+    </div>
+
+    <h3>Performance Results</h3>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Drafting Strategy</th>
+                    <th>Speedup vs Autoregressive</th>
+                    <th>vs EAGLE-3</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Autoregressive baseline</td>
+                    <td>1 token per pass</td>
+                    <td>1&times; (baseline)</td>
+                    <td>&mdash;</td>
+                </tr>
+                <tr>
+                    <td>EAGLE-3 (SOTA prior)</td>
+                    <td>Autoregressive draft tree</td>
+                    <td>~2.5&times;</td>
+                    <td>1&times;</td>
+                </tr>
+                <tr>
+                    <td><strong>DFlash</strong></td>
+                    <td><strong>Block diffusion (1 pass)</strong></td>
+                    <td><strong>6&times;+</strong></td>
+                    <td><strong>2.5&times;</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ANIMATION: DFlash speculative decoding comparison -->
+    <div class="chart-container chart-tall" style="margin: 30px 0;">
+        <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Interactive: compare autoregressive, standard speculative decoding, and DFlash block diffusion side-by-side</p>
+        
+        <canvas id="dflashAnim" width="800" height="520" style="width:100%; max-height:520px;"></canvas>
+    </div>
+
+    <p>DFlash achieves <strong>over 6&times; lossless acceleration</strong> across a range of models and benchmarks. "Lossless" here means the output distribution of DFlash is provably identical to that of the target model alone &mdash; speculative decoding with correct rejection sampling never changes what the model says, only how fast it says it.</p>
+
+    <h3>Relationship to KV Cache Efficiency</h3>
+
+    <p>DFlash and architectural KV cache improvements (MLA, CSA/HCA) are orthogonal and composable:</p>
+
+    <div class="comparison-grid">
+        <div class="comparison-card" style="border-top: 3px solid var(--primary);">
+            <div class="metric" style="font-size: 1rem;">Architectural (MLA, GQA, HCA)</div>
+            <div class="metric-label">Reduce KV cache size</div>
+            <div class="metric-context">Less memory per token &rarr; fit longer contexts, serve more users per GPU, reduce memory-bandwidth pressure during each decode step.</div>
+        </div>
+        <div class="comparison-card" style="border-top: 3px solid var(--accent);">
+            <div class="metric" style="font-size: 1rem;">DFlash (Block Diffusion)</div>
+            <div class="metric-label">Reduce decode steps</div>
+            <div class="metric-context">More tokens per target-model pass &rarr; amortize the fixed cost of loading the KV cache across more output tokens, directly improving tokens-per-second.</div>
+        </div>
+    </div>
+
+    <p>When both are applied together &mdash; for example, running DFlash on top of DeepSeek V4-Flash with its 7% KV cache footprint &mdash; the memory bandwidth freed by the smaller cache means each target-model verification step is faster, which further improves the effective speedup of speculative decoding. The two techniques multiply rather than substitute.</p>
+
+    <div class="key-insight">
+        <h4>Why DFlash Represents a Paradigm Shift in Drafting</h4>
+        <p>Every previous speculative decoding system was limited by the autoregressive nature of its draft model: to draft k tokens, you needed k sequential forward passes. DFlash breaks this coupling entirely. By treating token generation as a denoising diffusion process conditioned on the target model's KV cache, it collapses k drafting steps into one. The result &mdash; 6&times; lossless speedup and 2.5&times; over the prior state of the art &mdash; suggests that the next frontier in LLM inference is not just <em>what</em> you cache, but <em>how you generate</em> the tokens that populate that cache.</p>
+    </div>
+</div>
+</div>
+
+
+<!-- ==================== SECTION 18: KIMI K2.5 ==================== -->
+<div class="section" id="sec17">
+    <div class="section-number">Chapter 17</div>
+    <h2>DeepSeek V4 &mdash; The Million-Token Efficiency Breakthrough</h2>
+    <div class="section-divider"></div>
+
+    <p>In April 2026, vLLM published implementation notes for <strong>DeepSeek-V4-Pro</strong> and <strong>DeepSeek-V4-Flash</strong>, describing an attention design built for up to one million tokens of context. The headline systems number: with BF16 KV cache, vLLM reports about <strong>9.62 GiB</strong> of KV cache for one 1M-token V4-Pro sequence, about <strong>8.7&times;</strong> smaller than its 83.9 GiB estimate for a V3.2-style stack.</p>
+
+    <p>This was not achieved by simply adding more quantization or swapping in GQA. The architecture uses shared K=V cache, a short sliding window for local information, and two compressed long-range attention modes: <code>c4a</code> and <code>c128a</code>. In this article, CSA/HCA refers to that practical split between moderately compressed sparse attention and heavily compressed long-range attention.</p>
+
+    <div class="citation">Source: vLLM. "DeepSeek V4 in vLLM: Efficient Long-context Attention," April 2026. The implementation write-up reports 1M-token support, c4a/c128a compression, a 128-token sliding window, and 9.62 GiB BF16 KV cache per 1M-token V4-Pro sequence. Model cards: <a href="https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro">DeepSeek-V4-Pro</a>, <a href="https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash">DeepSeek-V4-Flash</a>. vLLM blog: <a href="https://vllm.ai/blog/deepseek-v4">vllm.ai/blog/deepseek-v4</a>.</div>
+
+    <h3>Two Model Variants</h3>
+
+    <div class="comparison-grid">
+        <div class="comparison-card" style="border-top: 3px solid var(--primary);">
+            <div class="metric" style="font-size: 1.3rem; background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">V4-Pro</div>
+            <div class="metric-label">1.6T total / 49B active</div>
+            <div class="metric-context">vLLM reports 1M-token context support and about 9.62 GiB BF16 KV cache per 1M-token sequence.</div>
+        </div>
+        <div class="comparison-card" style="border-top: 3px solid var(--accent);">
+            <div class="metric" style="font-size: 1.3rem; background: var(--gradient-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">V4-Flash</div>
+            <div class="metric-label">~285B total / 13B active</div>
+            <div class="metric-context">vLLM describes Flash as the smaller V4 variant with 1M-token context support.</div>
+        </div>
+    </div>
+
+    <h3>The Hybrid Attention Architecture</h3>
+
+    <p>Both V4 variants use a <strong>Hybrid Attention</strong> design that mixes two complementary mechanisms. Every layer in the network is assigned one of two attention types, depending on how critical its tokens are to the output quality:</p>
+
+    <h4>1. Compressed Sparse Attention (CSA) &mdash; Precision for Critical Layers</h4>
+
+    <p>CSA is applied to the layers where fine-grained token interactions matter most. It works in two steps:</p>
+
+    <div class="flow-diagram">
+        <div class="flow-box input">Full KV Sequence</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box process">Dynamic Sequence Compression</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box cache">Compressed KV Cache</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box process">DeepSeek Sparse Attention (DSA)</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box output">Sparse Attention Output</div>
+    </div>
+
+    <p>First, KV entries are compressed to reduce the raw memory footprint. Then, DeepSeek Sparse Attention (DSA) sparsifies the attention matrix &mdash; computing full attention only between tokens that have high relevance scores and skipping the rest. The result is a mechanism that preserves precision where it counts while eliminating unnecessary computation everywhere else.</p>
+
+    <h4>2. Heavily Compressed Attention (HCA) &mdash; Aggressive Compression for Supporting Layers</h4>
+
+    <p>HCA is assigned to layers that provide context and pattern reinforcement rather than precise token-level discrimination. Instead of individual compressed entries, HCA <strong>consolidates multiple consecutive tokens into a single shared KV entry</strong>. Think of it as summarizing a paragraph into a sentence: you lose fine-grained detail but retain the essential meaning at a fraction of the memory cost.</p>
+
+    <div class="info-card">
+        <h4>CSA vs HCA: When to Use Which</h4>
+        <p><strong>CSA layers</strong> preserve individual token identity with moderate compression. They are used in the deeper, semantically rich layers where precise relationships between tokens (e.g., coreference, long-range dependencies) must be resolved correctly.</p>
+        <p><strong>HCA layers</strong> collapse groups of tokens into single entries. They are used in shallower layers that perform broad pattern recognition &mdash; where the exact identity of each token matters less than the collective signal from the surrounding context.</p>
+        <p>The ratio of CSA to HCA layers is tuned per model variant. V4-Flash, being lighter, uses a higher proportion of HCA layers to achieve its 7% KV cache figure.</p>
+    </div>
+
+    <h3>Additional Architectural Innovation: Manifold-Constrained Hyper-Connections</h3>
+
+    <p>Beyond the attention architecture, DeepSeek V4 replaces the standard residual connection with <strong>Manifold-Constrained Hyper-Connections (mHC)</strong>. Standard residual connections add the layer's output directly to its input (<code>x + f(x)</code>). mHC constrains the residual path to a learned manifold, improving signal propagation stability across the depth of the model &mdash; which becomes critical when you have alternating CSA/HCA layers that may produce outputs with very different magnitudes.</p>
+
+    <h3>Inference Efficiency: By the Numbers</h3>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric at 1M-token context</th>
+                    <th>DeepSeek-V3.2 (baseline)</th>
+                    <th>V4-Pro</th>
+                    <th>V4-Flash</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Single-token inference FLOPs</td>
+                    <td>100% (baseline)</td>
+                    <td><strong>27%</strong></td>
+                    <td><strong>10%</strong></td>
+                </tr>
+                <tr>
+                    <td>KV cache memory</td>
+                    <td>100% (baseline)</td>
+                    <td><strong>10%</strong></td>
+                    <td><strong>7%</strong></td>
+                </tr>
+                <tr>
+                    <td>KV memory reduction vs V3.2</td>
+                    <td>&mdash;</td>
+                    <td><strong>9.5&ndash;10&times;</strong></td>
+                    <td><strong>13.7&ndash;14&times;</strong></td>
+                </tr>
+                <tr>
+                    <td>Total parameters</td>
+                    <td>671B</td>
+                    <td>1.6T</td>
+                    <td>284B</td>
+                </tr>
+                <tr>
+                    <td>Active parameters per token</td>
+                    <td>37B</td>
+                    <td>49B</td>
+                    <td>13B</td>
+                </tr>
+                <tr>
+                    <td>Context window</td>
+                    <td>128K</td>
+                    <td><strong>1M</strong></td>
+                    <td><strong>1M</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ANIMATION: DeepSeek V4 Hybrid Attention (CSA vs HCA) -->
+    <div class="chart-container chart-tall" style="margin: 30px 0;">
+        <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Interactive: watch CSA and HCA layers shape the KV cache footprint across a 12-layer model stack</p>
+        
+        <canvas id="deepseekV4Anim" width="800" height="520" style="width:100%; max-height:520px;"></canvas>
+    </div>
+
+    <h3>Inference Implementation: vLLM Integration</h3>
+
+    <p>The vLLM team shipped DeepSeek V4 support with an implementation focused on making the heterogeneous cache layout practical at one-million-token context. Their public write-up reports about <strong>9.62 GiB</strong> of BF16 KV cache per 1M-token V4-Pro sequence before further FP8/FP4 cache optimizations.</p>
+
+    <div class="comparison-grid">
+        <div class="comparison-card">
+            <div class="metric" style="font-size: 1rem;">Shared K=V Cache</div>
+            <div class="metric-label">One cached KV tensor</div>
+            <div class="metric-context">DeepSeek V4 uses a shared K=V multi-query-style cache, reducing stored attention state before compression is applied.</div>
+        </div>
+        <div class="comparison-card">
+            <div class="metric" style="font-size: 1rem;">c4a + c128a Layers</div>
+            <div class="metric-label">Heterogeneous compression</div>
+            <div class="metric-context">Some layers compress KV by roughly 4&times;, while heavily compressed layers use roughly 128&times; compression.</div>
+        </div>
+        <div class="comparison-card">
+            <div class="metric" style="font-size: 1rem;">PagedAttention Packing</div>
+            <div class="metric-label">One logical block size</div>
+            <div class="metric-context">vLLM maps different compression rates into a consistent block layout so prefix caching, disaggregation, and scheduling still work.</div>
+        </div>
+        <div class="comparison-card">
+            <div class="metric" style="font-size: 1rem;">Kernel Fusion + Streams</div>
+            <div class="metric-label">Lower serving overhead</div>
+            <div class="metric-context">The implementation uses fused kernels and multi-stream execution to keep the GPU busy despite the more complex attention path.</div>
+        </div>
+    </div>
+
+    <div class="key-insight">
+        <h4>What V4 Proves About the KV Cache Problem</h4>
+        <p>DeepSeek V4 demonstrates that the path to one-million-token context is not brute-force memory scaling &mdash; it is <strong>architectural differentiation of attention layers</strong>. By combining a short local sliding-window branch with moderately compressed CSA layers and heavily compressed HCA layers, V4 cuts the KV footprint enough that the <em>KV cache for a single 1M-token sequence</em> becomes manageable on modern accelerator memory. The full V4-Pro model weights still require a multi-GPU deployment; the single-card claim applies only to KV-cache capacity, not to hosting all model parameters.</p>
+    </div>
+</div>
+</div>
+
+<!-- ==================== SECTION 17: DFLASH ==================== -->
+<div class="container">
+<div class="section" id="sec18">
+    <div class="section-number">Chapter 18</div>
     <h2>Kimi K2.5 &mdash; How Reasoning Changes for AI Agents</h2>
     <div class="section-divider"></div>
 
@@ -2943,404 +3067,9 @@
     </div>
 </div>
 
-<!-- ==================== SECTION 17 ==================== -->
-<div class="section" id="sec17">
-    <div class="section-number">Chapter 17</div>
-    <h2>The State of the Art (2026) &amp; Future Directions</h2>
-    <div class="section-divider"></div>
-
-    <p>As of early 2026, the KV cache problem that once threatened to halt the scaling of large language models has been substantially addressed through a multi-pronged approach. Here's where things stand:</p>
-
-    <h3>What's Working Today</h3>
-    <div class="comparison-grid">
-        <div class="comparison-card" style="border-top: 3px solid var(--success);">
-            <div class="metric" style="font-size: 1.3rem; background: var(--gradient-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">GQA</div>
-            <div class="metric-label">Industry Standard</div>
-            <div class="metric-context">LLaMA-3/4, Qwen3, Gemma 4, Phi-4, Mistral</div>
-        </div>
-        <div class="comparison-card" style="border-top: 3px solid var(--success);">
-            <div class="metric" style="font-size: 1.3rem; background: var(--gradient-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">MLA</div>
-            <div class="metric-label">Best Compression Ratio</div>
-            <div class="metric-context">DeepSeek-V3, Kimi K2 (~1T params)</div>
-        </div>
-        <div class="comparison-card" style="border-top: 3px solid var(--success);">
-            <div class="metric" style="font-size: 1.3rem; background: var(--gradient-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Hybrid Attention</div>
-            <div class="metric-label">Extreme Long Context</div>
-            <div class="metric-context">LLaMA 4 Scout (10M), Gemma 4 E2B/E4B (128K mobile/edge)</div>
-        </div>
-    </div>
-
-    <h3>The Emerging Frontier</h3>
-    <p><strong>1. Trillion-Scale MLA:</strong> Moonshot AI's Kimi K2 uses DeepSeek-style MLA in a roughly 1T-parameter MoE with 384 routed experts and 32B active parameters. Its public config lists 64 attention heads, kv_lora_rank=512, and qk_rope_head_dim=64, showing that latent KV compression scales to trillion-scale open MoE systems.</p>
-
-    <p><strong>2. Ten-Million-Token Context:</strong> Meta's public LLaMA 4 Scout model card reports a <strong>10 million token</strong> context window. That is roughly 5,000 pages of text in a single prompt, even though the public card does not spell out every attention/KV implementation detail behind it.</p>
-
-    <p><strong>3. On-Device Intelligence:</strong> Gemma 4 E2B and E4B target mobile and edge deployments with 128K context. Their small KV budgets come from low KV-head counts, local-global attention, KV sharing across layers, and per-layer embeddings. Separately, Gemma 4 26B-A4B is the MoE family member that uses sparse routing; that MoE detail should not be attributed to the E2B/E4B variants. Post-training KV cache quantization methods (such as TurboQuant or KIVI) could further reduce memory, though Google's Gemma 4 documentation does not cite any specific KV quantization scheme as part of the on-device strategy.</p>
-
-    <p><strong>4. Aggressive KV Head Reduction:</strong> Qwen3's MoE variant uses just 4 KV heads with 64 query heads &mdash; a 16:1 ratio. This trend toward extreme Q-to-KV ratios suggests the field is converging on the insight that you need very few KV heads, even for models with many query heads.</p>
-
-    <p><strong>5. Data-Oblivious Quantization:</strong> TurboQuant requires no training data or model-specific tuning, making it a general-purpose post-training option for KV compression. Combined with architectural improvements, it can produce very large reductions versus a 2017-style FP16 MHA baseline, but the exact factor depends on model architecture, context length, and runtime settings.</p>
-
-    <h3>The Journey in Numbers</h3>
-
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Metric</th>
-                    <th>Naive FP16 MHA Baseline (e.g. LLaMA-2 7B, 2023)</th>
-                    <th>2026 (State of the Art)</th>
-                    <th>Improvement</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>KV Cache per token (7B model)</td>
-                    <td>512 KB (FP16 MHA)</td>
-                    <td>~10&ndash;20 KB (MLA + quant)</td>
-                    <td><strong>25&ndash;50&times;</strong></td>
-                </tr>
-                <tr>
-                    <td>Long-context serving target</td>
-                    <td>~2K tokens</td>
-                    <td>1M-token KV-cache designs; full large-model serving still often needs multi-GPU</td>
-                    <td><strong>Architecture-dependent</strong></td>
-                </tr>
-                <tr>
-                    <td>Serving throughput</td>
-                    <td>Baseline</td>
-                    <td>Multi-&times; gains with paging, batching, eviction, quantization, or speculative decoding</td>
-                    <td><strong>Workload-dependent</strong></td>
-                </tr>
-                <tr>
-                    <td>Memory waste in serving</td>
-                    <td>60&ndash;80%</td>
-                    <td>~0% (PagedAttention)</td>
-                    <td><strong>Eliminated</strong></td>
-                </tr>
-                <tr>
-                    <td>Smallest device for 8B+ models</td>
-                    <td>Data center GPUs</td>
-                    <td>Phone-class demos (Bonsai 8B: PrismML reports ~44 tok/s on iPhone 17 Pro Max)</td>
-                    <td><strong>Democratized</strong></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="key-insight">
-        <h4>The Big Picture</h4>
-        <p>The story of KV cache optimization is a story of the AI community refusing to accept limitations. When the "memory wall" threatened to stop progress, researchers attacked the problem from every angle: architectural changes (MQA, GQA, MLA), memory management (PagedAttention), numerical compression (KIVI, TurboQuant), intelligent caching (H2O, SnapKV), and attention pattern design (sliding window, local-global). The exact savings depend on model architecture and runtime settings, but source-backed examples now span from single-digit KB/token compressed designs to million-token KV layouts that are practical only because attention state is aggressively compressed.</p>
-    </div>
-</div>
-
-<!-- ==================== SECTION 18: DEEPSEEK V4 ==================== -->
-<div class="container">
-<div class="section" id="sec18">
-    <div class="section-number">Chapter 18</div>
-    <h2>DeepSeek V4 &mdash; The Million-Token Efficiency Breakthrough</h2>
-    <div class="section-divider"></div>
-
-    <p>In April 2026, vLLM published implementation notes for <strong>DeepSeek-V4-Pro</strong> and <strong>DeepSeek-V4-Flash</strong>, describing an attention design built for up to one million tokens of context. The headline systems number: with BF16 KV cache, vLLM reports about <strong>9.62 GiB</strong> of KV cache for one 1M-token V4-Pro sequence, about <strong>8.7&times;</strong> smaller than its 83.9 GiB estimate for a V3.2-style stack.</p>
-
-    <p>This was not achieved by simply adding more quantization or swapping in GQA. The architecture uses shared K=V cache, a short sliding window for local information, and two compressed long-range attention modes: <code>c4a</code> and <code>c128a</code>. In this article, CSA/HCA refers to that practical split between moderately compressed sparse attention and heavily compressed long-range attention.</p>
-
-    <div class="citation">Source: vLLM. "DeepSeek V4 in vLLM: Efficient Long-context Attention," April 2026. The implementation write-up reports 1M-token support, c4a/c128a compression, a 128-token sliding window, and 9.62 GiB BF16 KV cache per 1M-token V4-Pro sequence. Model cards: <a href="https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro">DeepSeek-V4-Pro</a>, <a href="https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash">DeepSeek-V4-Flash</a>. vLLM blog: <a href="https://vllm.ai/blog/deepseek-v4">vllm.ai/blog/deepseek-v4</a>.</div>
-
-    <h3>Two Model Variants</h3>
-
-    <div class="comparison-grid">
-        <div class="comparison-card" style="border-top: 3px solid var(--primary);">
-            <div class="metric" style="font-size: 1.3rem; background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">V4-Pro</div>
-            <div class="metric-label">1.6T total / 49B active</div>
-            <div class="metric-context">vLLM reports 1M-token context support and about 9.62 GiB BF16 KV cache per 1M-token sequence.</div>
-        </div>
-        <div class="comparison-card" style="border-top: 3px solid var(--accent);">
-            <div class="metric" style="font-size: 1.3rem; background: var(--gradient-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">V4-Flash</div>
-            <div class="metric-label">~285B total / 13B active</div>
-            <div class="metric-context">vLLM describes Flash as the smaller V4 variant with 1M-token context support.</div>
-        </div>
-    </div>
-
-    <h3>The Hybrid Attention Architecture</h3>
-
-    <p>Both V4 variants use a <strong>Hybrid Attention</strong> design that mixes two complementary mechanisms. Every layer in the network is assigned one of two attention types, depending on how critical its tokens are to the output quality:</p>
-
-    <h4>1. Compressed Sparse Attention (CSA) &mdash; Precision for Critical Layers</h4>
-
-    <p>CSA is applied to the layers where fine-grained token interactions matter most. It works in two steps:</p>
-
-    <div class="flow-diagram">
-        <div class="flow-box input">Full KV Sequence</div>
-        <div class="flow-arrow">&rarr;</div>
-        <div class="flow-box process">Dynamic Sequence Compression</div>
-        <div class="flow-arrow">&rarr;</div>
-        <div class="flow-box cache">Compressed KV Cache</div>
-        <div class="flow-arrow">&rarr;</div>
-        <div class="flow-box process">DeepSeek Sparse Attention (DSA)</div>
-        <div class="flow-arrow">&rarr;</div>
-        <div class="flow-box output">Sparse Attention Output</div>
-    </div>
-
-    <p>First, KV entries are compressed to reduce the raw memory footprint. Then, DeepSeek Sparse Attention (DSA) sparsifies the attention matrix &mdash; computing full attention only between tokens that have high relevance scores and skipping the rest. The result is a mechanism that preserves precision where it counts while eliminating unnecessary computation everywhere else.</p>
-
-    <h4>2. Heavily Compressed Attention (HCA) &mdash; Aggressive Compression for Supporting Layers</h4>
-
-    <p>HCA is assigned to layers that provide context and pattern reinforcement rather than precise token-level discrimination. Instead of individual compressed entries, HCA <strong>consolidates multiple consecutive tokens into a single shared KV entry</strong>. Think of it as summarizing a paragraph into a sentence: you lose fine-grained detail but retain the essential meaning at a fraction of the memory cost.</p>
-
-    <div class="info-card">
-        <h4>CSA vs HCA: When to Use Which</h4>
-        <p><strong>CSA layers</strong> preserve individual token identity with moderate compression. They are used in the deeper, semantically rich layers where precise relationships between tokens (e.g., coreference, long-range dependencies) must be resolved correctly.</p>
-        <p><strong>HCA layers</strong> collapse groups of tokens into single entries. They are used in shallower layers that perform broad pattern recognition &mdash; where the exact identity of each token matters less than the collective signal from the surrounding context.</p>
-        <p>The ratio of CSA to HCA layers is tuned per model variant. V4-Flash, being lighter, uses a higher proportion of HCA layers to achieve its 7% KV cache figure.</p>
-    </div>
-
-    <h3>Additional Architectural Innovation: Manifold-Constrained Hyper-Connections</h3>
-
-    <p>Beyond the attention architecture, DeepSeek V4 replaces the standard residual connection with <strong>Manifold-Constrained Hyper-Connections (mHC)</strong>. Standard residual connections add the layer's output directly to its input (<code>x + f(x)</code>). mHC constrains the residual path to a learned manifold, improving signal propagation stability across the depth of the model &mdash; which becomes critical when you have alternating CSA/HCA layers that may produce outputs with very different magnitudes.</p>
-
-    <h3>Inference Efficiency: By the Numbers</h3>
-
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Metric at 1M-token context</th>
-                    <th>DeepSeek-V3.2 (baseline)</th>
-                    <th>V4-Pro</th>
-                    <th>V4-Flash</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Single-token inference FLOPs</td>
-                    <td>100% (baseline)</td>
-                    <td><strong>27%</strong></td>
-                    <td><strong>10%</strong></td>
-                </tr>
-                <tr>
-                    <td>KV cache memory</td>
-                    <td>100% (baseline)</td>
-                    <td><strong>10%</strong></td>
-                    <td><strong>7%</strong></td>
-                </tr>
-                <tr>
-                    <td>KV memory reduction vs V3.2</td>
-                    <td>&mdash;</td>
-                    <td><strong>9.5&ndash;10&times;</strong></td>
-                    <td><strong>13.7&ndash;14&times;</strong></td>
-                </tr>
-                <tr>
-                    <td>Total parameters</td>
-                    <td>671B</td>
-                    <td>1.6T</td>
-                    <td>284B</td>
-                </tr>
-                <tr>
-                    <td>Active parameters per token</td>
-                    <td>37B</td>
-                    <td>49B</td>
-                    <td>13B</td>
-                </tr>
-                <tr>
-                    <td>Context window</td>
-                    <td>128K</td>
-                    <td><strong>1M</strong></td>
-                    <td><strong>1M</strong></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- ANIMATION: DeepSeek V4 Hybrid Attention (CSA vs HCA) -->
-    <div class="chart-container chart-tall" style="margin: 30px 0;">
-        <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Interactive: watch CSA and HCA layers shape the KV cache footprint across a 12-layer model stack</p>
-        <div class="article-video-card">
-            <h5>LinkedIn-ready video preview</h5>
-            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/deepseek-v4-hybrid-attention.mp4" type="video/mp4">
-                <source src="videos/deepseek-v4-hybrid-attention.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-            <div class="recap-links">
-                <a class="recap-link" href="videos/deepseek-v4-hybrid-attention.mp4">Download MP4</a>
-                <a class="recap-link" href="videos/deepseek-v4-hybrid-attention.webm">Open WebM</a>
-            </div>
-        </div>
-        <canvas id="deepseekV4Anim" width="800" height="520" style="width:100%; max-height:520px;"></canvas>
-    </div>
-
-    <h3>Inference Implementation: vLLM Integration</h3>
-
-    <p>The vLLM team shipped DeepSeek V4 support with an implementation focused on making the heterogeneous cache layout practical at one-million-token context. Their public write-up reports about <strong>9.62 GiB</strong> of BF16 KV cache per 1M-token V4-Pro sequence before further FP8/FP4 cache optimizations.</p>
-
-    <div class="comparison-grid">
-        <div class="comparison-card">
-            <div class="metric" style="font-size: 1rem;">Shared K=V Cache</div>
-            <div class="metric-label">One cached KV tensor</div>
-            <div class="metric-context">DeepSeek V4 uses a shared K=V multi-query-style cache, reducing stored attention state before compression is applied.</div>
-        </div>
-        <div class="comparison-card">
-            <div class="metric" style="font-size: 1rem;">c4a + c128a Layers</div>
-            <div class="metric-label">Heterogeneous compression</div>
-            <div class="metric-context">Some layers compress KV by roughly 4&times;, while heavily compressed layers use roughly 128&times; compression.</div>
-        </div>
-        <div class="comparison-card">
-            <div class="metric" style="font-size: 1rem;">PagedAttention Packing</div>
-            <div class="metric-label">One logical block size</div>
-            <div class="metric-context">vLLM maps different compression rates into a consistent block layout so prefix caching, disaggregation, and scheduling still work.</div>
-        </div>
-        <div class="comparison-card">
-            <div class="metric" style="font-size: 1rem;">Kernel Fusion + Streams</div>
-            <div class="metric-label">Lower serving overhead</div>
-            <div class="metric-context">The implementation uses fused kernels and multi-stream execution to keep the GPU busy despite the more complex attention path.</div>
-        </div>
-    </div>
-
-    <div class="key-insight">
-        <h4>What V4 Proves About the KV Cache Problem</h4>
-        <p>DeepSeek V4 demonstrates that the path to one-million-token context is not brute-force memory scaling &mdash; it is <strong>architectural differentiation of attention layers</strong>. By combining a short local sliding-window branch with moderately compressed CSA layers and heavily compressed HCA layers, V4 cuts the KV footprint enough that the <em>KV cache for a single 1M-token sequence</em> becomes manageable on modern accelerator memory. The full V4-Pro model weights still require a multi-GPU deployment; the single-card claim applies only to KV-cache capacity, not to hosting all model parameters.</p>
-    </div>
-</div>
-</div>
-
-<!-- ==================== SECTION 19: DFLASH ==================== -->
-<div class="container">
+<!-- ==================== SECTION 19: LINEAR ATTENTION ==================== -->
 <div class="section" id="sec19">
     <div class="section-number">Chapter 19</div>
-    <h2>DFlash &mdash; Block Diffusion for Flash Speculative Decoding</h2>
-    <div class="section-divider"></div>
-
-    <p>Architectural changes like MLA, GQA, and HCA reduce how <em>much</em> KV cache you need to store. But there is a complementary problem: how fast can you <em>generate</em> tokens given whatever cache you have? This is the domain of speculative decoding &mdash; and in February 2026, Z Lab published <strong>DFlash</strong>, which pushes speculative decoding to a new level by replacing the autoregressive draft model with a block diffusion model.</p>
-
-    <div class="citation">Z Lab. "DFlash: Block Diffusion for Flash Speculative Decoding." <em>arXiv preprint</em>, February 2026. <a href="https://arxiv.org/abs/2602.06036">arXiv:2602.06036</a></div>
-
-    <h3>The Speculative Decoding Bottleneck</h3>
-
-    <p>Standard autoregressive decoding generates one token per forward pass. Even with a fully optimized KV cache, the decode step is memory-bandwidth-bound: each new token requires loading the entire KV cache from HBM, computing attention, and writing one output token. GPU utilization hovers around 20&ndash;40% during decode &mdash; most of the hardware is idle.</p>
-
-    <p><strong>Speculative decoding</strong> addresses this by using a fast, small <em>draft model</em> to generate a block of candidate tokens, then verifying all of them in a single forward pass of the large <em>target model</em>. If k draft tokens are accepted, you effectively get k tokens of output from one target-model forward pass. The catch: conventional draft models are themselves autoregressive, so drafting k tokens still requires k sequential forward passes of the draft model. The bottleneck moves, but does not disappear.</p>
-
-    <p>DFlash eliminates this remaining bottleneck by using a <strong>block diffusion model</strong> as the drafter. A diffusion model generates an entire block of tokens in a single forward pass &mdash; non-autoregressively. No sequential chain. The full draft block is ready in one shot.</p>
-
-    <h3>How DFlash Works</h3>
-
-    <h4>Step 1: Context Feature Extraction</h4>
-
-    <p>After each prefill or verification step, DFlash extracts hidden-state features from the target model. Rather than using only the final layer's output, it samples from layers distributed uniformly across the target model's depth &mdash; capturing both low-level syntax patterns (early layers) and high-level semantic intent (late layers). These features are fused via a lightweight projection.</p>
-
-    <h4>Step 2: KV Cache Injection into the Draft Model</h4>
-
-    <p>This is DFlash's key technical contribution. The fused context features are injected directly into the <strong>Key/Value projections of every layer in the draft model</strong> and stored in the draft model's own KV cache. This means the draft model has persistent access to the target model's understanding of the full context throughout the diffusion process &mdash; not just a summary passed in at the start.</p>
-
-    <div class="flow-diagram">
-        <div class="flow-box input">Target Model Prefill</div>
-        <div class="flow-arrow">&rarr;</div>
-        <div class="flow-box process">Extract Hidden States (all depths)</div>
-        <div class="flow-arrow">&rarr;</div>
-        <div class="flow-box process">Fuse &amp; Project Features</div>
-        <div class="flow-arrow">&rarr;</div>
-        <div class="flow-box cache">Inject into Draft KV Cache</div>
-        <div class="flow-arrow">&rarr;</div>
-        <div class="flow-box output">Block Diffusion Draft (1 pass)</div>
-        <div class="flow-arrow">&rarr;</div>
-        <div class="flow-box process">Target Model Verification (1 pass)</div>
-    </div>
-
-    <h4>Step 3: Parallel Verification</h4>
-
-    <p>The block of draft tokens is verified by the target model in a single forward pass. Tokens that match are accepted; the first mismatch is corrected and the remaining draft tokens are discarded. Because the target model's KV cache already covers the full prior context, verification is as fast as a single decode step &mdash; regardless of block size.</p>
-
-    <div class="info-card success">
-        <h4>Why KV Cache Injection Matters for Acceptance Rate</h4>
-        <p>The key advantage of injecting context into <em>every draft layer's KV cache</em> is that the draft model remains coherent with the target model throughout the entire diffusion process. Earlier speculative methods conditioned the draft model only at the start (via a summary or the last hidden state). DFlash's persistent conditioning means draft tokens remain on-distribution with the target model even for long block lengths, resulting in higher acceptance rates &mdash; which is the primary driver of end-to-end speedup.</p>
-    </div>
-
-    <h3>Performance Results</h3>
-
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Method</th>
-                    <th>Drafting Strategy</th>
-                    <th>Speedup vs Autoregressive</th>
-                    <th>vs EAGLE-3</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Autoregressive baseline</td>
-                    <td>1 token per pass</td>
-                    <td>1&times; (baseline)</td>
-                    <td>&mdash;</td>
-                </tr>
-                <tr>
-                    <td>EAGLE-3 (SOTA prior)</td>
-                    <td>Autoregressive draft tree</td>
-                    <td>~2.5&times;</td>
-                    <td>1&times;</td>
-                </tr>
-                <tr>
-                    <td><strong>DFlash</strong></td>
-                    <td><strong>Block diffusion (1 pass)</strong></td>
-                    <td><strong>6&times;+</strong></td>
-                    <td><strong>2.5&times;</strong></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- ANIMATION: DFlash speculative decoding comparison -->
-    <div class="chart-container chart-tall" style="margin: 30px 0;">
-        <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Interactive: compare autoregressive, standard speculative decoding, and DFlash block diffusion side-by-side</p>
-        <div class="article-video-card">
-            <h5>LinkedIn-ready video preview</h5>
-            <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/dflash-block-diffusion.mp4" type="video/mp4">
-                <source src="videos/dflash-block-diffusion.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-            <div class="recap-links">
-                <a class="recap-link" href="videos/dflash-block-diffusion.mp4">Download MP4</a>
-                <a class="recap-link" href="videos/dflash-block-diffusion.webm">Open WebM</a>
-            </div>
-        </div>
-        <canvas id="dflashAnim" width="800" height="520" style="width:100%; max-height:520px;"></canvas>
-    </div>
-
-    <p>DFlash achieves <strong>over 6&times; lossless acceleration</strong> across a range of models and benchmarks. "Lossless" here means the output distribution of DFlash is provably identical to that of the target model alone &mdash; speculative decoding with correct rejection sampling never changes what the model says, only how fast it says it.</p>
-
-    <h3>Relationship to KV Cache Efficiency</h3>
-
-    <p>DFlash and architectural KV cache improvements (MLA, CSA/HCA) are orthogonal and composable:</p>
-
-    <div class="comparison-grid">
-        <div class="comparison-card" style="border-top: 3px solid var(--primary);">
-            <div class="metric" style="font-size: 1rem;">Architectural (MLA, GQA, HCA)</div>
-            <div class="metric-label">Reduce KV cache size</div>
-            <div class="metric-context">Less memory per token &rarr; fit longer contexts, serve more users per GPU, reduce memory-bandwidth pressure during each decode step.</div>
-        </div>
-        <div class="comparison-card" style="border-top: 3px solid var(--accent);">
-            <div class="metric" style="font-size: 1rem;">DFlash (Block Diffusion)</div>
-            <div class="metric-label">Reduce decode steps</div>
-            <div class="metric-context">More tokens per target-model pass &rarr; amortize the fixed cost of loading the KV cache across more output tokens, directly improving tokens-per-second.</div>
-        </div>
-    </div>
-
-    <p>When both are applied together &mdash; for example, running DFlash on top of DeepSeek V4-Flash with its 7% KV cache footprint &mdash; the memory bandwidth freed by the smaller cache means each target-model verification step is faster, which further improves the effective speedup of speculative decoding. The two techniques multiply rather than substitute.</p>
-
-    <div class="key-insight">
-        <h4>Why DFlash Represents a Paradigm Shift in Drafting</h4>
-        <p>Every previous speculative decoding system was limited by the autoregressive nature of its draft model: to draft k tokens, you needed k sequential forward passes. DFlash breaks this coupling entirely. By treating token generation as a denoising diffusion process conditioned on the target model's KV cache, it collapses k drafting steps into one. The result &mdash; 6&times; lossless speedup and 2.5&times; over the prior state of the art &mdash; suggests that the next frontier in LLM inference is not just <em>what</em> you cache, but <em>how you generate</em> the tokens that populate that cache.</p>
-    </div>
-</div>
-</div>
-
-
-<!-- ==================== SECTION 20: LINEAR ATTENTION / SSMs ==================== -->
-<div class="section" id="sec20">
-    <div class="section-number">Chapter 20</div>
     <h2>Linear Attention &amp; SSMs &mdash; The O(1) KV Cache Alternative</h2>
     <div class="section-divider"></div>
 
@@ -3413,9 +3142,9 @@
     </div>
 </div>
 
-<!-- ==================== SECTION 21: PREFIX CACHING ==================== -->
-<div class="section" id="sec21">
-    <div class="section-number">Chapter 21</div>
+<!-- ==================== SECTION 20: PREFIX CACHING ==================== -->
+<div class="section" id="sec20">
+    <div class="section-number">Chapter 20</div>
     <h2>Prefix Caching &amp; RadixAttention &mdash; Reuse Across Requests</h2>
     <div class="section-divider"></div>
 
@@ -3482,9 +3211,9 @@
     </div>
 </div>
 
-<!-- ==================== SECTION 22: MOE + KV CACHE ==================== -->
-<div class="section" id="sec22">
-    <div class="section-number">Chapter 22</div>
+<!-- ==================== SECTION 21: MIXTURE OF EXPERTS ==================== -->
+<div class="section" id="sec21">
+    <div class="section-number">Chapter 21</div>
     <h2>Mixture of Experts &amp; KV Cache &mdash; Sparse Activation</h2>
     <div class="section-divider"></div>
 
@@ -3543,9 +3272,9 @@
     </div>
 </div>
 
-<!-- ==================== SECTION 23: KV CACHE OFFLOADING ==================== -->
-<div class="section" id="sec23">
-    <div class="section-number">Chapter 23</div>
+<!-- ==================== SECTION 22: KV OFFLOADING ==================== -->
+<div class="section" id="sec22">
+    <div class="section-number">Chapter 22</div>
     <h2>KV Cache Offloading &mdash; CPU &amp; NVMe as Overflow</h2>
     <div class="section-divider"></div>
 
@@ -3601,9 +3330,9 @@
     </div>
 </div>
 
-<!-- ==================== SECTION 24: DISAGGREGATED PREFILL/DECODE ==================== -->
-<div class="section" id="sec24">
-    <div class="section-number">Chapter 24</div>
+<!-- ==================== SECTION 23: DISAGGREGATED PREFILL/DECODE ==================== -->
+<div class="section" id="sec23">
+    <div class="section-number">Chapter 23</div>
     <h2>Disaggregated Prefill &amp; Decode &mdash; The New Serving Paradigm</h2>
     <div class="section-divider"></div>
 
@@ -3668,58 +3397,109 @@
     </div>
 </div>
 
+<!-- ==================== SECTION 24: 2026 SUMMARY ==================== -->
+<div class="section" id="sec24">
+    <div class="section-number">Chapter 24</div>
+    <h2>2026 Summary &amp; Future Directions</h2>
+    <div class="section-divider"></div>
+
+    <p>After walking through the major architectures, model families, and serving systems, here is the consolidated 2026 view of where KV cache optimization stands and where it is heading next.</p>
+
+    <h3>What's Working Today</h3>
+    <div class="comparison-grid">
+        <div class="comparison-card" style="border-top: 3px solid var(--success);">
+            <div class="metric" style="font-size: 1.3rem; background: var(--gradient-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">GQA</div>
+            <div class="metric-label">Industry Standard</div>
+            <div class="metric-context">LLaMA-3/4, Qwen3, Gemma 4, Phi-4, Mistral</div>
+        </div>
+        <div class="comparison-card" style="border-top: 3px solid var(--success);">
+            <div class="metric" style="font-size: 1.3rem; background: var(--gradient-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">MLA</div>
+            <div class="metric-label">Best Compression Ratio</div>
+            <div class="metric-context">DeepSeek-V3, Kimi K2 (~1T params)</div>
+        </div>
+        <div class="comparison-card" style="border-top: 3px solid var(--success);">
+            <div class="metric" style="font-size: 1.3rem; background: var(--gradient-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Hybrid Attention</div>
+            <div class="metric-label">Extreme Long Context</div>
+            <div class="metric-context">LLaMA 4 Scout (10M), Gemma 4 E2B/E4B (128K mobile/edge)</div>
+        </div>
+    </div>
+
+    <h3>The Emerging Frontier</h3>
+    <p><strong>1. Trillion-Scale MLA:</strong> Moonshot AI's Kimi K2 uses DeepSeek-style MLA in a roughly 1T-parameter MoE with 384 routed experts and 32B active parameters. Its public config lists 64 attention heads, kv_lora_rank=512, and qk_rope_head_dim=64, showing that latent KV compression scales to trillion-scale open MoE systems.</p>
+
+    <p><strong>2. Ten-Million-Token Context:</strong> Meta's public LLaMA 4 Scout model card reports a <strong>10 million token</strong> context window. That is roughly 5,000 pages of text in a single prompt, even though the public card does not spell out every attention/KV implementation detail behind it.</p>
+
+    <p><strong>3. On-Device Intelligence:</strong> Gemma 4 E2B and E4B target mobile and edge deployments with 128K context. Their small KV budgets come from low KV-head counts, local-global attention, KV sharing across layers, and per-layer embeddings. Separately, Gemma 4 26B-A4B is the MoE family member that uses sparse routing; that MoE detail should not be attributed to the E2B/E4B variants. Post-training KV cache quantization methods (such as TurboQuant or KIVI) could further reduce memory, though Google's Gemma 4 documentation does not cite any specific KV quantization scheme as part of the on-device strategy.</p>
+
+    <p><strong>4. Aggressive KV Head Reduction:</strong> Qwen3's MoE variant uses just 4 KV heads with 64 query heads &mdash; a 16:1 ratio. This trend toward extreme Q-to-KV ratios suggests the field is converging on the insight that you need very few KV heads, even for models with many query heads.</p>
+
+    <p><strong>5. Data-Oblivious Quantization:</strong> TurboQuant requires no training data or model-specific tuning, making it a general-purpose post-training option for KV compression. Combined with architectural improvements, it can produce very large reductions versus a 2017-style FP16 MHA baseline, but the exact factor depends on model architecture, context length, and runtime settings.</p>
+
+    <h3>The Journey in Numbers</h3>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Naive FP16 MHA Baseline (e.g. LLaMA-2 7B, 2023)</th>
+                    <th>2026 frontier examples</th>
+                    <th>Improvement</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>KV Cache per token (7B model)</td>
+                    <td>512 KB (FP16 MHA)</td>
+                    <td>~10&ndash;20 KB (MLA + quant)</td>
+                    <td><strong>25&ndash;50&times;</strong></td>
+                </tr>
+                <tr>
+                    <td>Long-context serving target</td>
+                    <td>~2K tokens</td>
+                    <td>1M-token KV-cache designs; full large-model serving still often needs multi-GPU</td>
+                    <td><strong>Architecture-dependent</strong></td>
+                </tr>
+                <tr>
+                    <td>Serving throughput</td>
+                    <td>Baseline</td>
+                    <td>Multi-&times; gains with paging, batching, eviction, quantization, or speculative decoding</td>
+                    <td><strong>Workload-dependent</strong></td>
+                </tr>
+                <tr>
+                    <td>Memory waste in serving</td>
+                    <td>60&ndash;80%</td>
+                    <td>~0% (PagedAttention)</td>
+                    <td><strong>Eliminated</strong></td>
+                </tr>
+                <tr>
+                    <td>Smallest device for 8B+ models</td>
+                    <td>Data center GPUs</td>
+                    <td>Phone-class demos (Bonsai 8B: PrismML reports ~44 tok/s on iPhone 17 Pro Max)</td>
+                    <td><strong>Democratized</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="key-insight">
+        <h4>The Big Picture</h4>
+        <p>The story of KV cache optimization is a story of the AI community refusing to accept limitations. When the "memory wall" threatened to stop progress, researchers attacked the problem from every angle: architectural changes (MQA, GQA, MLA), memory management (PagedAttention), numerical compression (KIVI, TurboQuant), intelligent caching (H2O, SnapKV), and attention pattern design (sliding window, local-global). The exact savings depend on model architecture and runtime settings, but source-backed examples now span from single-digit KB/token compressed designs to million-token KV layouts that are practical only because attention state is aggressively compressed.</p>
+    </div>
+</div>
+
 <!-- ==================== VISUAL RECAP (before References) ==================== -->
-<div class="section recap-section">
+<div class="section recap-section" id="visual-recap">
     <div class="section-number">Visual Recap</div>
-    <h2>The Full Journey &mdash; MHA to MLA</h2>
+    <h2>The Full Journey &mdash; MHA to Million-Token KV</h2>
     <div class="section-divider"></div>
     <div class="recap-shell">
         <div class="recap-header">
-            <div class="hero-badge recap-kicker">Video + Canvas</div>
+            <div class="hero-badge recap-kicker">Interactive Canvas</div>
             <h3 class="recap-title"><span>Watch the recap or scrub the interactive version</span></h3>
-            <p class="recap-copy">Prefer a clean export over a live animation? Use the fast social-friendly recap or the slower full walkthrough below. The original interactive canvas is still here if you want to explore the whole visual journey inside the article.</p>
+            <p class="recap-copy">Use the interactive canvas below to explore the full visual journey inside the article.</p>
         </div>
-        <div class="recap-media-grid">
-            <div class="recap-video-card">
-                <video class="recap-video" controls playsinline preload="metadata" muted>
-                    <source src="videos/recap-paced-canvas.mp4" type="video/mp4">
-                    <source src="videos/recap-paced-canvas.webm" type="video/webm">
-                    Your browser does not support embedded video. <a href="videos/recap-paced-canvas.mp4">Open the recap video</a>.
-                </video>
-                <h4>Fast recap video</h4>
-                <p>A lighter export that works well for article readers and social previews. It covers the full progression from MHA to MLA without the slower pauses.</p>
-                <div class="recap-links">
-                    <a class="recap-link" href="videos/recap-paced-canvas.mp4">Download MP4</a>
-                    <a class="recap-link" href="videos/recap-paced-canvas.webm">Open WebM</a>
-                </div>
-            </div>
-            <div class="recap-video-card">
-                <video class="recap-video" controls playsinline preload="metadata" muted>
-                    <source src="videos/recap-5x-slow-full.mp4" type="video/mp4">
-                    <source src="videos/recap-5x-slow-full.webm" type="video/webm">
-                    Your browser does not support embedded video. <a href="videos/recap-5x-slow-full.mp4">Open the full walkthrough</a>.
-                </video>
-                <h4>Slow full walkthrough</h4>
-                <p>A slower export for readers who want time to follow the labels, cache counters, and architecture transitions frame by frame.</p>
-                <div class="recap-links">
-                    <a class="recap-link" href="videos/recap-5x-slow-full.mp4">Download MP4</a>
-                    <a class="recap-link" href="videos/recap-5x-slow-full.webm">Open WebM</a>
-                </div>
-            </div>
-            <div class="recap-video-card">
-                <video class="recap-video" controls playsinline preload="metadata" muted loop>
-                    <source src="videos/kv-cache-recap-canvas.mp4" type="video/mp4">
-                    <source src="videos/kv-cache-recap-canvas.webm" type="video/webm">
-                    Your browser does not support embedded video. <a href="videos/kv-cache-recap-canvas.mp4">Open the short recap clip</a>.
-                </video>
-                <h4>Short LinkedIn clip</h4>
-                <p>A compact MP4 cut from the live recap canvas. Use this when you need a quick animated asset to upload directly into a LinkedIn post.</p>
-                <div class="recap-links">
-                    <a class="recap-link" href="videos/kv-cache-recap-canvas.mp4">Download MP4</a>
-                    <a class="recap-link" href="videos/kv-cache-recap-canvas.webm">Open WebM</a>
-                </div>
-            </div>
-        </div>
+        
         <div class="recap-frame">
             <canvas id="recapAnim" class="recap-canvas" width="900" height="620"></canvas>
         </div>

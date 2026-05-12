@@ -555,74 +555,9 @@
 
         .recap-copy {
             max-width: 760px;
-            margin: 14px auto 26px;
+            margin: 14px auto 24px;
             text-align: center;
             color: var(--text-muted);
-        }
-
-        .recap-media-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 18px;
-            margin-bottom: 22px;
-        }
-
-        .recap-video-card {
-            position: relative;
-            z-index: 1;
-            border-radius: 22px;
-            padding: 16px;
-            border: 1px solid rgba(92, 121, 155, 0.24);
-            background: linear-gradient(180deg, rgba(8, 17, 31, 0.94), rgba(10, 20, 35, 0.9));
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-        }
-
-        .recap-video-card h4 {
-            margin: 14px 0 10px;
-            font-size: 1.05rem;
-        }
-
-        .recap-video-card p {
-            margin-bottom: 0;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-
-        .recap-video {
-            width: 100%;
-            display: block;
-            border-radius: 16px;
-            border: 1px solid rgba(92, 121, 155, 0.26);
-            background: #020617;
-            box-shadow: 0 16px 36px rgba(2, 8, 23, 0.28);
-        }
-
-        .article-video-card {
-            margin: 14px 0 18px;
-            padding: 14px;
-            border-radius: 18px;
-            border: 1px solid rgba(92, 121, 155, 0.24);
-            background: linear-gradient(180deg, rgba(8, 17, 31, 0.9), rgba(10, 20, 35, 0.82));
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-        }
-
-        .article-video-card h5 {
-            margin: 0 0 10px;
-            color: var(--text);
-            font-size: 0.95rem;
-            letter-spacing: 0;
-        }
-
-        .article-animation-video {
-            width: 100%;
-            display: block;
-            border-radius: 14px;
-            border: 1px solid rgba(92, 121, 155, 0.26);
-            background: #020617;
-        }
-
-        .article-video-card .recap-links {
-            margin-top: 10px;
         }
 
         .recap-links {
@@ -938,7 +873,6 @@
             .recap-shell { padding: 20px 16px; border-radius: 22px; }
             .recap-title { font-size: 1.9rem; }
             .recap-copy { margin-bottom: 20px; }
-            .recap-video-card { padding: 14px; }
             .recap-frame { padding: 12px; }
         }
 
@@ -1140,12 +1074,7 @@
     <div class="chart-container">
         <h4>Animation: Q &times; K<sup>T</sup> &rarr; Attention Scores &rarr; Weighted V &rarr; Output</h4>
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Toy scaled-dot-product example: one 1&times;4 Query is compared against five cached Keys, scaled by &radic;d<sub>k</sub>, then turned into attention weights and a weighted V output.</p>
-        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/qkv-attention-matmul.mp4" type="video/mp4">
-                <source src="videos/qkv-attention-matmul.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-        <canvas style="display:none" id="matMulAnim" width="780" height="400" style="width:100%; max-height:400px;"></canvas>
+        <canvas id="matMulAnim" width="780" height="400" style="width:100%; max-height:400px;"></canvas>
     </div>
 
     <h3>The Speed Benefit</h3>
@@ -1251,12 +1180,7 @@
     <div class="chart-container">
         <h4>Animation: KV Cache Growing Token by Token</h4>
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Illustrative LLaMA-2 7B FP16-style baseline: each new token adds one more cached K/V state for every layer. Watch GPU memory fill up over time.</p>
-        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/kv-cache-growth.mp4" type="video/mp4">
-                <source src="videos/kv-cache-growth.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-        <canvas style="display:none" id="cacheGrowthAnim" width="800" height="300" style="width:100%; max-height:300px;"></canvas>
+        <canvas id="cacheGrowthAnim" width="800" height="300" style="width:100%; max-height:300px;"></canvas>
     </div>
 </div>
 
@@ -1753,12 +1677,7 @@
     <p>The animation below runs all four attention methods side by side. Watch tokens arrive one at a time and see how much cached attention state each method stores. This is a normalized 32-layer FP16 comparison so the methods are compared on the same footing.</p>
 
     <div class="chart-container" style="padding: 15px;">
-        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/mha-mqa-gqa-mla-comparison.mp4" type="video/mp4">
-                <source src="videos/mha-mqa-gqa-mla-comparison.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-        <canvas style="display:none" id="kvCompareAnim" width="800" height="780" style="width:100%; max-height:780px;"></canvas>
+        <canvas id="kvCompareAnim" width="800" height="780" style="width:100%; max-height:780px;"></canvas>
     </div>
 </div>
 
@@ -1993,12 +1912,7 @@
     <div class="chart-container">
         <h4>Animation: KV Cache Quantization &mdash; FP16 &rarr; INT8 &rarr; INT4 &rarr; INT2</h4>
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Illustrative scalar view of KV quantization: the values are rounded more aggressively as bit width drops. Real systems such as KIVI and TurboQuant use more sophisticated schemes than this simple bar demo.</p>
-        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/kv-cache-quantization.mp4" type="video/mp4">
-                <source src="videos/kv-cache-quantization.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-        <canvas style="display:none" id="quantAnim" width="800" height="380" style="width:100%; max-height:380px;"></canvas>
+        <canvas id="quantAnim" width="800" height="380" style="width:100%; max-height:380px;"></canvas>
     </div>
 
     <h3>KIVI: 2-Bit Quantization (ICML 2024)</h3>
@@ -2711,23 +2625,13 @@
     <!-- Chart: KV Cache per Token Comparison -->
     <div class="chart-container chart-tall live-chart" data-chart-kind="kvBar">
         <h4>KV Cache Memory Per Token Comparison (FP16)</h4>
-        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/model-kv-cache-chart.mp4" type="video/mp4">
-                <source src="videos/model-kv-cache-chart.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-        <canvas style="display:none" id="kvCacheChart"></canvas>
+        <canvas id="kvCacheChart"></canvas>
     </div>
 
     <!-- Chart: Evolution of KV Cache Reduction Techniques -->
     <div class="chart-container chart-medium live-chart" data-chart-kind="reductionRadar">
         <h4>Memory Reduction vs. FP16 MHA Baseline (Lower is Better)</h4>
-        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/optimization-radar-chart.mp4" type="video/mp4">
-                <source src="videos/optimization-radar-chart.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-        <canvas style="display:none" id="reductionChart"></canvas>
+        <canvas id="reductionChart"></canvas>
     </div>
 
     <h3>Visual Summary: How Each Technique Reduces KV Cache</h3>
@@ -2829,12 +2733,7 @@
     <!-- ANIMATION: DFlash speculative decoding comparison -->
     <div class="chart-container chart-tall" style="margin: 30px 0;">
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Interactive: compare autoregressive, standard speculative decoding, and DFlash block diffusion side-by-side</p>
-        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/dflash-block-diffusion.mp4" type="video/mp4">
-                <source src="videos/dflash-block-diffusion.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-        <canvas style="display:none" id="dflashAnim" width="800" height="520" style="width:100%; max-height:520px;"></canvas>
+        <canvas id="dflashAnim" width="960" height="620" style="width:100%; max-height:620px;"></canvas>
     </div>
 
     <p>DFlash achieves <strong>over 6&times; lossless acceleration</strong> across a range of models and benchmarks. "Lossless" here means the output distribution of DFlash is provably identical to that of the target model alone &mdash; speculative decoding with correct rejection sampling never changes what the model says, only how fast it says it.</p>
@@ -2986,12 +2885,7 @@
     <!-- ANIMATION: DeepSeek V4 Hybrid Attention (CSA vs HCA) -->
     <div class="chart-container chart-tall" style="margin: 30px 0;">
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Interactive: watch CSA and HCA layers shape the KV cache footprint across a 12-layer model stack</p>
-        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
-                <source src="videos/deepseek-v4-hybrid-attention.mp4" type="video/mp4">
-                <source src="videos/deepseek-v4-hybrid-attention.webm" type="video/webm">
-                Your browser does not support embedded video.
-            </video>
-        <canvas style="display:none" id="deepseekV4Anim" width="800" height="520" style="width:100%; max-height:520px;"></canvas>
+        <canvas id="deepseekV4Anim" width="960" height="620" style="width:100%; max-height:620px;"></canvas>
     </div>
 
     <h3>Inference Implementation: vLLM Integration</h3>
@@ -3520,56 +3414,7 @@
     </div>
 </div>
 
-<!-- ==================== VISUAL RECAP (before References) ==================== -->
-<div class="section recap-section">
-    <div class="section-number">Visual Recap</div>
-    <h2>The Full Journey &mdash; MHA to MLA</h2>
-    <div class="section-divider"></div>
-    <div class="recap-shell">
-        <div class="recap-header">
-            <div class="hero-badge recap-kicker">Video + Canvas</div>
-            <h3 class="recap-title"><span>Watch the recap or scrub the interactive version</span></h3>
-            <p class="recap-copy">Prefer a clean export over a live animation? Use the fast social-friendly recap or the slower full walkthrough below. The original interactive canvas is still here if you want to explore the whole visual journey inside the article.</p>
-        </div>
-        <div class="recap-media-grid">
-            <div class="recap-video-card">
-                <video class="recap-video" controls playsinline preload="metadata" muted>
-                    <source src="videos/recap-paced-canvas.mp4" type="video/mp4">
-                    <source src="videos/recap-paced-canvas.webm" type="video/webm">
-                    Your browser does not support embedded video. <a href="videos/recap-paced-canvas.mp4">Open the recap video</a>.
-                </video>
-                <h4>Fast recap video</h4>
-                <p>A lighter export that works well for article readers and social previews. It covers the full progression from MHA to MLA without the slower pauses.</p>
-                
-            </div>
-            <div class="recap-video-card">
-                <video class="recap-video" controls playsinline preload="metadata" muted>
-                    <source src="videos/recap-5x-slow-full.mp4" type="video/mp4">
-                    <source src="videos/recap-5x-slow-full.webm" type="video/webm">
-                    Your browser does not support embedded video. <a href="videos/recap-5x-slow-full.mp4">Open the full walkthrough</a>.
-                </video>
-                <h4>Slow full walkthrough</h4>
-                <p>A slower export for readers who want time to follow the labels, cache counters, and architecture transitions frame by frame.</p>
-                
-            </div>
-            <div class="recap-video-card">
-                <video class="recap-video" controls playsinline preload="metadata" muted loop>
-                    <source src="videos/kv-cache-recap-canvas.mp4" type="video/mp4">
-                    <source src="videos/kv-cache-recap-canvas.webm" type="video/webm">
-                    Your browser does not support embedded video. <a href="videos/kv-cache-recap-canvas.mp4">Open the short recap clip</a>.
-                </video>
-                <h4>Short LinkedIn clip</h4>
-                <p>A compact MP4 cut from the live recap canvas. Use this when you need a quick animated asset to upload directly into a LinkedIn post.</p>
-                
-            </div>
-        </div>
-        <div class="recap-frame">
-            <canvas id="recapAnim" class="recap-canvas" width="900" height="620"></canvas>
-        </div>
-    </div>
-</div>
-
-<!-- ==================== SECTION 25: REFERENCES ==================== -->
+<!-- ==================== SECTION 24: STATE OF THE ART ==================== -->
 <div class="section" id="sec24">
     <div class="section-number">Chapter 24</div>
     <h2>The State of the Art (2026) &amp; Future Directions</h2>
@@ -3660,7 +3505,24 @@
     </div>
 </div>
 
-<!-- ==================== SECTION 18: DEEPSEEK V4 ==================== -->
+<!-- ==================== VISUAL RECAP (before References) ==================== -->
+<div class="section recap-section">
+    <div class="section-number">Visual Recap</div>
+    <h2>The Full Journey &mdash; MHA to MLA</h2>
+    <div class="section-divider"></div>
+    <div class="recap-shell">
+        <div class="recap-header">
+            <div class="hero-badge recap-kicker">Interactive Canvas</div>
+            <h3 class="recap-title"><span>Scrub the visual journey from MHA to MLA</span></h3>
+            <p class="recap-copy">This article keeps the live canvas animation embedded. Social-ready MP4/WebM exports are generated locally in the <code>videos/</code> folder for upload to LinkedIn.</p>
+        </div>
+        <div class="recap-frame">
+            <canvas id="recapAnim" class="recap-canvas" width="900" height="620"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== SECTION 25: REFERENCES ==================== -->
 <div class="container">
 <div class="section" id="sec25">
     <div class="section-number">Chapter 25</div>
@@ -4104,6 +3966,8 @@ function setupHiDPICanvas(canvas, width, height) {
         const tokenPhase = loopElapsed % cycleMs;
 
         ctx.clearRect(0,0,W,H);
+        ctx.fillStyle = '#07111d';
+        ctx.fillRect(0,0,W,H);
         curTok = Math.min(maxTok, Math.floor(tokenPhase / tokenStepMs));
         animTok = curTok === 0 ? 0 : Math.min((tokenPhase % tokenStepMs) / tokenFillMs, 1);
 
@@ -4463,23 +4327,39 @@ function setupHiDPICanvas(canvas, width, height) {
 
     // Scene progress bar at bottom
     function progressBar(sceneIdx){
-        const bw = W / stageNames.length;
+        const y = H - 34;
+        const trackX = 90;
+        const trackW = W - 180;
+        const dotGap = trackW / (stageNames.length - 1);
+        ctx.save();
+        ctx.fillStyle = 'rgba(11,24,40,0.94)';
+        ctx.fillRect(0, H - 48, W, 48);
+        ctx.strokeStyle = 'rgba(73, 92, 119, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(trackX, y);
+        ctx.lineTo(trackX + trackW, y);
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(96,165,250,0.65)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(trackX, y);
+        ctx.lineTo(trackX + dotGap * sceneIdx, y);
+        ctx.stroke();
         stageNames.forEach((name,i)=>{
-            const x = i * bw + 2;
-            const y = H - 36;
-            const w = bw - 6;
+            const x = trackX + i * dotGap;
             const isActive = i === sceneIdx;
-            ctx.fillStyle = isActive ? 'rgba(96,165,250,0.2)' : 'rgba(11,24,40,0.94)';
-            ctx.fillRect(x, y, w, 28);
-            ctx.strokeStyle = isActive ? 'rgba(96,165,250,0.44)' : 'rgba(73, 92, 119, 0.5)';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(x, y, w, 28);
-            ctx.fillStyle = isActive ? TEXT : MUTED;
-            ctx.font = (isActive ? '700 10.5px Inter,sans-serif' : '600 9.5px Inter,sans-serif');
-            ctx.textAlign = 'center';
-            ctx.fillText(name, x + w / 2, y + 18);
-            ctx.textAlign = 'left';
+            ctx.beginPath();
+            ctx.arc(x, y, isActive ? 5 : 3, 0, Math.PI * 2);
+            ctx.fillStyle = isActive ? BLUE : 'rgba(126, 167, 204, 0.45)';
+            ctx.fill();
         });
+        ctx.fillStyle = TEXT;
+        ctx.font = '700 12px Inter,sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(stageNames[sceneIdx], W/2, H - 14);
+        ctx.restore();
+        ctx.textAlign = 'left';
     }
 
     // Sample data
@@ -5539,7 +5419,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
 (function(){
     const canvas = document.getElementById('deepseekV4Anim');
     if(!canvas) return;
-    const W=800, H=520;
+    const W=960, H=620;
     const ctx = setupHiDPICanvas(canvas, W, H);
 
     const BG='#07111d', CSA='#4da3ff', HCA='#fb923c', KEY_C='#f59e0b', VAL_C='#22c55e';
@@ -5578,6 +5458,9 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     function mono(text,x,y,col,sz,align){
         ctx.fillStyle=col||MUTED;ctx.font=(sz||10)+'px JetBrains Mono,monospace';
         ctx.textAlign=align||'left';ctx.fillText(text,x,y);ctx.textAlign='left';
+    }
+    function multiline(lines,x,y,lineH,col,sz,wt,align){
+        lines.forEach((line,i)=>lbl(line,x,y+i*lineH,col,sz,wt,align));
     }
     function flowDots(x1,y1,x2,y2,col,t,n,speed){
         for(let i=0;i<n;i++){
@@ -5632,7 +5515,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     function drawScene1(t){
         const prog=ease(Math.min(1,t*1.4));
         lbl('The Memory Wall: Why V4 Had to Change',20,28,BRIGHT,15,'bold');
-        lbl("At 1M tokens, a V3-style MLA cache consumes most of an 80GB GPU before weights and overhead",20,50,MUTED,12);
+        lbl("At 1M tokens, a V3-style MLA cache consumes most of an 80GB GPU before weights and overhead.",20,50,MUTED,12);
 
         const ctxK=[1,8,64,256,1000];
         const kvPerToken=70; // KB per token, V3.2 MLA
@@ -5680,7 +5563,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
             }
             ctx.globalAlpha=1;
         });
-        mono('V3-style MLA baseline: ~70 KB/token KV only  |  H100 80 GB reference line',aX,aY+aH+50,'#475569',10);
+        mono('V3-style MLA baseline: ~70 KB/token KV only  |  H100 80 GB reference line',aX,aY+aH+50,'#64748b',10);
 
         // Solution callout
         if(prog>0.68){
@@ -5940,14 +5823,14 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     function drawScene5(t){
         const prog=ease(Math.min(1,t*1.3));
         lbl('The Payoff: KV Cache at 1M Tokens',20,28,BRIGHT,16,'bold');
-        lbl('CSA + HCA together slash the KV footprint by 90–93% vs DeepSeek-V3.2',20,52,MUTED,12);
+        lbl('CSA + HCA compress long-context KV state by 90–93% vs a V3-style baseline.',20,52,MUTED,12);
 
         const models=[
             {name:'DeepSeek-V3.2',frac:1.00,col:'#ef4444',tag:'V3-style baseline'},
             {name:'V4-Pro',frac:0.10,col:CSA,tag:'27% FLOPs  ·  10% KV  ·  1.6T / 49B active'},
             {name:'V4-Flash',frac:0.07,col:HCA,tag:'10% FLOPs  ·   7% KV  ·   284B / 13B active'},
         ];
-        const maxBW=W-310,bH=56,bGap=18,sY=88;
+        const maxBW=W-370,bH=62,bGap=20,sY=92;
 
         models.forEach((m,i)=>{
             const delay=i*0.18;
@@ -5956,16 +5839,16 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
             const animF=m.frac*ease(clamp((prog-delay-0.06)/0.72,0,1));
             const y=sY+i*(bH+bGap),bw=maxBW*animF;
             ctx.globalAlpha=alpha;
-            rrect(190,y,maxBW,bH,7,DIM,null);
-            rrect(190,y,bw,bH,7,m.col+'28',null);
-            rrect(190,y,bw,bH/3.5,7,m.col+'50',null);
-            rrect(190,y,maxBW,bH,7,null,m.col+'60',1.8);
-            if(bw>0){glow(m.col,12);rrect(190,y,Math.min(bw,10),bH,7,null,m.col,2.2);noGlow();}
-            lbl(m.name,186,y+bH/2-4,m.col,14,'bold','right');
-            mono(m.tag,186,y+bH/2+13,MUTED,9,'right');
+            rrect(230,y,maxBW,bH,7,DIM,null);
+            rrect(230,y,bw,bH,7,m.col+'28',null);
+            rrect(230,y,bw,bH/3.5,7,m.col+'50',null);
+            rrect(230,y,maxBW,bH,7,null,m.col+'60',1.8);
+            if(bw>0){glow(m.col,12);rrect(230,y,Math.min(bw,10),bH,7,null,m.col,2.2);noGlow();}
+            lbl(m.name,224,y+bH/2-4,m.col,14,'bold','right');
+            mono(m.tag,224,y+bH/2+13,MUTED,9,'right');
             const pctTxt=Math.round(m.frac*100)+'%';
-            if(bw>100){glow(m.col,8);lbl(pctTxt,190+bw/2,y+bH/2+7,m.col,17,'bold','center');noGlow();}
-            else if(bw>0){lbl(pctTxt,194+bw,y+bH/2+7,m.col,13,'bold');}
+            if(bw>100){glow(m.col,8);lbl(pctTxt,230+bw/2,y+bH/2+7,m.col,17,'bold','center');noGlow();}
+            else if(bw>0){lbl(pctTxt,234+bw,y+bH/2+7,m.col,13,'bold');}
             ctx.globalAlpha=1;
         });
 
@@ -5975,8 +5858,8 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
             [[1,'9.5–10× less memory',CSA],[2,'13–14× less memory',HCA]].forEach(([idx,text,col])=>{
                 const y=sY+idx*(bH+bGap);
                 ctx.globalAlpha=cp;
-                glow(col,6);rrect(W-192,y+14,178,26,7,col+'18',col,1.5);noGlow();
-                lbl(text,W-103,y+31,col,12,'bold','center');
+                glow(col,6);rrect(W-230,y+15,210,28,7,col+'18',col,1.5);noGlow();
+                lbl(text,W-125,y+34,col,12,'bold','center');
                 ctx.globalAlpha=1;
             });
         }
@@ -5986,10 +5869,13 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
             const fp=ease(clamp((prog-0.78)/0.22,0,1));
             const bY=sY+models.length*(bH+bGap)+8;
             ctx.globalAlpha=fp;
-            glow(SUCCESS,8);rrect(20,bY,W-40,66,10,'rgba(34,197,94,0.07)',SUCCESS,1.5);noGlow();
-            lbl('KV cache for one 1M-token sequence can fit in accelerator memory; weights still need multi-GPU serving',W/2,bY+22,SUCCESS,12,'bold','center');
-            lbl('Shared K=V plus CSA/HCA compression: roughly 5–10 KB/token vs ~70 KB/token for the V3-style MLA baseline',W/2,bY+42,TEXT,10,'normal','center');
-            mono('DeepSeek-V4 / vLLM public figures  |  V4-Pro: 1.6T/49B  |  V4-Flash: 284B/13B',W/2,bY+58,MUTED,9,'center');
+            glow(SUCCESS,8);rrect(20,bY,W-40,92,10,'rgba(34,197,94,0.07)',SUCCESS,1.5);noGlow();
+            multiline([
+                '1M-token KV cache becomes accelerator-memory scale.',
+                'Model weights still require multi-GPU serving.',
+                'Shared K=V + c4a/c128a: ~5–10 KB/token vs ~70 KB/token baseline.'
+            ],W/2,bY+24,20,SUCCESS,11,'bold','center');
+            mono('vLLM public figures: V4-Pro 1.6T/49B active | V4-Flash 284B/13B active',W/2,bY+84,MUTED,9,'center');
             ctx.globalAlpha=1;
         }
     }
@@ -6024,7 +5910,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
 (function(){
     const canvas=document.getElementById('dflashAnim');
     if(!canvas)return;
-    const W=800,H=520;
+    const W=960,H=620;
     const ctx=setupHiDPICanvas(canvas,W,H);
 
     const BG='#07111d',TEXT='#d7e5f2',MUTED='#8fa3b8',BRIGHT='#f8fbff';
@@ -6051,6 +5937,9 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     function mono(t,x,y,col,sz,al){
         ctx.fillStyle=col||MUTED;ctx.font=(sz||10)+'px JetBrains Mono,monospace';
         ctx.textAlign=al||'left';ctx.fillText(t,x,y);ctx.textAlign='left';
+    }
+    function multiline(lines,x,y,lineH,col,sz,wt,al){
+        lines.forEach((line,i)=>lbl(line,x,y+i*lineH,col,sz,wt,al));
     }
     function arrowTo(x1,y1,x2,y2,col,alpha,lw){
         ctx.globalAlpha=alpha||1;ctx.strokeStyle=col;ctx.lineWidth=lw||1.5;
@@ -6159,8 +6048,8 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
             const fp=ease(clamp((prog-0.78)/0.22,0,1));
             ctx.globalAlpha=fp;
             rrect(20,H-60,W-40,44,10,'rgba(239,68,68,0.08)',AR,1.5);
-            lbl('GPU utilization during decode: 20–40%  —  most hardware sits idle between passes',W/2,H-39,AR,12,'bold','center');
-            lbl('The decode step is memory-bandwidth-bound: loading the KV cache per token is the true bottleneck',W/2,H-20,MUTED,11,'normal','center');
+            lbl('Decode utilization can sit around 20–40% because each step is memory-bandwidth-bound',W/2,H-39,AR,12,'bold','center');
+            lbl('Every token reloads attention state; the KV cache, not compute, often becomes the bottleneck.',W/2,H-20,MUTED,11,'normal','center');
             ctx.globalAlpha=1;
         }
     }
@@ -6171,7 +6060,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     function drawScene2(t){
         const prog=ease(Math.min(1,t*1.2));
         lbl('② DFlash: KV Injection Pipeline',20,28,DF,15,'bold');
-        lbl("Target model's features are injected into every draft layer's KV cache — persistent conditioning throughout diffusion.",20,50,MUTED,11);
+        lbl("Target features are injected into every draft layer's KV cache, keeping diffusion on-distribution.",20,50,MUTED,11);
 
         // 6 pipeline stages
         const stages=[
@@ -6219,18 +6108,20 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
         if(prog>0.42){
             const dp=ease(clamp((prog-0.42)/0.38,0,1));
             const inj=stages[3];
-            const panX=20,panY=180,panW=W-40,panH=120;
+            const panX=20,panY=190,panW=W-40,panH=140;
             ctx.globalAlpha=dp;
             rrect(panX,panY,panW,panH,10,'rgba(45,212,191,0.07)',INJ,1.5);
 
-            lbl('How KV Injection Works:',panX+14,panY+20,INJ,13,'bold');
-            lbl('After each prefill or verify step, DFlash samples hidden states from layers distributed',panX+14,panY+40,TEXT,11);
-            lbl('uniformly across the target model depth — early layers give syntax/position, deep layers give semantics.',panX+14,panY+56,TEXT,11);
-            lbl('These are fused by a lightweight projection and stored directly in the K and V projections of',panX+14,panY+74,TEXT,11);
-            lbl('every draft model layer. The draft KV cache carries target-model context throughout diffusion.',panX+14,panY+90,TEXT,11);
+            lbl('How KV Injection Works:',panX+14,panY+22,INJ,13,'bold');
+            multiline([
+                '1. Sample target hidden states from shallow, middle, and deep layers.',
+                '2. Fuse them with a lightweight projection.',
+                '3. Store the fused signal in every draft layer KV cache.',
+                'Result: the draft model stays conditioned throughout diffusion.'
+            ],panX+14,panY+44,18,TEXT,11,'normal','left');
 
             // Mini diagram inside panel
-            const dX=panX+panW-310,dY=panY+18;
+            const dX=panX+panW-330,dY=panY+24;
             [[DF,'Target L1'],[DF,'Target L4'],[DF,'Target L8'],[DF,'Target LN']].forEach((b,i)=>{
                 const bx=dX+i*58;
                 rrect(bx,dY,50,18,4,b[0]+'20',b[0]+'80',1);
@@ -6258,8 +6149,8 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
             const wp=ease(clamp((prog-0.72)/0.28,0,1));
             ctx.globalAlpha=wp;
             rrect(20,H-62,W-40,46,10,'rgba(77,163,255,0.08)',DF,1.5);
-            glow(DF,6);lbl('Persistent conditioning → higher draft acceptance rate → more tokens per target-model pass',W/2,H-41,DF,12,'bold','center');noGlow();
-            lbl('Earlier methods conditioned only at the start. DFlash re-injects at every step, so drafts stay on-distribution.',W/2,H-22,MUTED,11,'normal','center');
+            glow(DF,6);lbl('Persistent conditioning → higher acceptance → more tokens per target-model pass',W/2,H-41,DF,12,'bold','center');noGlow();
+            lbl('DFlash re-injects target features at every step, so draft blocks stay on-distribution.',W/2,H-22,MUTED,11,'normal','center');
             ctx.globalAlpha=1;
         }
     }
@@ -6351,7 +6242,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
             const ep=ease(clamp((prog-0.84)/0.16,0,1));
             ctx.globalAlpha=ep;
             rrect(20,H-56,W-40,40,10,'rgba(77,163,255,0.08)',DF,1.5);
-            lbl(BLOCK+' draft tokens via 1 diffusion pass + 1 verify pass  =  2 forward passes for '+BLOCK+' output tokens',W/2,H-36,DF,12,'bold','center');
+            lbl(BLOCK+' draft tokens: 1 diffusion pass + 1 verify pass = 2 passes total',W/2,H-36,DF,12,'bold','center');
             lbl('Autoregressive would need '+BLOCK+' passes for the same output',W/2,H-17,MUTED,11,'normal','center');
             ctx.globalAlpha=1;
         }
@@ -6363,7 +6254,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     function drawScene4(t){
         const prog=ease(Math.min(1,t*1.3));
         lbl('④ Lossless Speedup vs Baselines',20,28,BRIGHT,15,'bold');
-        lbl('DFlash achieves over 6× lossless acceleration — output distribution is identical to the target model alone.',20,50,MUTED,12);
+            lbl('DFlash reports over 6× lossless acceleration while preserving the target-model distribution.',20,50,MUTED,12);
 
         const methods=[
             {name:'Autoregressive',sub:'1 token / forward pass',mult:1.0,col:AR},
@@ -6417,8 +6308,8 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
             const np=ease(clamp((prog-0.84)/0.16,0,1));
             ctx.globalAlpha=np;
             rrect(20,H-50,W-40,38,10,'rgba(45,212,191,0.07)',INJ,1.5);
-            lbl('Orthogonal to KV cache compression (MLA, CSA, HCA): smaller KV → faster verify → even higher effective speedup',W/2,H-33,INJ,11,'bold','center');
-            lbl('Run DFlash on top of DeepSeek V4-Flash: smaller KV + block drafting compound multiplicatively.',W/2,H-15,MUTED,10,'normal','center');
+            lbl('Orthogonal to KV compression: smaller KV makes target verification faster',W/2,H-33,INJ,11,'bold','center');
+            lbl('Architecture cuts memory per token; DFlash reduces target-model passes per output token.',W/2,H-15,MUTED,10,'normal','center');
             ctx.globalAlpha=1;
         }
     }

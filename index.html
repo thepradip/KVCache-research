@@ -560,6 +560,99 @@
             color: var(--text-muted);
         }
 
+        .recap-media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .recap-video-card {
+            position: relative;
+            z-index: 1;
+            border-radius: 22px;
+            padding: 16px;
+            border: 1px solid rgba(92, 121, 155, 0.24);
+            background: linear-gradient(180deg, rgba(8, 17, 31, 0.94), rgba(10, 20, 35, 0.9));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        .recap-video-card h4 {
+            margin: 14px 0 10px;
+            font-size: 1.05rem;
+        }
+
+        .recap-video-card p {
+            margin-bottom: 0;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .recap-video {
+            width: 100%;
+            display: block;
+            border-radius: 16px;
+            border: 1px solid rgba(92, 121, 155, 0.26);
+            background: #020617;
+            box-shadow: 0 16px 36px rgba(2, 8, 23, 0.28);
+        }
+
+        .article-video-card {
+            margin: 14px 0 18px;
+            padding: 14px;
+            border-radius: 18px;
+            border: 1px solid rgba(92, 121, 155, 0.24);
+            background: linear-gradient(180deg, rgba(8, 17, 31, 0.9), rgba(10, 20, 35, 0.82));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        .article-video-card h5 {
+            margin: 0 0 10px;
+            color: var(--text);
+            font-size: 0.95rem;
+            letter-spacing: 0;
+        }
+
+        .article-animation-video {
+            width: 100%;
+            display: block;
+            border-radius: 14px;
+            border: 1px solid rgba(92, 121, 155, 0.26);
+            background: #020617;
+        }
+
+        .article-video-card .recap-links {
+            margin-top: 10px;
+        }
+
+        .recap-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .recap-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(77, 163, 255, 0.22);
+            background: rgba(77, 163, 255, 0.08);
+            color: #cde4ff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .recap-link:hover {
+            transform: translateY(-1px);
+            background: rgba(77, 163, 255, 0.14);
+            border-color: rgba(77, 163, 255, 0.34);
+        }
+
         .recap-canvas {
             display: block;
             width: 100%;
@@ -838,13 +931,14 @@
             h2 { font-size: 1.8rem; }
             .comparison-grid { grid-template-columns: 1fr; }
             .toc { padding: 20px; }
-            .chart-container.chart-tall { min-height: 640px; }
-            .chart-container.chart-medium { min-height: 420px; }
+            .chart-container.chart-tall { height: 640px; }
+            .chart-container.chart-medium { height: 420px; }
             .counter-item { min-width: 140px; padding: 16px 10px; }
             .counter-value { font-size: 2.35rem; }
             .recap-shell { padding: 20px 16px; border-radius: 22px; }
             .recap-title { font-size: 1.9rem; }
             .recap-copy { margin-bottom: 20px; }
+            .recap-video-card { padding: 14px; }
             .recap-frame { padding: 12px; }
         }
 
@@ -904,7 +998,6 @@
         <li><a href="#sec6">Multi-Query Attention (MQA) &mdash; The First Big Fix</a></li>
         <li><a href="#sec7">Grouped-Query Attention (GQA) &mdash; The Best of Both Worlds</a></li>
         <li><a href="#sec8">Multi-Head Latent Attention (MLA) &mdash; DeepSeek's Breakthrough</a></li>
-        <li><a href="#sec8-live">Live Visual Comparison &mdash; MHA vs MQA vs GQA vs MLA</a></li>
         <li><a href="#sec9">Cross-Layer Attention (CLA) &mdash; Sharing Across Layers</a></li>
         <li><a href="#sec10">Sliding Window &amp; Local-Global Attention</a></li>
         <li><a href="#sec11">PagedAttention &mdash; Virtual Memory for AI</a></li>
@@ -912,16 +1005,15 @@
         <li><a href="#sec13">KV Cache Quantization &mdash; Shrinking Each Number</a></li>
         <li><a href="#sec14">FlashAttention &mdash; Making Hardware Work Smarter</a></li>
         <li><a href="#sec15">Model-by-Model Comparison &mdash; The Complete Picture</a></li>
-        <li><a href="#sec16">DFlash &mdash; Block Diffusion for Flash Speculative Decoding</a></li>
-        <li><a href="#sec17">DeepSeek V4 &mdash; The Million-Token Efficiency Breakthrough</a></li>
-        <li><a href="#sec18">Kimi K2.5 &mdash; How Reasoning Changes for AI Agents</a></li>
-        <li><a href="#sec19">Linear Attention &amp; SSMs &mdash; The O(1) KV Cache Alternative</a></li>
-        <li><a href="#sec20">Prefix Caching &amp; RadixAttention &mdash; Reuse Across Requests</a></li>
-        <li><a href="#sec21">Mixture of Experts &amp; KV Cache &mdash; Sparse Activation</a></li>
-        <li><a href="#sec22">KV Cache Offloading &mdash; CPU &amp; NVMe as Overflow</a></li>
-        <li><a href="#sec23">Disaggregated Prefill &amp; Decode &mdash; The New Serving Paradigm</a></li>
-        <li><a href="#sec24">2026 Summary &amp; Future Directions</a></li>
-        <li><a href="#visual-recap">Visual Recap &mdash; Interactive Canvas</a></li>
+        <li><a href="#sec24">DFlash &mdash; Block Diffusion for Flash Speculative Decoding</a></li>
+        <li><a href="#sec18">DeepSeek V4 &mdash; The Million-Token Efficiency Breakthrough</a></li>
+        <li><a href="#sec17">Kimi K2.5 &mdash; How Reasoning Changes for AI Agents</a></li>
+        <li><a href="#sec16">Linear Attention &amp; SSMs &mdash; The O(1) KV Cache Alternative</a></li>
+        <li><a href="#sec19">Prefix Caching &amp; RadixAttention &mdash; Reuse Across Requests</a></li>
+        <li><a href="#sec20">Mixture of Experts &amp; KV Cache &mdash; Sparse Activation</a></li>
+        <li><a href="#sec21">KV Cache Offloading &mdash; CPU &amp; NVMe as Overflow</a></li>
+        <li><a href="#sec22">Disaggregated Prefill &amp; Decode &mdash; The New Serving Paradigm</a></li>
+        <li><a href="#sec23">The State of the Art (2026) &amp; Future Directions</a></li>
         <li><a href="#sec25">References</a></li>
     </ol>
 </div>
@@ -1048,8 +1140,12 @@
     <div class="chart-container">
         <h4>Animation: Q &times; K<sup>T</sup> &rarr; Attention Scores &rarr; Weighted V &rarr; Output</h4>
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Toy scaled-dot-product example: one 1&times;4 Query is compared against five cached Keys, scaled by &radic;d<sub>k</sub>, then turned into attention weights and a weighted V output.</p>
-        
-        <canvas id="matMulAnim" width="780" height="400" style="width:100%; max-height:400px;"></canvas>
+        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/qkv-attention-matmul.mp4" type="video/mp4">
+                <source src="videos/qkv-attention-matmul.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+        <canvas style="display:none" id="matMulAnim" width="780" height="400" style="width:100%; max-height:400px;"></canvas>
     </div>
 
     <h3>The Speed Benefit</h3>
@@ -1155,8 +1251,12 @@
     <div class="chart-container">
         <h4>Animation: KV Cache Growing Token by Token</h4>
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Illustrative LLaMA-2 7B FP16-style baseline: each new token adds one more cached K/V state for every layer. Watch GPU memory fill up over time.</p>
-        
-        <canvas id="cacheGrowthAnim" width="800" height="300" style="width:100%; max-height:300px;"></canvas>
+        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/kv-cache-growth.mp4" type="video/mp4">
+                <source src="videos/kv-cache-growth.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+        <canvas style="display:none" id="cacheGrowthAnim" width="800" height="300" style="width:100%; max-height:300px;"></canvas>
     </div>
 </div>
 
@@ -1646,15 +1746,19 @@
 </div>
 
 <!-- ==================== LIVE COMPARISON ANIMATION ==================== -->
-<div class="section" id="sec8-live">
+<div class="section">
     <div class="section-number">Interactive Comparison</div>
-    <h2>Live Visual Comparison &mdash; MHA vs MQA vs GQA vs MLA</h2>
+    <h2>Live: How KV Cache Works in MHA vs MQA vs GQA vs MLA</h2>
     <div class="section-divider"></div>
     <p>The animation below runs all four attention methods side by side. Watch tokens arrive one at a time and see how much cached attention state each method stores. This is a normalized 32-layer FP16 comparison so the methods are compared on the same footing.</p>
 
     <div class="chart-container" style="padding: 15px;">
-        
-        <canvas id="kvCompareAnim" width="800" height="780" style="width:100%; max-height:780px;"></canvas>
+        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/mha-mqa-gqa-mla-comparison.mp4" type="video/mp4">
+                <source src="videos/mha-mqa-gqa-mla-comparison.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+        <canvas style="display:none" id="kvCompareAnim" width="800" height="780" style="width:100%; max-height:780px;"></canvas>
     </div>
 </div>
 
@@ -1889,8 +1993,12 @@
     <div class="chart-container">
         <h4>Animation: KV Cache Quantization &mdash; FP16 &rarr; INT8 &rarr; INT4 &rarr; INT2</h4>
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Illustrative scalar view of KV quantization: the values are rounded more aggressively as bit width drops. Real systems such as KIVI and TurboQuant use more sophisticated schemes than this simple bar demo.</p>
-        
-        <canvas id="quantAnim" width="800" height="380" style="width:100%; max-height:380px;"></canvas>
+        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/kv-cache-quantization.mp4" type="video/mp4">
+                <source src="videos/kv-cache-quantization.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+        <canvas style="display:none" id="quantAnim" width="800" height="380" style="width:100%; max-height:380px;"></canvas>
     </div>
 
     <h3>KIVI: 2-Bit Quantization (ICML 2024)</h3>
@@ -2603,15 +2711,23 @@
     <!-- Chart: KV Cache per Token Comparison -->
     <div class="chart-container chart-tall live-chart" data-chart-kind="kvBar">
         <h4>KV Cache Memory Per Token Comparison (FP16)</h4>
-        
-        <canvas id="kvCacheChart"></canvas>
+        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/model-kv-cache-chart.mp4" type="video/mp4">
+                <source src="videos/model-kv-cache-chart.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+        <canvas style="display:none" id="kvCacheChart"></canvas>
     </div>
 
     <!-- Chart: Evolution of KV Cache Reduction Techniques -->
     <div class="chart-container chart-medium live-chart" data-chart-kind="reductionRadar">
         <h4>Memory Reduction vs. FP16 MHA Baseline (Lower is Better)</h4>
-        
-        <canvas id="reductionChart"></canvas>
+        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/optimization-radar-chart.mp4" type="video/mp4">
+                <source src="videos/optimization-radar-chart.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+        <canvas style="display:none" id="reductionChart"></canvas>
     </div>
 
     <h3>Visual Summary: How Each Technique Reduces KV Cache</h3>
@@ -2624,8 +2740,7 @@
     </div>
 </div>
 
-<!-- ==================== SECTION 16: DEEPSEEK V4 ==================== -->
-<div class="container">
+<!-- ==================== SECTION 16: KIMI K2.5 AGENTIC ==================== -->
 <div class="section" id="sec16">
     <div class="section-number">Chapter 16</div>
     <h2>DFlash &mdash; Block Diffusion for Flash Speculative Decoding</h2>
@@ -2714,8 +2829,12 @@
     <!-- ANIMATION: DFlash speculative decoding comparison -->
     <div class="chart-container chart-tall" style="margin: 30px 0;">
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Interactive: compare autoregressive, standard speculative decoding, and DFlash block diffusion side-by-side</p>
-        
-        <canvas id="dflashAnim" width="800" height="520" style="width:100%; max-height:520px;"></canvas>
+        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/dflash-block-diffusion.mp4" type="video/mp4">
+                <source src="videos/dflash-block-diffusion.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+        <canvas style="display:none" id="dflashAnim" width="800" height="520" style="width:100%; max-height:520px;"></canvas>
     </div>
 
     <p>DFlash achieves <strong>over 6&times; lossless acceleration</strong> across a range of models and benchmarks. "Lossless" here means the output distribution of DFlash is provably identical to that of the target model alone &mdash; speculative decoding with correct rejection sampling never changes what the model says, only how fast it says it.</p>
@@ -2747,7 +2866,7 @@
 </div>
 
 
-<!-- ==================== SECTION 18: KIMI K2.5 ==================== -->
+<!-- ==================== SECTION 20: LINEAR ATTENTION / SSMs ==================== -->
 <div class="section" id="sec17">
     <div class="section-number">Chapter 17</div>
     <h2>DeepSeek V4 &mdash; The Million-Token Efficiency Breakthrough</h2>
@@ -2867,8 +2986,12 @@
     <!-- ANIMATION: DeepSeek V4 Hybrid Attention (CSA vs HCA) -->
     <div class="chart-container chart-tall" style="margin: 30px 0;">
         <p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Interactive: watch CSA and HCA layers shape the KV cache footprint across a 12-layer model stack</p>
-        
-        <canvas id="deepseekV4Anim" width="800" height="520" style="width:100%; max-height:520px;"></canvas>
+        <video class="article-animation-video" controls playsinline muted loop preload="metadata">
+                <source src="videos/deepseek-v4-hybrid-attention.mp4" type="video/mp4">
+                <source src="videos/deepseek-v4-hybrid-attention.webm" type="video/webm">
+                Your browser does not support embedded video.
+            </video>
+        <canvas style="display:none" id="deepseekV4Anim" width="800" height="520" style="width:100%; max-height:520px;"></canvas>
     </div>
 
     <h3>Inference Implementation: vLLM Integration</h3>
@@ -2905,7 +3028,7 @@
 </div>
 </div>
 
-<!-- ==================== SECTION 17: DFLASH ==================== -->
+<!-- ==================== SECTION 19: DFLASH ==================== -->
 <div class="container">
 <div class="section" id="sec18">
     <div class="section-number">Chapter 18</div>
@@ -3067,7 +3190,7 @@
     </div>
 </div>
 
-<!-- ==================== SECTION 19: LINEAR ATTENTION ==================== -->
+<!-- ==================== SECTION 17 ==================== -->
 <div class="section" id="sec19">
     <div class="section-number">Chapter 19</div>
     <h2>Linear Attention &amp; SSMs &mdash; The O(1) KV Cache Alternative</h2>
@@ -3142,7 +3265,7 @@
     </div>
 </div>
 
-<!-- ==================== SECTION 20: PREFIX CACHING ==================== -->
+<!-- ==================== SECTION 21: PREFIX CACHING ==================== -->
 <div class="section" id="sec20">
     <div class="section-number">Chapter 20</div>
     <h2>Prefix Caching &amp; RadixAttention &mdash; Reuse Across Requests</h2>
@@ -3211,7 +3334,7 @@
     </div>
 </div>
 
-<!-- ==================== SECTION 21: MIXTURE OF EXPERTS ==================== -->
+<!-- ==================== SECTION 22: MOE + KV CACHE ==================== -->
 <div class="section" id="sec21">
     <div class="section-number">Chapter 21</div>
     <h2>Mixture of Experts &amp; KV Cache &mdash; Sparse Activation</h2>
@@ -3272,7 +3395,7 @@
     </div>
 </div>
 
-<!-- ==================== SECTION 22: KV OFFLOADING ==================== -->
+<!-- ==================== SECTION 23: KV CACHE OFFLOADING ==================== -->
 <div class="section" id="sec22">
     <div class="section-number">Chapter 22</div>
     <h2>KV Cache Offloading &mdash; CPU &amp; NVMe as Overflow</h2>
@@ -3330,7 +3453,7 @@
     </div>
 </div>
 
-<!-- ==================== SECTION 23: DISAGGREGATED PREFILL/DECODE ==================== -->
+<!-- ==================== SECTION 24: DISAGGREGATED PREFILL/DECODE ==================== -->
 <div class="section" id="sec23">
     <div class="section-number">Chapter 23</div>
     <h2>Disaggregated Prefill &amp; Decode &mdash; The New Serving Paradigm</h2>
@@ -3397,13 +3520,62 @@
     </div>
 </div>
 
-<!-- ==================== SECTION 24: 2026 SUMMARY ==================== -->
+<!-- ==================== VISUAL RECAP (before References) ==================== -->
+<div class="section recap-section">
+    <div class="section-number">Visual Recap</div>
+    <h2>The Full Journey &mdash; MHA to MLA</h2>
+    <div class="section-divider"></div>
+    <div class="recap-shell">
+        <div class="recap-header">
+            <div class="hero-badge recap-kicker">Video + Canvas</div>
+            <h3 class="recap-title"><span>Watch the recap or scrub the interactive version</span></h3>
+            <p class="recap-copy">Prefer a clean export over a live animation? Use the fast social-friendly recap or the slower full walkthrough below. The original interactive canvas is still here if you want to explore the whole visual journey inside the article.</p>
+        </div>
+        <div class="recap-media-grid">
+            <div class="recap-video-card">
+                <video class="recap-video" controls playsinline preload="metadata" muted>
+                    <source src="videos/recap-paced-canvas.mp4" type="video/mp4">
+                    <source src="videos/recap-paced-canvas.webm" type="video/webm">
+                    Your browser does not support embedded video. <a href="videos/recap-paced-canvas.mp4">Open the recap video</a>.
+                </video>
+                <h4>Fast recap video</h4>
+                <p>A lighter export that works well for article readers and social previews. It covers the full progression from MHA to MLA without the slower pauses.</p>
+                
+            </div>
+            <div class="recap-video-card">
+                <video class="recap-video" controls playsinline preload="metadata" muted>
+                    <source src="videos/recap-5x-slow-full.mp4" type="video/mp4">
+                    <source src="videos/recap-5x-slow-full.webm" type="video/webm">
+                    Your browser does not support embedded video. <a href="videos/recap-5x-slow-full.mp4">Open the full walkthrough</a>.
+                </video>
+                <h4>Slow full walkthrough</h4>
+                <p>A slower export for readers who want time to follow the labels, cache counters, and architecture transitions frame by frame.</p>
+                
+            </div>
+            <div class="recap-video-card">
+                <video class="recap-video" controls playsinline preload="metadata" muted loop>
+                    <source src="videos/kv-cache-recap-canvas.mp4" type="video/mp4">
+                    <source src="videos/kv-cache-recap-canvas.webm" type="video/webm">
+                    Your browser does not support embedded video. <a href="videos/kv-cache-recap-canvas.mp4">Open the short recap clip</a>.
+                </video>
+                <h4>Short LinkedIn clip</h4>
+                <p>A compact MP4 cut from the live recap canvas. Use this when you need a quick animated asset to upload directly into a LinkedIn post.</p>
+                
+            </div>
+        </div>
+        <div class="recap-frame">
+            <canvas id="recapAnim" class="recap-canvas" width="900" height="620"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== SECTION 25: REFERENCES ==================== -->
 <div class="section" id="sec24">
     <div class="section-number">Chapter 24</div>
-    <h2>2026 Summary &amp; Future Directions</h2>
+    <h2>The State of the Art (2026) &amp; Future Directions</h2>
     <div class="section-divider"></div>
 
-    <p>After walking through the major architectures, model families, and serving systems, here is the consolidated 2026 view of where KV cache optimization stands and where it is heading next.</p>
+    <p>As of early 2026, the KV cache problem that once threatened to halt the scaling of large language models has been substantially addressed through a multi-pronged approach. Here's where things stand:</p>
 
     <h3>What's Working Today</h3>
     <div class="comparison-grid">
@@ -3443,7 +3615,7 @@
                 <tr>
                     <th>Metric</th>
                     <th>Naive FP16 MHA Baseline (e.g. LLaMA-2 7B, 2023)</th>
-                    <th>2026 frontier examples</th>
+                    <th>2026 (State of the Art)</th>
                     <th>Improvement</th>
                 </tr>
             </thead>
@@ -3488,25 +3660,8 @@
     </div>
 </div>
 
-<!-- ==================== VISUAL RECAP (before References) ==================== -->
-<div class="section recap-section" id="visual-recap">
-    <div class="section-number">Visual Recap</div>
-    <h2>The Full Journey &mdash; MHA to Million-Token KV</h2>
-    <div class="section-divider"></div>
-    <div class="recap-shell">
-        <div class="recap-header">
-            <div class="hero-badge recap-kicker">Interactive Canvas</div>
-            <h3 class="recap-title"><span>Watch the recap or scrub the interactive version</span></h3>
-            <p class="recap-copy">Use the interactive canvas below to explore the full visual journey inside the article.</p>
-        </div>
-        
-        <div class="recap-frame">
-            <canvas id="recapAnim" class="recap-canvas" width="900" height="620"></canvas>
-        </div>
-    </div>
-</div>
-
-<!-- ==================== SECTION 25: REFERENCES ==================== -->
+<!-- ==================== SECTION 18: DEEPSEEK V4 ==================== -->
+<div class="container">
 <div class="section" id="sec25">
     <div class="section-number">Chapter 25</div>
     <h2>References</h2>

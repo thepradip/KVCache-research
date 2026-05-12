@@ -1,6 +1,6 @@
 # The KV Cache Evolution: From Attention Heads to DeepSeek V4's 90% Memory Breakthrough
 
-**Author:** [Pradip Tivhale](https://github.com/thepradip) &nbsp;|&nbsp; 19 Chapters &nbsp;|&nbsp; 32 Papers &nbsp;|&nbsp; Interactive Visualizations
+**Author:** [Pradip Tivhale](https://github.com/thepradip) &nbsp;|&nbsp; 25 Chapters &nbsp;|&nbsp; 47 Citations &nbsp;|&nbsp; 41 Papers &nbsp;|&nbsp; Interactive Animations
 
 [![Live Article](https://img.shields.io/badge/📖_Read_Live_Article-GitHub_Pages-blue?style=for-the-badge)](https://thepradip.github.io/KVCache-research/)
 [![DeepSeek V4](https://img.shields.io/badge/🔥_DeepSeek_V4-90%25_Memory_Reduction-red?style=for-the-badge)](https://thepradip.github.io/KVCache-research/#sec18)
@@ -8,27 +8,17 @@
 
 ---
 
-## 🎬 Interactive Demo
+## 🎬 Live Article
 
 <p align="center">
   <a href="https://thepradip.github.io/KVCache-research/" target="_blank">
-    <img src="deepseek_v4_check_results_final3.png" alt="KV Cache Evolution — Interactive Article" width="90%"/>
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://thepradip.github.io/KVCache-research/">
     <strong>▶ Open Interactive Article with Animations</strong>
-  </a>
-  &nbsp;&nbsp;|&nbsp;&nbsp;
-  <a href="deepseek_v4_animation.html">
-    <strong>🎞️ DeepSeek V4 Hybrid Attention Animation</strong>
   </a>
 </p>
 
 ---
 
-## 🧠 What is KV Cache? 
+## 🧠 What is KV Cache?
 
 Imagine you're having a conversation with a friend. Every time your friend wants to reply, they re-read **the entire conversation from the beginning** — every single word — before saying the next sentence. That's exhausting and slow!
 
@@ -43,119 +33,66 @@ The problem? **The notepad gets huge.** For a 1-million-token conversation, stor
 
 ---
 
-## 📚 All 19 Chapters
+## 📚 All 25 Chapters
 
 | # | Chapter | The Big Idea | Memory Impact |
 |---|---------|-------------|--------------|
 | 1 | **Transformers & Attention** | How AI reads text using Q, K, V matrices | Baseline |
-| 2 | **KV Cache Basics** | Cache the notepad instead of re-reading | ✅ Speed ↑ |
-| 3 | **Multi-Head Attention (MHA)** | Many notepads in parallel — richer understanding | ❌ Memory ↑↑ |
-| 4 | **Multi-Query Attention (MQA)** | All heads share one notepad | ✅ Memory ↓ 8× |
-| 5 | **Grouped-Query Attention (GQA)** | Groups of heads share notepads | ✅ Balance |
-| 6 | **Multi-Head Latent Attention (MLA)** | Compress the notepad into a tiny summary | ✅ Memory ↓ 90% |
-| 7 | **Cross-Layer Attention (CLA)** | Share notepads across layers too | ✅ Memory ↓ 50% |
-| 8 | **PagedAttention** | Store notepad pages non-contiguously (like OS paging) | ✅ No waste |
-| 9 | **Streaming LLM** | Throw away old notepad pages smartly | ✅ Infinite context |
-| 10 | **KIVI Quantization** | Write notes in shorthand (2-bit) | ✅ Memory ↓ 4× |
-| 11 | **KVQuant** | Smarter shorthand with per-channel scaling | ✅ Memory ↓ 6× |
-| 12 | **TurboQuant** | Lossless 1-bit notepad compression | ✅ Memory ↓ 8× |
-| 13 | **Bonsai 1-bit** | Prune the notepad to just the important parts | ✅ Memory ↓ 8× |
-| 14 | **LLaMA 2/3/4** | Meta's evolution of attention efficiency | GQA → MLA |
-| 15 | **Gemma & Qwen** | Google/Alibaba's approaches | GQA variants |
-| 16 | **DeepSeek V2/V3** | MLA breakthrough — 93% KV reduction | ✅ Memory ↓ 93% |
-| 17 | **Kimi K2 / Phi-4** | Long-context specialists | Hybrid MLA |
-| 18 | **DeepSeek V4** 🔥 | 90% KV reduction at 1M tokens via CSA/HCA | ✅ Memory ↓ 90-93% |
-| 19 | **DFlash** ⚡ | Block diffusion speculative decoding | ✅ Speed ↑↑ |
+| 2 | **Keys, Values & Queries** | The math behind what gets cached | Baseline |
+| 3 | **KV Cache Basics** | Cache the notepad instead of re-reading | ✅ Speed ↑ |
+| 4 | **The Memory Bottleneck** | Why GPU memory — not compute — is the limit | Problem |
+| 5 | **Multi-Head Attention (MHA)** | Many notepads in parallel — richer understanding | ❌ Memory ↑↑ |
+| 6 | **Multi-Query Attention (MQA)** | All heads share one notepad | ✅ Memory ↓ 8× |
+| 7 | **Grouped-Query Attention (GQA)** | Groups of heads share notepads | ✅ Balance |
+| 8 | **Multi-Head Latent Attention (MLA)** | Compress the notepad into a tiny summary | ✅ Memory ↓ 93% |
+| 9 | **Live Comparison: MHA vs MQA vs GQA vs MLA** | Interactive side-by-side animation | Visual |
+| 10 | **Cross-Layer Attention (CLA)** | Share notepads across layers too | ✅ Memory ↓ 50% |
+| 11 | **Sliding Window & Local-Global Attention** | Mistral 7B, Gemma 2/3 window tricks | ✅ Bounded |
+| 12 | **PagedAttention** | Store notepad pages non-contiguously (like OS paging) | ✅ No waste |
+| 13 | **KV Cache Eviction** | H2O, Scissorhands — throw away unimportant tokens | ✅ Bounded |
+| 14 | **KV Cache Quantization** | KIVI (2-bit), KVQuant, TurboQuant, Bonsai 1-bit | ✅ Memory ↓ 4–8× |
+| 15 | **FlashAttention** | Tiled SRAM computation — no KV materialisation | ✅ Speed ↑↑ |
+| 16 | **Model-by-Model Comparison** | LLaMA, Gemma, Qwen, DeepSeek, Kimi, Phi — all verified | Reference |
+| 17 | **Kimi K2.5** | How agentic reasoning changes KV cache needs | Long-context |
+| 18 | **State of the Art 2026** | Where the field stands today and where it's heading | Survey |
+| 19 | **DeepSeek V4** 🔥 | CSA/HCA hybrid — 90% KV reduction at 1M tokens | ✅ Memory ↓ 90% |
+| 20 | **DFlash** ⚡ | Block diffusion speculative decoding — 2–4× speed | ✅ Speed ↑↑ |
+| 21 | **Linear Attention & SSMs** | Mamba, RWKV, RetNet — O(1) KV alternative | ✅ Constant |
+| 22 | **Prefix Caching & RadixAttention** | Reuse KV across requests with SGLang RadixAttention | ✅ Reuse |
+| 23 | **Mixture of Experts & KV Cache** | How sparse MoE routing shrinks effective KV | ✅ Sparse |
+| 24 | **KV Cache Offloading** | FlexGen, InfiniGen — spill KV to CPU/NVMe | ✅ Overflow |
+| 25 | **Disaggregated Prefill & Decode** | Splitwise, DistServe, Mooncake, Ring Attention | ✅ Serving |
 
 ---
 
-## 🔥 DeepSeek V4 — The Million-Token Breakthrough (Chapter 18)
+## 🔥 DeepSeek V4 — The Million-Token Breakthrough (Chapter 19)
 
 > *"At one million tokens of context, V4-Pro needs only 10% of the KV cache that V3 required."*
 
-### The Analogy
-Old models re-wrote their entire notepad every few pages. DeepSeek V4 uses **two types of notepad pages**:
-- 🗒️ **Compressed Sparse Attention (CSA)** pages — tiny summaries, written every layer
-- 📋 **Hybrid Cross Attention (HCA)** pages — full detail, written every 8th layer
+### Architecture
 
-Only 1 in 8 layers keeps the full notepad. The rest use the tiny summary. Result: **90% less memory.**
+| Layer Type | Mechanism | KV Cost |
+|-----------|-----------|---------|
+| **CSA (Compressed Sparse Attention)** | Per-token low-rank KV + DeepSeek Sparse Attention | ~4× compressed |
+| **HCA (Heavily Compressed Attention)** | Groups of tokens collapsed into a single KV entry | ~128× compressed |
+| **mHC (Manifold-Constrained Hyper-Connections)** | Stabilises residual path across CSA/HCA alternation | — |
 
-### Key Innovations
+### Numbers at 1M-token context
 
-| Innovation | What it does | Why it matters |
-|-----------|-------------|----------------|
-| **CSA (Compressed Sparse Attention)** | Compress K,V into low-rank matrices per token | 90% KV memory cut |
-| **HCA (Hybrid Cross Attention)** | Full attention every 8 layers — anchors accuracy | Keeps quality high |
-| **mHC (Manifold-Constrained Hyper-Connections)** | Stabilises signal across CSA/HCA layer alternation | No quality degradation |
-| **DeepSeek-V4-Flash** | Even more aggressive compression (93% reduction) | 7× cheaper inference |
-
-### Pros & Cons
-
-| ✅ Pros | ❌ Cons |
-|---------|---------|
-| 90–93% KV cache reduction at 1M context | Complex alternating layer schedule |
-| Runs on fewer GPUs at long context | mHC adds training complexity |
-| SGLang inference support on day 1 | Still needs HCA full layers (can't go to 100%) |
-| Open-sourced weights | CSA compression can miss rare tokens |
-
-<p align="center">
-  <img src="deepseek_v4_check_hybrid_final.png" alt="DeepSeek V4 CSA/HCA Hybrid Attention" width="85%"/>
-</p>
+| Metric | V3.2 (baseline) | V4-Pro | V4-Flash |
+|--------|----------------|--------|----------|
+| KV cache memory | 100% | **10%** | **7%** |
+| Inference FLOPs | 100% | **27%** | **10%** |
+| Active parameters | 37B | 49B | 13B |
+| Context window | 128K | **1M** | **1M** |
 
 ---
 
-## ⚡ DFlash — Speculative Decoding Meets Diffusion (Chapter 19)
+## ⚡ DFlash — Speculative Decoding Meets Diffusion (Chapter 20)
 
-### The Analogy
-Normal AI writes one word at a time — like typing with one finger. **DFlash writes a whole block of words at once** using a draft model, then checks them all in parallel. It's like autocomplete for entire sentences, verified instantly.
+Normal AI writes one word at a time. **DFlash writes a whole block at once** using a draft model, then verifies the entire block in parallel — reusing the existing KV cache with no extra memory overhead.
 
-### How it Works
-1. A small **draft model** generates a block of N tokens simultaneously (non-autoregressive)
-2. The large **verifier model** checks all N tokens in one forward pass — reusing the KV cache
-3. Accepted tokens are kept; rejected ones are regenerated
-4. KV cache is shared across draft and verify steps — **no extra memory overhead**
-
-### Pros & Cons
-
-| ✅ Pros | ❌ Cons |
-|---------|---------|
-| 2–4× generation speedup | Requires a matched draft model |
-| No extra KV cache memory | Block rejection wastes compute |
-| Works with existing KV cache infrastructure | Draft model quality is critical |
-| Parallelises what was serial | Harder to implement than greedy decoding |
-
----
-
-## 🌊 Liquid Foundation Models (LFM) & Hybrid Attention
-
-### What is LFM?
-
-LFMs replace the standard Transformer attention with **liquid state machines** — recurrent networks that maintain a compressed hidden state instead of a growing KV cache. Think of it as replacing the notepad with a **memory chip** that automatically overwrites old information.
-
-### How Hybrid Attention Works
-
-Modern frontier models (DeepSeek V4, Kimi K2, Jamba) combine:
-
-```
-Layer 1  → Full Attention (MHA/GQA)    — big notepad, full context
-Layer 2  → Full Attention
-...
-Layer 8  → SSM / Linear Attention      — tiny memory chip, constant size
-Layer 9  → Full Attention
-...
-Layer 16 → SSM / Linear Attention
-```
-
-Every N layers, a recurrent layer (Mamba, RWKV, or linear attention) **compresses** the context into a fixed-size state. Full attention layers then attend over the compressed + recent context.
-
-### Hybrid Attention: Pros & Cons
-
-| ✅ Pros | ❌ Cons |
-|---------|---------|
-| O(1) memory for recurrent layers | Recurrent layers lose long-range precision |
-| Constant inference cost regardless of context | Training is harder (BPTT through time) |
-| Handles infinite-length sequences | Hybrid routing adds architectural complexity |
-| Faster for long contexts vs pure Transformer | Less parallelisable on current GPU hardware |
+**Results:** 2–4× generation speedup with no KV cache size increase.
 
 ---
 
@@ -171,39 +108,63 @@ Every N layers, a recurrent layer (Mamba, RWKV, or linear attention) **compresse
 
 ---
 
+## 🎥 Animations (MP4)
+
+| Video | What it shows |
+|-------|--------------|
+| `videos/qkv-attention-matmul.mp4` | Q, K, V matrix multiplication step by step |
+| `videos/kv-cache-growth.mp4` | KV cache growing with each generated token |
+| `videos/mha-mqa-gqa-mla-comparison.mp4` | Side-by-side MHA vs MQA vs GQA vs MLA |
+| `videos/model-kv-cache-chart.mp4` | KV cache size across 12 frontier models |
+| `videos/kv-cache-quantization.mp4` | KIVI / KVQuant / TurboQuant / Bonsai comparison |
+| `videos/optimization-radar-chart.mp4` | Radar chart of all optimisation techniques |
+| `videos/deepseek-v4-hybrid-attention.mp4` | DeepSeek V4 CSA/HCA layer-by-layer animation |
+| `videos/dflash-block-diffusion.mp4` | DFlash block diffusion speculative decoding |
+| `videos/kv-cache-recap-canvas.mp4` | Full journey recap — MHA to MLA |
+| `videos/recap-paced-canvas.mp4` | Paced recap for social sharing |
+| `videos/recap-5x-slow-full.mp4` | Slow-motion full recap |
+
+---
+
+## 📖 Key Papers Cited (41 unique)
+
+| Paper | Contribution |
+|-------|-------------|
+| Vaswani et al. (2017) | Transformer — Q, K, V attention |
+| Shazeer (2019) | Multi-Query Attention (MQA) |
+| Ainslie et al. (2023) | Grouped-Query Attention (GQA) |
+| DeepSeek-AI (2024) | MLA — 93% KV reduction (DeepSeek-V2) |
+| DeepSeek-AI (2024) | DeepSeek-V3 technical report |
+| Kwon et al. (2023) | PagedAttention — vLLM |
+| Dao et al. (2022) | FlashAttention |
+| Liu et al. (2024) | KIVI — 2-bit KV quantization |
+| Hooper et al. (2024) | KVQuant — per-channel quantization |
+| Zhang et al. (2023) | H2O — heavy-hitter KV eviction |
+| Brandon et al. (2024) | Cross-Layer Attention (CLA) |
+| Jiang et al. (2023) | Mistral 7B — sliding window attention |
+| Touvron et al. (2023) | LLaMA 2 |
+| Meta AI (2024) | LLaMA 3 |
+| Gemma Team (2024/2025) | Gemma 2 / Gemma 3 |
+| vLLM (2026) | DeepSeek V4 — CSA/HCA, 1M-token context |
+| Anonymous (2026) | DFlash — block diffusion speculative decoding |
+
+Full reference list with arXiv links in the article.
+
+---
+
 ## 🗂️ Repository Contents
 
 | File | Description |
 |------|-------------|
-| [`index.html`](index.html) | 📖 Main 19-chapter interactive article with animations |
-| [`deepseek_v4_animation.html`](deepseek_v4_animation.html) | 🎞️ Animated DeepSeek V4 CSA/HCA hybrid attention diagram |
-| [`KV_Cache_Research_Article_v10.html`](KV_Cache_Research_Article_v10.html) | 📄 Standalone research article (v10) |
-| [`KV_Cache_LinkedIn_Article.md`](KV_Cache_LinkedIn_Article.md) | 💼 LinkedIn long-form article |
-| [`KV_Cache_LinkedIn_Post.md`](KV_Cache_LinkedIn_Post.md) | 💼 LinkedIn short post |
-| [`KV_Cache_X_Thread.md`](KV_Cache_X_Thread.md) | 🐦 X/Twitter thread |
-| `deepseek_v4_*.png` | 🖼️ 26 architecture diagrams and visualizations |
-
----
-
-## 📖 Key Papers Cited
-
-| Paper | Key Contribution |
-|-------|----------------|
-| Vaswani et al. (2017) | Original Transformer — Q, K, V attention |
-| Shazeer (2019) | Multi-Query Attention (MQA) |
-| Ainslie et al. (2023) | Grouped-Query Attention (GQA) |
-| DeepSeek-AI (2024) | Multi-Head Latent Attention (MLA) — 93% KV reduction |
-| Kwon et al. (2023) | PagedAttention — vLLM |
-| Liu et al. (2024) | KIVI — 2-bit KV quantization |
-| Hooper et al. (2024) | KVQuant — per-channel quantization |
-| DeepSeek-AI (2026) | DeepSeek-V4 — CSA/HCA hybrid, 90% KV at 1M tokens |
-| Anonymous (2026) | DFlash — block diffusion speculative decoding |
+| [`index.html`](index.html) | Main 25-chapter interactive article with all animations embedded |
+| [`videos/`](videos/) | 11 exported MP4 animations used in the article |
+| [`README.md`](README.md) | This file |
 
 ---
 
 ## 🔗 Live Article
 
-**Read the full interactive article with animations:**
+**Read the full interactive article:**
 👉 [https://thepradip.github.io/KVCache-research/](https://thepradip.github.io/KVCache-research/)
 
 ---

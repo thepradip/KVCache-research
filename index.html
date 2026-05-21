@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="author" content="Pradip Tivhale">
-    <meta name="description" content="A survey of KV Cache optimization in Large Language Models, from MHA to MLA, with 30+ citations and interactive animations.">
-    <title>The KV Cache Evolution: How Long-Context LLMs Learned to Remember, by Pradip Tivhale</title>
+    <meta name="author" content="thepradip">
+    <meta name="contact" content="pradiptivhale@gmail.com">
+    <meta name="description" content="A survey of KV Cache memory in large language models, from MHA to MLA, with citations and interactive animations.">
+    <title>The KV Cache Evolution: How Long-Context LLMs Manage Memory, by thepradip</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
     <style>
@@ -914,9 +915,9 @@
 <div class="hero">
     <h1>The KV Cache Evolution</h1>
     <p class="hero-subtitle">
-        A practical story of how long-context LLMs learned to remember without running out of memory.
+        How long-context LLMs keep memory from taking over inference.
     </p>
-    <p style="margin-top: 20px; font-size: 1rem; color: #94a3b8; font-weight: 500;">By <strong style="color: #f8fafc;">Pradip Tivhale</strong></p>
+    <p style="margin-top: 20px; font-size: 1rem; color: #94a3b8; font-weight: 500;">By <strong style="color: #f8fafc;">thepradip</strong></p>
 </div>
 
 <!-- ==================== TABLE OF CONTENTS ==================== -->
@@ -924,24 +925,24 @@
 <div class="toc">
     <h2>Table of Contents</h2>
     <ol>
-        <li><a href="#sec1">The Transformer Moment: Where the Memory Story Begins</a></li>
+        <li><a href="#sec1">The Transformer Moment: Where This Starts</a></li>
         <li><a href="#sec2">Understanding Keys, Values, and Queries</a></li>
         <li><a href="#sec3">What Is KV Cache and Why Does It Exist?</a></li>
         <li><a href="#sec4">The Problem: When Memory Becomes the Bottleneck</a></li>
         <li><a href="#sec5">Multi-Head Attention (MHA): The Baseline</a></li>
         <li><a href="#sec6">Multi-Query Attention (MQA): Sharing One Memory Shelf</a></li>
         <li><a href="#sec7">Grouped-Query Attention (GQA): The Middle Path</a></li>
-        <li><a href="#sec8">Multi-Head Latent Attention (MLA): DeepSeek's Different Question</a></li>
+        <li><a href="#sec8">Multi-Head Latent Attention (MLA): DeepSeek's Different Approach</a></li>
         <li><a href="#sec9">Cross-Layer Attention (CLA): Sharing Across Layers</a></li>
         <li><a href="#sec10">Sliding Window &amp; Local-Global Attention</a></li>
         <li><a href="#sec11">PagedAttention: Virtual Memory for KV Blocks</a></li>
         <li><a href="#sec12">KV Cache Eviction: Keeping Only What Matters</a></li>
         <li><a href="#sec13">KV Cache Quantization: Shrinking Each Number</a></li>
-        <li><a href="#sec14">FlashAttention: Making Hardware Work Smarter</a></li>
+        <li><a href="#sec14">FlashAttention: Using Hardware Better</a></li>
         <li><a href="#sec15">Model-by-Model Comparison: How the Pieces Fit</a></li>
         <li><a href="#sec16">DFlash: Block Diffusion for Flash Speculative Decoding</a></li>
         <li><a href="#sec17">DeepSeek V4: Making Million-Token KV Practical</a></li>
-        <li><a href="#sec18">Kimi K2.5: How Reasoning Changes for AI Agents</a></li>
+        <li><a href="#sec18">Kimi K2.5: How Agent Workloads Change Memory</a></li>
         <li><a href="#sec19">Linear Attention &amp; SSMs: The O(1) KV Cache Alternative</a></li>
         <li><a href="#sec20">Prefix Caching &amp; RadixAttention: Reuse Across Requests</a></li>
         <li><a href="#sec21">Mixture of Experts &amp; KV Cache: Sparse Activation</a></li>
@@ -956,7 +957,7 @@
 <div class="container">
     <div class="info-card success">
         <h4>Source Verification Note</h4>
-        <p>I have kept the newer 2025&ndash;2026 claims tied to primary sources wherever possible: official Hugging Face configs and model cards for Qwen3.5, Gemma 4, Kimi K2, Llama 4, and DeepSeek V4; arXiv papers for DFlash, Kimi K2, Qwen3, TurboQuant, KIVI, KVQuant, PagedAttention, and related systems work; plus PrismML's Bonsai announcement and whitepaper for Bonsai-specific hardware and model-size claims. Any local benchmark numbers are labeled as local measurements, not vendor guarantees.</p>
+        <p>For the newer 2025&ndash;2026 claims, I used primary sources where I could: official Hugging Face configs and model cards for Qwen3.5, Gemma 4, Kimi K2, Llama 4, and DeepSeek V4; arXiv papers for DFlash, Kimi K2, Qwen3, TurboQuant, KIVI, KVQuant, PagedAttention, and related systems work; plus PrismML's Bonsai announcement and whitepaper for Bonsai-specific hardware and model-size claims. Local benchmark numbers are labeled as local measurements, not vendor guarantees.</p>
     </div>
 </div>
 
@@ -964,20 +965,20 @@
 <div class="container">
 <div class="section" id="sec1">
     <div class="section-number">Chapter 01</div>
-    <h2>The Transformer Moment: Where the Memory Story Begins</h2>
+    <h2>The Transformer Moment: Where This Starts</h2>
     <div class="section-divider"></div>
 
-    <p>June 2017. Eight researchers at Google published a paper with a title that sounded almost too confident: <strong>"Attention Is All You Need."</strong> Inside was the <strong>Transformer</strong>. At the time it was a sequence-modeling architecture. In hindsight, it was also the start of a memory story we are still living through.</p>
+    <p>June 2017. Eight researchers at Google published a paper with a bold title: <strong>"Attention Is All You Need."</strong> Inside was the <strong>Transformer</strong>. At the time, it was a sequence-modeling architecture. Looking back, it also started the memory problem this article is about.</p>
 
     <p>To see why it mattered, remember what came before. The dominant approach was the <strong>Recurrent Neural Network (RNN)</strong>. Imagine passing a sticky note down a line of 500 people. Each person reads the previous note, compresses the whole story into their own short message, adds something new, and passes it along. By person 300, the first message is blurry. Worse, person 10 cannot even start until person 9 is finished. That was the shape of recurrence: useful, but painfully sequential.</p>
 
-    <p>The Transformer changed the room. Instead of passing one note forward, it let every token look at every other token directly and decide what mattered. That is <strong>attention</strong>. No waiting for the previous step to finish. No single compressed hidden state carrying the entire past. Just a large, parallel matrix operation, expensive but wonderfully suited to GPUs.</p>
+    <p>The Transformer changed the setup. Instead of passing one note forward, it let every token look at every other token directly and decide what mattered. That is <strong>attention</strong>. There is no need to wait for the previous step to finish, and no single compressed hidden state has to carry the whole past. The cost is a large matrix operation, but that operation maps well to GPUs.</p>
 
     <div class="citation">Vaswani, A., Shazeer, N., Parmar, N., et al. "Attention Is All You Need." <em>NeurIPS 2017</em>. arXiv: <a href="https://arxiv.org/abs/1706.03762">1706.03762</a></div>
 
-    <p>The benchmark numbers made the case. On WMT 2014 English-to-German, the Transformer reached 28.4 BLEU, more than 2 points above the previous best. That may sound small from the outside, but in machine translation those points were hard-won. Training also became far faster. The architecture did not merely improve accuracy; it fit the hardware better.</p>
+    <p>The benchmark numbers made the case. On WMT 2014 English-to-German, the Transformer reached 28.4 BLEU, more than 2 points above the previous best. That may sound small from the outside, but in machine translation those points were hard to win. Training also became much faster. The architecture improved accuracy and fit the hardware better.</p>
 
-    <p>The next decade kept building on that foundation: BERT, GPT-2, GPT-3, GPT-4, LLaMA, Gemma, Qwen, DeepSeek, Mistral. More layers, more parameters, more data. For a while, the recipe worked almost too well. Then users began asking models to read long codebases, research archives, legal documents, and multi-hour conversations. A quieter cost started to dominate. It was not the cost of the weights. It was the cost of remembering the context. That cost is the <strong>KV cache</strong>.</p>
+    <p>The next decade built on that foundation: BERT, GPT-2, GPT-3, GPT-4, LLaMA, Gemma, Qwen, DeepSeek, and Mistral. More layers, more parameters, more data. For a while, the recipe kept working. Then users started asking models to read long codebases, research archives, legal documents, and multi-hour conversations. A quieter cost began to dominate. It was not the cost of the weights. It was the cost of remembering the context. That cost is the <strong>KV cache</strong>.</p>
 
     <div class="timeline">
         <div class="timeline-item">
@@ -1003,7 +1004,7 @@
         <div class="timeline-item">
             <div class="timeline-year">2025&ndash;2026</div>
             <div class="timeline-title">The Efficiency Era</div>
-            <div class="timeline-desc">TurboQuant, Gemma 4, DeepSeek-V4, Bonsai: long-context and edge-friendly inference become practical.</div>
+            <div class="timeline-desc">TurboQuant, Gemma 4, DeepSeek-V4, Bonsai: long-context and edge-friendly inference move closer to daily use.</div>
         </div>
     </div>
 </div>
@@ -1014,7 +1015,7 @@
     <h2>Queries, Keys, and Values: The Small Mechanism Behind the Big Cost</h2>
     <div class="section-divider"></div>
 
-    <p>Before the cache makes sense, the objects inside it have to make sense. The Transformer's central operation, <strong>scaled dot-product attention</strong>, turns each token into three vectors: <strong>Query (Q)</strong>, <strong>Key (K)</strong>, and <strong>Value (V)</strong>. The names come from database language, though I find the database analogy a little dry. A food court is closer to the feeling of it.</p>
+    <p>Before the cache makes sense, the objects inside it have to make sense. The Transformer's central operation, <strong>scaled dot-product attention</strong>, turns each token into three vectors: <strong>Query (Q)</strong>, <strong>Key (K)</strong>, and <strong>Value (V)</strong>. The names come from database language, but a food court is an easier way to picture it.</p>
 
     <p>Picture a food court with 200 stalls.</p>
 
@@ -1036,14 +1037,14 @@
         </div>
     </div>
 
-    <p>Inside the model, every token makes the same move. It sends out a Query, compares that Query against other tokens' Keys, and then blends the Values according to those scores. A token that looks relevant contributes more. A token that looks irrelevant fades into the background. The final representation is not copied from one place; it is mixed, weighted, and reassembled from the whole context. The operation is compact on paper. At scale, across every token and every layer, it becomes the bill.</p>
+    <p>Inside the model, every token makes the same move. It sends out a Query, compares that Query against other tokens' Keys, and then blends the Values according to those scores. A token that looks relevant contributes more. A token that looks irrelevant fades into the background. The final representation is not copied from one place. It is mixed, weighted, and rebuilt from the full context. The operation is compact on paper. At scale, across every token and every layer, it becomes expensive.</p>
 
     <div class="formula-box">
         <span class="formula-label">The Attention Formula</span>
         Attention(Q, K, V) = softmax(Q &times; K<sup>T</sup> / &radic;d<sub>k</sub>) &times; V
     </div>
 
-    <p>The softmax turns raw scores into weights that sum to 100%. The <strong>&radic;d<sub>k</sub></strong> term, the square root of the key dimension, keeps the scores from getting numerically wild. Under the notation, the idea is plain: ask what matters, then blend the useful content. Simple. Beautiful, even. Also very hungry for memory once the context grows.</p>
+    <p>The softmax turns raw scores into weights that sum to 100%. The <strong>&radic;d<sub>k</sub></strong> term, the square root of the key dimension, keeps the scores from becoming too large. Under the notation, the mechanism is plain: ask what matters, then blend the content that receives weight. It is simple, but it becomes memory-heavy once the context grows.</p>
 
     <h3>How Big Are These Vectors?</h3>
     <p>Each Q, K, and V vector has a specific size called the <strong>head dimension</strong> (d<sub>h</sub>), typically 128 numbers. In a model like LLaMA-2 7B, there are 32 attention heads, each with dimension 128, giving a total hidden size of 4,096.</p>
@@ -1062,11 +1063,11 @@
     <h2>What Is KV Cache and Why Does It Exist?</h2>
     <div class="section-divider"></div>
 
-    <p>The first time I looked closely at LLM inference, the slow part felt almost mundane. The model does not write a paragraph in one breath. It writes one token, pauses, looks back, writes the next token, pauses again. Every step is a small act of rereading.</p>
+    <p>The first time I looked closely at LLM inference, the slow part was more ordinary than I expected. The model does not write a paragraph in one breath. It writes one token, looks back, writes the next token, and looks back again. Every step repeats part of the same work.</p>
 
     <p>Say it has written "The cat sat on the" and now needs token 6. It attends over tokens 1&ndash;5. Then token 7 attends over 1&ndash;6. Token 8 over 1&ndash;7. Without caching, the model keeps rebuilding Key and Value vectors for old tokens it has already processed. Nothing is mathematically broken. It is simply repetitive, and the repetition compounds.</p>
 
-    <p>The <strong>KV cache</strong> is the notebook the model keeps open beside it. Compute each token's Key and Value once. Store them. When the next token arrives, read the old entries instead of rebuilding them. It is a plain idea, almost ordinary, which is why the cost it creates later is easy to underestimate.</p>
+    <p>The <strong>KV cache</strong> is the notebook the model keeps open beside it. Compute each token's Key and Value once. Store them. When the next token arrives, read the old entries instead of rebuilding them. It is a plain idea, which is why the memory cost is easy to underestimate.</p>
 
     <!-- ANIMATION: Matrix Multiplication Q × K^T → Attention → V -->
     <div class="chart-container">
@@ -1076,7 +1077,7 @@
     </div>
 
     <h3>The Speed Benefit</h3>
-    <p>Without the cache, the model keeps paying for old work. With the cache, each step computes K and V only for the new token, then attends over the stored history. This does not make attention magically constant-time: each new token still scans a growing context, so decoding still gets more expensive as the sequence length grows. The win is narrower and very real: fewer repeated projections, fewer wasted bytes moving around.</p>
+    <p>Without the cache, the model keeps paying for old work. With the cache, each step computes K and V only for the new token, then attends over the stored history. This does not make attention constant-time. Each new token still scans a growing context, so decoding still gets more expensive as the sequence length grows. The gain is concrete: fewer repeated projections and fewer wasted bytes moving around.</p>
 
     <h3>The Memory Cost</h3>
     <p>Then the tradeoff arrives. The cached K and V vectors live in GPU memory, and they grow <strong>linearly with sequence length</strong>. In FP16, the memory formula is:</p>
@@ -1188,7 +1189,7 @@
     <h2>The Problem: When Memory Becomes the Bottleneck</h2>
     <div class="section-divider"></div>
 
-    <p>The cache saves time, then slowly becomes the thing that runs the show. At 2K tokens, it is easy to ignore. At 32K, 128K, or a million tokens, it decides which model fits, how many users can be batched, and whether the request survives at all. Three pressure points show up again and again:</p>
+    <p>The cache saves time, then slowly becomes the thing that controls the system. At 2K tokens, it is easy to ignore. At 32K, 128K, or a million tokens, it decides which model fits, how many users can be batched, and whether the request can finish. Three pressure points show up again and again:</p>
 
     <div class="comparison-grid">
         <div class="comparison-card" style="border-top: 3px solid var(--danger);">
@@ -1218,7 +1219,7 @@
 
     <div class="citation">Kwon, W., Li, Z., Zhuang, S., et al. "Efficient Memory Management for Large Language Model Serving with PagedAttention." <em>SOSP 2023</em>. arXiv: <a href="https://arxiv.org/abs/2309.06180">2309.06180</a></div>
 
-    <p>The rest of the field is, in many ways, a set of answers to those pressures. The answers fall into five families:</p>
+    <p>Most KV cache work answers one of those pressures. The techniques fall into five groups:</p>
 
     <div class="info-card highlight">
         <h4>The Five Strategies for Taming KV Cache</h4>
@@ -1247,7 +1248,7 @@
 
     <p>For LLaMA-2 7B: 2 &times; 32 layers &times; <strong>32 heads</strong> &times; 128 dim &times; 2 bytes = <strong>524,288 bytes = 512 KB per token</strong>.</p>
 
-    <p>This is why MHA remains such a useful baseline. It gives every head its own memory, so each head can specialize freely. But the cost is blunt: more heads mean more cached vectors. With 32 heads and 128-dimensional heads, the model stores 64 vectors per token per layer. That is a lot of memory just to remember what has already been read.</p>
+    <p>This is why MHA remains a good baseline. It gives every head its own memory, so each head can specialize freely. But the cost is blunt: more heads mean more cached vectors. With 32 heads and 128-dimensional heads, the model stores 64 vectors per token per layer. That is a lot of memory just to remember what has already been read.</p>
 
     <div class="diagram">
         <h4>Multi-Head Attention (MHA): Each Head Has Its Own K and V (Two Separate Vectors)</h4>
@@ -1332,7 +1333,7 @@
 
     <p>That is <strong>Multi-Query Attention (MQA)</strong>. You keep many Query heads, so the model can still ask many different questions. But instead of giving each head its own Key-Value archive, every head reads from the same archive. Imagine 32 researchers working from one filing cabinet. They disagree, they ask different questions, they write different notes, but the cabinet itself is shared.</p>
 
-    <p>The intuition is disarmingly simple. Queries need diversity because each head asks a different question. Keys and Values are the context being questioned. Maybe you do not need 32 full copies of that context. In retrospect this sounds obvious. Good ideas often do, once somebody else has written them down.</p>
+    <p>The idea is simple. Queries need variety because each head asks a different question. Keys and Values are the context being questioned. Maybe the model does not need 32 full copies of that context.</p>
 
     <div class="formula-box">
         <span class="formula-label">MQA KV Cache Size</span>
@@ -1347,7 +1348,7 @@
     <p>The speed gain follows the memory story. Decode is usually bandwidth-bound, so a 32&times; smaller KV cache means far fewer bytes read every step. Tokens per second improves. The quality cost exists, but in 2019 it looked small enough to be worth the trade.</p>
 
     <h3>The Trade-off</h3>
-    <p>Over time, that phrase "modest quality loss" became less comforting. MQA holds up well on short answers and many factual tasks. On long code, multi-step reasoning, and dense document analysis, the gap becomes easier to feel. By 2023, "slightly worse" was no longer good enough for frontier models. That is where GQA enters.</p>
+    <p>Over time, that phrase "modest quality loss" became less comforting. MQA holds up well on short answers and many factual tasks. On long code, multi-step reasoning, and dense document analysis, the gap becomes easier to feel. By 2023, "slightly worse" was no longer good enough for many top models. That is where GQA enters.</p>
 
     <div class="diagram">
         <h4>Multi-Query Attention (MQA): All Heads Share One K and One V</h4>
@@ -1404,7 +1405,7 @@
 
     <p>Joshua Ainslie and the Google team asked the practical question: if MHA is too expensive and MQA is too compressed, what sits between them? Their answer was <strong>Grouped-Query Attention (GQA)</strong>. Divide the query heads into groups. Each group shares one KV head. With 32 query heads and 8 KV groups, the cache drops by 4&times;. Not as dramatic as MQA, but often much easier to live with.</p>
 
-    <p>The paper's most useful result was not just the architecture. It was the conversion recipe. A trained MHA model could be uptrained into GQA using about 5% of the original pretraining compute. No full restart. No gigantic retraining bill. And GQA-8 stayed close enough to MHA on benchmarks that the quality gap became a deployment tradeoff rather than a blocker.</p>
+    <p>The conversion recipe may be the most valuable part of the paper. A trained MHA model could be uptrained into GQA using about 5% of the original pretraining compute. No full restart. No huge retraining bill. GQA-8 stayed close enough to MHA on benchmarks that the quality gap became a deployment tradeoff rather than a blocker.</p>
 
     <div class="citation">Ainslie, J., Lee-Thorp, J., de Jong, M., et al. "GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints." <em>EMNLP 2023</em>. arXiv: <a href="https://arxiv.org/abs/2305.13245">2305.13245</a></div>
 
@@ -1416,7 +1417,7 @@
     </div>
 
     <h3>What the Paper Actually Shows</h3>
-    <p>Two things make GQA feel like an engineer's solution rather than a theoretical flourish. It saves enough memory to matter, and it can be adopted without throwing away an already-trained model. That combination is why GQA spread so quickly through open model families.</p>
+    <p>GQA fit the way model teams actually work. It saved enough memory to matter, and it could be adopted without throwing away an already-trained model. That combination is why it spread so quickly through open model families.</p>
 
     <div class="diagram">
         <h4>Grouped-Query Attention (GQA): 4 Query Heads Share 1 K + 1 V Per Group</h4>
@@ -1625,7 +1626,7 @@
     <p>The cache stores 512 + 64 = 576 elements per token per layer. Standard MHA with 128 heads would store 2 &times; 128 &times; 128 = 32,768 elements. That is about a 56&times; reduction in the V2 configuration. It is roughly like having 2.25 KV groups, a configuration GQA cannot naturally express.</p>
 
     <h3>DeepSeek-V3: Scaling MLA Further</h3>
-    <p>V2 proved the idea. V3 showed it could scale. DeepSeek kept MLA while moving to a 671B-parameter MoE model with 61 transformer layers. The cache cost landed around 70 KB per token. That is not tiny in isolation, but for a model of that scale it is remarkably low.</p>
+    <p>V2 proved the idea. V3 showed it could scale. DeepSeek kept MLA while moving to a 671B-parameter MoE model with 61 transformer layers. The cache cost landed around 70 KB per token. That is not tiny in isolation, but it is low for a model of that scale.</p>
 
     <div class="citation">DeepSeek-AI. "DeepSeek-V3 Technical Report." arXiv: <a href="https://arxiv.org/abs/2412.19437">2412.19437</a>, December 2024.</div>
 
@@ -1668,7 +1669,7 @@
 
     <div class="key-insight">
         <h4>The Claim That Changed the Tone</h4>
-        <p>The DeepSeek-V2 paper does not merely say MLA preserves quality. It reports better benchmark results than MHA in their setup, with the suggestion that compression may act like regularization. The exact causal story is still worth studying, but the result weakened an old assumption: smaller KV cache does not automatically mean worse quality.</p>
+        <p>The DeepSeek-V2 paper does more than claim MLA preserves quality. It reports better benchmark results than MHA in their setup, with the suggestion that compression may act like regularization. The exact cause still needs study, but the result weakened an old assumption: smaller KV cache does not automatically mean worse quality.</p>
     </div>
 </div>
 
@@ -1764,7 +1765,7 @@
 
     <div class="key-insight">
         <h4>Gemma 3's Clever Design</h4>
-        <p>What I find genuinely interesting about Gemma 3 is how surgical it is. Most KV cache tricks are blunt instruments, compress everything, quantize everything, drop some tokens. Gemma 3's 5:1 local-global ratio is selective: let the specialized global layers handle distant context, and let the majority of layers be cheap. It's a division of labor that the architecture enforces structurally, not through any runtime heuristic. The Gemma 4 E4B and E2B variants take this further, targeting mobile and edge hardware where even the global layers need to be lean.</p>
+        <p>Gemma 3 is unusually selective. Many KV cache tricks are blunt instruments: compress everything, quantize everything, or drop some tokens. Gemma 3's 5:1 local-global ratio gives distant context to specialized global layers and keeps most layers cheap. The architecture enforces that division of labor directly, without a runtime heuristic. The Gemma 4 E4B and E2B variants take this further for mobile and edge hardware, where even the global layers need to be lean.</p>
     </div>
 </div>
 
@@ -1774,7 +1775,7 @@
     <h2>PagedAttention: Virtual Memory for KV Blocks</h2>
     <div class="section-divider"></div>
 
-    <p>Everything up to this point has been about making the KV cache <em>smaller in theory</em>. MLA stores latents instead of full KV. GQA cuts the head count. Quantization shrinks each number. All good. But there's a separate, more embarrassing problem that none of those fixes touch: the software managing GPU memory for KV cache is, frankly, a mess.</p>
+    <p>Everything up to this point has been about making the KV cache <em>smaller in theory</em>. MLA stores latents instead of full KV. GQA cuts the head count. Quantization shrinks each number. But there is a separate systems problem: the software managing GPU memory for KV cache can waste a lot of space.</p>
 
     <p>Before vLLM, most serving systems pre-allocated a contiguous block of memory for each request, sized for the maximum possible sequence length. If you pre-allocate for 4,096 tokens and the user sends 200, you've wasted 3,896 tokens worth of memory. Multiply by thousands of concurrent users and you're throwing away 60–80% of your GPU memory before a single token is generated. The SOSP 2023 paper that measured this was not subtle about how bad the situation was.</p>
 
@@ -1803,7 +1804,7 @@
     <p>The paper found that existing systems waste <strong>60&ndash;80%</strong> of KV cache memory!</p>
 
     <h3>The Solution: Paging</h3>
-    <p>PagedAttention splits the KV cache into small fixed-size <strong>blocks</strong>, think 16 or 32 tokens per block. Blocks are allocated as needed, not upfront. And crucially, they don't need to be physically adjacent in memory. A page table maps logical sequence positions to wherever the physical blocks actually sit. Request A's block 3 can be sitting right next to Request B's block 7 in physical memory. The attention kernel doesn't care; it uses the table.</p>
+    <p>PagedAttention splits the KV cache into small fixed-size <strong>blocks</strong>, often 16 or 32 tokens per block. Blocks are allocated as needed, not upfront. They also do not need to be physically adjacent in memory. A page table maps logical sequence positions to wherever the physical blocks actually sit. Request A's block 3 can sit next to Request B's block 7 in physical memory. The attention kernel does not care; it uses the table.</p>
 
     <div class="flow-diagram">
         <div class="flow-box input">Request arrives</div>
@@ -1816,7 +1817,7 @@
     </div>
 
     <h3>Results</h3>
-    <p>The system built on this, <strong>vLLM</strong>, became one of the most deployed LLM servers almost immediately after release. The throughput numbers are good. But I think the more important thing PagedAttention enabled is KV cache sharing across requests, multiple users hitting the same system prompt don't each need their own copy of its KV blocks. That sharing came essentially for free from the paging design.</p>
+    <p>The system built on this, <strong>vLLM</strong>, quickly became one of the most used LLM servers. The throughput numbers are strong, but the bigger change is KV cache sharing across requests. Multiple users hitting the same system prompt do not each need their own copy of its KV blocks. That sharing follows naturally from the paging design.</p>
 
     <div class="comparison-grid">
         <div class="comparison-card">
@@ -1836,7 +1837,7 @@
         </div>
     </div>
 
-    <p>TensorRT-LLM and SGLang both adopted similar paging approaches. At this point, if you're running a production LLM service and not using paged KV cache management in some form, you're probably leaving 60%+ of your GPU memory on the floor.</p>
+    <p>TensorRT-LLM and SGLang both adopted similar paging approaches. For production LLM serving, paged KV cache management is now one of the first memory tools to check.</p>
 </div>
 
 <!-- ==================== SECTION 12 ==================== -->
@@ -1848,7 +1849,7 @@
     <p>One uncomfortable finding keeps showing up in KV eviction papers: much of the cache is barely used. Attention is highly skewed. A small set of tokens attracts most of the attention weight, while many others contribute almost nothing during generation. Once you see that pattern, the next question is natural: why keep every token at full cost?</p>
 
     <h3>H<sub>2</sub>O: Heavy-Hitter Oracle (NeurIPS 2023)</h3>
-    <p>Zhang et al. dug into how attention scores are actually distributed across tokens in a running generation and found what I'd describe as a pretty striking result: it's not spread around. A small number of tokens, the "heavy hitters", absorb the vast majority of cumulative attention across all heads and all decode steps. Everything else is nearly zero. H<sub>2</sub>O tracks which tokens are accumulating the most attention weight and keeps only those, plus a small window of recent tokens for continuity. Everything else gets evicted.</p>
+    <p>Zhang et al. studied how attention scores are distributed across tokens during generation and found that they are not spread evenly. A small number of tokens, the "heavy hitters", absorb most cumulative attention across heads and decode steps. Many other tokens receive almost none. H<sub>2</sub>O tracks which tokens collect the most attention weight and keeps those, plus a small window of recent tokens for continuity. Everything else gets evicted.</p>
 
     <div class="citation">Zhang, Z., Sheng, Y., et al. "H₂O: Heavy-Hitter Oracle for Efficient Generative Inference of Large Language Models." <em>NeurIPS 2023</em>. arXiv: <a href="https://arxiv.org/abs/2306.14048">2306.14048</a></div>
 
@@ -1862,7 +1863,7 @@
     <p>Scissorhands achieves up to <strong>5&times; KV cache reduction</strong> without quality loss, and when combined with 4-bit quantization, reaches <strong>20&times; compression</strong>.</p>
 
     <h3>StreamingLLM: Infinite Context with Fixed Cache (ICLR 2024)</h3>
-    <p>This one surprised me when I read it. Xiao et al. at MIT were studying why removing the first few tokens from the KV cache causes such severe quality degradation, more than you'd expect from their content alone. What they found is that those initial tokens function as <strong>"attention sinks."</strong> Regardless of what those tokens actually say, the model's attention mechanism routes a disproportionate amount of weight to them. It seems almost like the model uses the beginning of the sequence as a scratch pad for distributing attention that doesn't belong anywhere else. Destroy the sinks, and the whole attention computation becomes unstable. Preserve just the sinks plus a sliding window of recent tokens, and you can process arbitrarily long sequences with a fixed cache budget.</p>
+    <p>Xiao et al. at MIT studied why removing the first few tokens from the KV cache causes such severe quality loss, more than their content alone would suggest. They found that those initial tokens work as <strong>"attention sinks."</strong> No matter what the tokens say, the model routes a large share of attention weight to them. The beginning of the sequence seems to act like a scratch pad for attention that does not belong anywhere else. Remove the sinks, and attention becomes unstable. Keep the sinks plus a sliding window of recent tokens, and the model can process very long sequences with a fixed cache budget.</p>
 
     <div class="citation">Xiao, G., Tian, Y., Chen, B., et al. "Efficient Streaming Language Models with Attention Sinks." <em>ICLR 2024</em>. arXiv: <a href="https://arxiv.org/abs/2309.17453">2309.17453</a></div>
 
@@ -1892,7 +1893,7 @@
     </div>
 
     <h3>PyramidInfer and PyramidKV</h3>
-    <p>Both PyramidInfer and PyramidKV arrived at the same insight from slightly different angles: token importance is not uniform across layers. Lower layers, which build up basic syntactic structure, need to attend to more tokens. Higher layers, which handle abstraction and semantics, can often get by with very few. So instead of allocating the same cache budget to every layer, give early layers more and late layers less. A pyramid shape, hence the names. PyramidKV matched full-cache performance while keeping only 12% of the total cache, which is frankly a remarkable number if you trust the benchmark results (and the paper methodology is thorough enough that I do).</p>
+    <p>Both PyramidInfer and PyramidKV reached the same insight from different angles: token importance is not uniform across layers. Lower layers, which build basic syntactic structure, need to attend to more tokens. Higher layers, which handle abstraction and semantics, can often get by with fewer. Instead of giving every layer the same cache budget, early layers get more and late layers get less. That gives the cache a pyramid shape. PyramidKV matched full-cache performance while keeping only 12% of the total cache in the reported benchmarks.</p>
 
     <div class="citation">Yang, D., et al. "PyramidInfer: Pyramid KV Cache Compression for High-throughput LLM Inference." arXiv: <a href="https://arxiv.org/abs/2405.12532">2405.12532</a>, 2024.</div>
     <div class="citation">Cai, Z., et al. "PyramidKV: Dynamic KV Cache Compression based on Pyramidal Information Funneling." arXiv: <a href="https://arxiv.org/abs/2406.02069">2406.02069</a>, 2024.</div>
@@ -1906,9 +1907,9 @@
     <h2>KV Cache Quantization: Shrinking Each Number</h2>
     <div class="section-divider"></div>
 
-    <p>All the approaches so far have tried to store fewer things in the KV cache. Quantization takes a different angle: store the same things, but use fewer bits per number. Think of it like image compression, you're not removing pixels, you're encoding each one more efficiently. Standard KV cache uses 16-bit floats (FP16). That's two bytes per number. The quantization question is: how far can you push this before the model starts getting confused by its own imprecise memories? 8 bits? 4 bits? 2 bits?</p>
+    <p>All the approaches so far have tried to store fewer things in the KV cache. Quantization takes a different angle: store the same things, but use fewer bits per number. Think of it like image compression. You are not removing pixels; you are encoding each one more compactly. Standard KV cache uses 16-bit floats (FP16). That is two bytes per number. The quantization question is: how far can you push this before the model starts getting confused by its own rough memories? 8 bits? 4 bits? 2 bits?</p>
 
-    <p>This is trickier than it sounds. Keys and Values aren't just arbitrary numbers, they carry specific structures that attention depends on. Mess up the Key representations and the model starts attending to the wrong tokens. Mess up the Values and the output gets garbled. Quantization researchers in this space have had to develop methods that respect these structures, not just apply generic compression.</p>
+    <p>This is harder than it sounds. Keys and Values are not arbitrary numbers. They carry structures that attention depends on. Distort the Key representations and the model starts attending to the wrong tokens. Distort the Values and the output gets garbled. KV quantization methods have to respect those structures instead of applying generic compression blindly.</p>
 
     <div class="info-card highlight">
         <h4>What is Quantization?</h4>
@@ -1923,7 +1924,7 @@
     </div>
 
     <h3>KIVI: 2-Bit Quantization (ICML 2024)</h3>
-    <p>KIVI is the paper I'd point people to if they want to understand why KV quantization is harder than it looks. The key observation is that Keys and Values have structurally different outlier problems. Key matrices have specific channels (column indices) that produce very large values across all tokens, if you quantize naively, those channels dominate the scale and you lose precision everywhere else. Value matrices have the opposite issue: certain tokens produce spiking activations across all channels. KIVI handles this by using <em>per-channel</em> quantization for Keys and <em>per-token</em> quantization for Values, matching the compression axis to the actual outlier axis. The result is stable 2-bit quantization with near-lossless quality. Getting to 2 bits from 16 is an 8× compression, and doing it without fine-tuning is the part I find genuinely impressive.</p>
+    <p>KIVI is the paper I would point people to for why KV quantization is harder than it looks. Keys and Values have different outlier problems. Key matrices have specific channels (column indices) that produce very large values across all tokens. If you quantize naively, those channels dominate the scale and precision is lost everywhere else. Value matrices have the opposite issue: certain tokens produce spiking activations across all channels. KIVI handles this by using <em>per-channel</em> quantization for Keys and <em>per-token</em> quantization for Values, matching the compression axis to the actual outlier axis. The result is stable 2-bit quantization with near-lossless quality. Moving from 16 bits to 2 bits is an 8× compression, and KIVI does it without fine-tuning.</p>
 
     <div class="citation">Liu, Z., Yuan, J., Jin, H., et al. "KIVI: A Tuning-Free Asymmetric 2bit Quantization for KV Cache." <em>ICML 2024</em>. arXiv: <a href="https://arxiv.org/abs/2402.02750">2402.02750</a></div>
 
@@ -1996,7 +1997,7 @@
 
     <div class="citation">PrismML / Caltech. "Announcing 1-bit Bonsai: The First Commercially Viable 1-bit LLMs." <a href="https://prismml.com/news/bonsai-8b">prismml.com</a>, March 31, 2026. Whitepaper: <a href="https://github.com/PrismML-Eng/Bonsai-demo/blob/main/1-bit-bonsai-8b-whitepaper.pdf">GitHub</a></div>
 
-    <p>There is a catch: <strong>1-bit weights do NOT mean 1-bit KV cache</strong>. The weights (W<sub>K</sub>, W<sub>V</sub>, W<sub>Q</sub>, etc.) are 1-bit, but when they multiply against input activations, the resulting Key and Value vectors are still full-precision floating point numbers. So even though Bonsai's weights are tiny, the KV cache during inference remains FP16-sized and grows linearly with context length, the same memory wall problem as before.</p>
+    <p>There is a catch: <strong>1-bit weights do NOT mean 1-bit KV cache</strong>. The weights (W<sub>K</sub>, W<sub>V</sub>, W<sub>Q</sub>, etc.) are 1-bit, but when they multiply against input activations, the resulting Key and Value vectors are still full-precision floating point numbers. Bonsai's weights are tiny, but the KV cache during inference remains FP16-sized and grows linearly with context length. The memory wall is still there.</p>
 
     <p>This is where <strong>Turbo1Bit</strong> comes in: an open-source project that stacks TurboQuant-style KV cache quantization on top of Bonsai's 1-bit weights.</p>
 
@@ -2062,7 +2063,7 @@
 
     <div class="key-insight">
         <h4>The 1-Bit Insight: KV Cache Becomes the Dominant Cost</h4>
-        <p>Bonsai reveals a clear reality about 1-bit models. When you compress model weights to 1-bit (1.15 GB for an 8B model), the <strong>KV cache becomes the overwhelming majority of memory usage</strong>. At 65K context with FP16 KV cache, the cache is <strong>7&times; larger than the model itself</strong>. This flips the traditional assumption that model weights dominate memory. For 1-bit models, KV cache optimization is not optional; it is essential. This is why combining Bonsai with TurboQuant-style KV compression has such a large effect: total memory drops from 10.6 GB to 4 GB.</p>
+        <p>Bonsai shows a clear reality about 1-bit models. When you compress model weights to 1-bit (1.15 GB for an 8B model), the <strong>KV cache becomes the largest part of memory usage</strong>. At 65K context with FP16 KV cache, the cache is <strong>7&times; larger than the model itself</strong>. This flips the usual assumption that model weights dominate memory. For 1-bit models, KV cache optimization is required. This is why combining Bonsai with TurboQuant-style KV compression has such a large effect: total memory drops from 10.6 GB to 4 GB.</p>
     </div>
 
     <div class="info-card success">
@@ -2153,22 +2154,22 @@
 <!-- ==================== SECTION 14 ==================== -->
 <div class="section" id="sec14">
     <div class="section-number">Chapter 14</div>
-    <h2>FlashAttention: Making Hardware Work Smarter</h2>
+    <h2>FlashAttention: Using Hardware Better</h2>
     <div class="section-divider"></div>
 
-    <p>FlashAttention is a bit of an odd fit for this survey. It doesn't shrink the KV cache. It doesn't change how many KV heads you have or what precision you use. But I'm including it because understanding why it matters is essential context for everything else, and because it's one of the most elegant pieces of systems work in this whole space.</p>
+    <p>FlashAttention is a slightly different kind of topic for this survey. It does not shrink the KV cache. It does not change how many KV heads you have or what precision you use. I include it because it explains why memory movement matters so much in long-context inference.</p>
 
-    <p>The core observation from Tri Dao's 2022 paper is that standard attention implementations are doing something wasteful at the hardware level that has nothing to do with the algorithm itself. They're moving data between GPU HBM (slow, far) and SRAM (fast, tiny) more times than necessary. FlashAttention restructures the computation to tile it into SRAM-sized chunks, dramatically reducing that data movement. The algorithm is mathematically identical. The result is the same. But the implementation is 2–4x faster and uses memory proportional to the sequence length rather than its square.</p>
+    <p>The core observation from Tri Dao's 2022 paper is that standard attention implementations move data between GPU HBM (large, slower) and SRAM (small, fast) more often than needed. FlashAttention restructures the computation into SRAM-sized tiles, reducing that movement. The algorithm is mathematically identical. The output is the same. The implementation is 2&ndash;4&times; faster and uses memory proportional to sequence length rather than its square.</p>
 
     <h3>FlashAttention (NeurIPS 2022)</h3>
-    <p>Standard attention computes the full n×n score matrix and holds it in HBM while doing subsequent operations. For a 32K-token sequence with 128 heads, that matrix is enormous. And every operation on it requires loading it from HBM into the GPU cores, doing some work, and writing results back. Repeatedly. FlashAttention's tiling approach breaks the attention matrix into chunks small enough to fit in on-chip SRAM, does all the operations for each chunk while it's in fast memory, and never materializes the full matrix in HBM. The algorithm is mathematically equivalent, same output, but the memory access pattern is completely different.</p>
+    <p>Standard attention computes the full n&times;n score matrix and holds it in HBM while doing later operations. For a 32K-token sequence with 128 heads, that matrix is enormous. Every operation has to load data from HBM into the GPU cores, do work, and write results back. FlashAttention breaks the attention matrix into chunks small enough to fit in on-chip SRAM, finishes the operations for each chunk while it is in fast memory, and never materializes the full matrix in HBM. The output is the same, but the memory access pattern is different.</p>
 
     <div class="citation">Dao, T., Fu, D.Y., Ermon, S., et al. "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness." <em>NeurIPS 2022</em>. arXiv: <a href="https://arxiv.org/abs/2205.14135">2205.14135</a></div>
 
     <p>Key result: 2&ndash;4&times; speedup over optimized baselines, with <strong>linear</strong> memory usage instead of quadratic. This means the n&times;n attention matrix is never fully materialized in GPU memory.</p>
 
     <h3>FlashAttention-2 (2023)</h3>
-    <p>FlashAttention-2 is less of a conceptual advance and more of an engineering grind, in the best sense. Dao revisited the work partitioning between GPU thread blocks, reduced non-matmul operations, and improved the handling of varying sequence lengths. None of these changes affect the algorithm. They push GPU utilization from around 35% to 72%, which is the number that actually matters for deployment.</p>
+    <p>FlashAttention-2 is mostly an engineering improvement. Dao revisited work partitioning between GPU thread blocks, reduced non-matmul operations, and improved handling of varying sequence lengths. None of these changes affect the algorithm. They push GPU utilization from around 35% to 72%, which matters a lot in deployment.</p>
 
     <div class="citation">Dao, T. "FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning." arXiv: <a href="https://arxiv.org/abs/2307.08691">2307.08691</a>, 2023.</div>
 
@@ -2188,7 +2189,7 @@
         </div>
     </div>
 
-    <p>At this point FlashAttention is essentially ubiquitous, vLLM, Hugging Face Transformers, PyTorch, all of them use it. If you're running attention without it, you're probably doing it by accident. The relevance to KV cache is indirect but real: because FlashAttention handles the attention computation more efficiently, the per-step cost of attending over a long KV cache is lower, which makes the other optimizations in this survey more effective.</p>
+    <p>FlashAttention is now common in vLLM, Hugging Face Transformers, PyTorch, and many other stacks. Its link to KV cache is indirect but real: when attention is computed more efficiently, the per-step cost of attending over a long KV cache is lower. That makes the other memory reductions pay off more.</p>
 </div>
 
 <!-- ==================== SECTION 15 ==================== -->
@@ -2199,7 +2200,7 @@
 
     <p>After the methods, the fastest way to build intuition is to look at real configs. The tables below use published configs and model cards where available. When a row needs an assumption because of mixed head dimensions, shared KV, or sliding-window layers, I flag it rather than hiding the uncertainty.</p>
 
-    <p>A pattern appears quickly. LLaMA-2 7B, with pure MHA, sits at 512 KB per token. Mistral 7B, with GQA plus a sliding window, drops to 128 KB before any KV quantization. MLA cuts far deeper. Qwen3.5-9B gets to 32 KB per token by mixing attention with DeltaNet-style recurrent layers. The table is dense, but the story is simple: modern models are not relying on one trick. They are stacking several.</p>
+    <p>A pattern appears quickly. LLaMA-2 7B, with pure MHA, sits at 512 KB per token. Mistral 7B, with GQA plus a sliding window, drops to 128 KB before any KV quantization. MLA cuts far deeper. Qwen3.5-9B gets to 32 KB per token by mixing attention with DeltaNet-style recurrent layers. The table is dense, but the pattern is simple: modern models are not relying on one trick. They are stacking several.</p>
 
     <h3>Part A: Legacy &amp; Foundational Models (2023&ndash;2024)</h3>
     <div class="table-wrapper">
@@ -2604,7 +2605,7 @@
 
     <div class="key-insight">
         <h4>The Standout: Qwen3.5 9B Uses Only 32 KB Per Token</h4>
-        <p>Qwen3.5-9B achieves remarkably low KV cache through a <strong>hybrid DeltaNet + Attention architecture</strong>. Out of 32 layers, only 8 use traditional attention (which requires KV cache). The remaining 24 use Gated DeltaNet, a form of linear attention that maintains a fixed-size recurrent state instead of a growing cache. This means 75% of the model's layers add <strong>zero</strong> KV cache overhead regardless of context length. Combined with just 4 KV heads and head_dim=256, the result is just 32 KB per token, <strong>16&times; less than the LLaMA-2 7B baseline</strong> of similar parameter count. At 128K context, that is only 4 GB for the entire KV cache.</p>
+        <p>Qwen3.5-9B gets a low KV cache through a <strong>hybrid DeltaNet + Attention architecture</strong>. Out of 32 layers, only 8 use traditional attention, which requires KV cache. The remaining 24 use Gated DeltaNet, a form of linear attention that maintains a fixed-size recurrent state instead of a growing cache. This means 75% of the model's layers add <strong>zero</strong> KV cache overhead regardless of context length. Combined with just 4 KV heads and head_dim=256, the result is 32 KB per token, <strong>16&times; less than the LLaMA-2 7B baseline</strong> of similar parameter count. At 128K context, that is 4 GB for the entire KV cache.</p>
     </div>
 
     <div class="info-card warning">
@@ -2651,7 +2652,7 @@
         <h4>The Practical Pattern: Stack the Boring Wins</h4>
         <p>The largest gains usually come from <strong>combining</strong> techniques rather than waiting for one perfect method. A modern deployment might use:</p>
         <p><strong>GQA</strong> (4&ndash;8&times;) + <strong>Local-Global attention</strong> (3&ndash;5&times;) + <strong>TurboQuant</strong> (4&ndash;7&times;) + <strong>PagedAttention</strong> (eliminates waste) + <strong>SnapKV eviction</strong> (further reduction)</p>
-        <p>These reductions can compound. An 8 &times; 4 &times; 5 stack is a <strong>160&times; theoretical reduction</strong> from a naive FP16 MHA baseline. Real deployments are messier than multiplication on a slide, but the direction is clear: each generation uses more than one lever.</p>
+        <p>These reductions can compound. An 8 &times; 4 &times; 5 stack is a <strong>160&times; theoretical reduction</strong> from a naive FP16 MHA baseline. Real deployments are messier than multiplication on a slide, but the direction is clear: newer systems use more than one lever.</p>
     </div>
 </div>
 
@@ -2770,7 +2771,7 @@
 
     <div class="key-insight">
         <h4>Why DFlash Matters</h4>
-        <p>The interesting part is not only the reported 6&times; speedup. It is the suggestion that speculative decoding was constrained by the shape of the drafter, not just its size. If the drafter can generate a whole block at once, the ceiling moves.</p>
+        <p>The reported 6&times; speedup is only part of the point. The paper also suggests that speculative decoding was limited by the shape of the drafter as well as its size. If the drafter can generate a whole block at once, the limit changes.</p>
     </div>
 </div>
 </div>
@@ -2784,7 +2785,7 @@
 
     <p>In April 2026, vLLM published implementation notes for <strong>DeepSeek-V4-Pro</strong> and <strong>DeepSeek-V4-Flash</strong>. The attention design is built for contexts up to one million tokens. The number that matters for this article is the cache: vLLM reports about <strong>9.62 GiB</strong> of BF16 KV cache for one 1M-token V4-Pro sequence, compared with its 83.9 GiB estimate for a V3.2-style stack.</p>
 
-    <p>This is not just "use GQA and quantize harder." V4 combines shared K=V cache, a short sliding window for local information, and two compressed long-range attention modes: <code>c4a</code> and <code>c128a</code>. In this article, CSA/HCA is shorthand for that split between moderately compressed sparse attention and heavily compressed long-range attention.</p>
+    <p>V4 is not simply "use GQA and quantize harder." It combines shared K=V cache, a short sliding window for local information, and two compressed long-range attention modes: <code>c4a</code> and <code>c128a</code>. In this article, CSA/HCA is shorthand for that split between moderately compressed sparse attention and heavily compressed long-range attention.</p>
 
     <div class="citation">Source: vLLM. "DeepSeek V4 in vLLM: Efficient Long-context Attention," April 2026. The implementation write-up reports 1M-token support, c4a/c128a compression, a 128-token sliding window, and 9.62 GiB BF16 KV cache per 1M-token V4-Pro sequence. Model cards: <a href="https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro">DeepSeek-V4-Pro</a>, <a href="https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash">DeepSeek-V4-Flash</a>. vLLM blog: <a href="https://vllm.ai/blog/deepseek-v4">vllm.ai/blog/deepseek-v4</a>.</div>
 
@@ -2937,12 +2938,12 @@
 <div class="container">
 <div class="section" id="sec18">
     <div class="section-number">Chapter 18</div>
-    <h2>Kimi K2.5: How Reasoning Changes for AI Agents</h2>
+    <h2>Kimi K2.5: How Agent Workloads Change Memory</h2>
     <div class="section-divider"></div>
 
-    <p>Everything up to this point assumes the model gets one prompt and writes one response. That's not how agentic AI works. An agent gets a task, "research competitors and write a market analysis", and then runs for hours. It searches the web, reads documents, calls code interpreters, checks its own outputs, revises its plan, searches again. Each tool call returns 5,000–20,000 tokens of content. After 100 tool calls, the context has millions of tokens, most of them irrelevant to what the model is doing right now. The KV cache problem stops being about memory efficiency and starts being about whether the session can survive at all.</p>
+    <p>Everything up to this point assumes the model gets one prompt and writes one response. Agents work differently. An agent may get a task like "research competitors and write a market analysis" and then run for hours. It searches the web, reads documents, calls code tools, checks outputs, revises its plan, and searches again. Each tool call can return 5,000&ndash;20,000 tokens. After 100 tool calls, the context can contain millions of tokens, many of them stale. At that point, KV cache is no longer only an efficiency issue. It becomes a session-management issue.</p>
 
-    <p>Moonshot AI's <strong>Kimi K2.5</strong> paper (February 2026) is the most interesting recent work on this problem, and honestly one of the more honest technical reports I've read. It doesn't just describe what they built. It describes what broke when they tried to run long agentic sessions, and how each failure mode shaped the solution.</p>
+    <p>Moonshot AI's <strong>Kimi K2.5</strong> paper (February 2026) is worth reading because it describes both the system and the failures they hit while running long agent sessions. Those failure modes explain why the design looks the way it does.</p>
 
     <div class="citation">Kimi Team, Moonshot AI. "Kimi K2.5: Visual Agentic Intelligence." arXiv: <a href="https://arxiv.org/abs/2602.02276">2602.02276</a>, February 2026.</div>
 
@@ -2974,12 +2975,12 @@
 
     <h4>1. Agent Swarm: Parallel Decomposition</h4>
 
-    <p>Instead of a single agent chewing through a problem step-by-step (which creates one enormous, ever-growing KV cache), K2.5 introduces <strong>Agent Swarm</strong>: a framework where a central <em>orchestrator</em> breaks a complex task into independent sub-problems, then spawns multiple <em>sub-agents</em> to work on them simultaneously.</p>
+    <p>Instead of one agent working through a problem step by step, which creates one large and growing KV cache, K2.5 introduces <strong>Agent Swarm</strong>. A central <em>orchestrator</em> breaks a complex task into independent sub-problems, then starts multiple <em>sub-agents</em> to work on them at the same time.</p>
 
     <div class="info-card success">
         <h4>How Agent Swarm Manages KV Cache</h4>
         <p>Each sub-agent runs in its own <strong>isolated context window</strong> with its own KV cache. Instead of one 500K-token context, you get ten 50K-token contexts running in parallel. When a sub-agent finishes, only its <em>final output</em> (a few hundred tokens) gets sent back to the orchestrator, not its full reasoning chain or tool outputs. The sub-agent's KV cache is then freed entirely.</p>
-        <p>This is essentially <strong>PagedAttention philosophy applied at the agent level</strong>: allocate memory where needed, free it when done, and never let any single context grow unbounded.</p>
+        <p>This applies a <strong>PagedAttention-like idea at the agent level</strong>: allocate memory where needed, free it when done, and avoid letting one context grow without a bound.</p>
     </div>
 
     <p>The result: <strong>4.5&times; latency reduction</strong> over single-agent baselines on complex web search tasks, and a 17.8% accuracy improvement on BrowseComp (60.6% &rarr; 78.4%).</p>
@@ -3011,7 +3012,7 @@
         </div>
     </div>
 
-    <p>A critical design choice: <strong>sub-agents are frozen</strong> (their weights don't update during PARL training). Only the orchestrator learns. This avoids a nasty problem in multi-agent RL where you can't tell which agent deserves credit for a good outcome.</p>
+    <p>A key design choice: <strong>sub-agents are frozen</strong>, so their weights do not update during PARL training. Only the orchestrator learns. This avoids a hard credit-assignment problem in multi-agent RL, where it is unclear which agent caused a good outcome.</p>
 
     <h4>3. Toggle: Budget-Aware Reasoning</h4>
 
@@ -3030,13 +3031,13 @@
         </div>
     </div>
 
-    <p>Why this matters for KV cache: <strong>reasoning tokens are expensive</strong>. A "thinking" model like K2.5 might generate 36,000 internal reasoning tokens before producing a 200-token answer. Those 36K tokens all live in the KV cache. Toggle teaches the model to be efficient: use 7K tokens for easy sub-tasks, save the 36K budget for genuinely hard ones. At ~70 KB per token (MLA), that is the difference between 490 MB and 2.5 GB of KV cache just for the thinking phase.</p>
+    <p>For KV cache, <strong>reasoning tokens are expensive</strong>. A thinking model like K2.5 might generate 36,000 internal reasoning tokens before producing a 200-token answer. Those 36K tokens all live in the KV cache. Toggle teaches the model to spend fewer tokens on easy sub-tasks and save the larger budget for harder ones. At ~70 KB per token with MLA, that is the difference between 490 MB and 2.5 GB of KV cache just for the thinking phase.</p>
 
     <h3>Discard-All Context Management</h3>
 
-    <p>For extremely long agent sessions, K2.5 uses a strategy called <strong>"Discard-all"</strong>: after each major reasoning phase, the model discards the full context (including tool outputs) and starts fresh with only the accumulated conclusions. This effectively resets the KV cache periodically rather than letting it grow to the context limit.</p>
+    <p>For very long agent sessions, K2.5 uses a strategy called <strong>"Discard-all"</strong>. After each major reasoning phase, the model discards the full context, including tool outputs, and starts fresh with only the accumulated conclusions. This resets the KV cache periodically instead of letting it grow to the context limit.</p>
 
-    <p>On the BrowseComp benchmark, using Discard-all boosted accuracy from 60.6% to <strong>74.9%</strong>, beating GPT-5.2's reported 65.8%, Claude Opus 4.5 (37.0%), and Gemini 3 Pro (37.8%). The surprising result: <em>throwing away context helped</em>, because a bloated context full of stale tool outputs actually confuses the model more than it helps.</p>
+    <p>On the BrowseComp benchmark, using Discard-all boosted accuracy from 60.6% to <strong>74.9%</strong>, beating GPT-5.2's reported 65.8%, Claude Opus 4.5 (37.0%), and Gemini 3 Pro (37.8%). The useful lesson is that throwing away context can help when old tool outputs add more noise than value.</p>
 
     <h3>The KV Cache Implications</h3>
 
@@ -3090,8 +3091,8 @@
     </div>
 
     <div class="key-insight">
-        <h4>Why This Matters for the Future of KV Cache</h4>
-        <p>Kimi K2.5 shows that as AI moves from chatbots to agents, the KV cache problem shifts from a memory-scaling challenge into a <strong>dynamic memory management</strong> problem. The solutions are not just about compressing each token's cache (MLA, GQA, quantization); they are about deciding <em>which contexts to keep alive, when to reset them, and how to distribute work across parallel cache instances</em>. Agent Swarm is essentially the agentic equivalent of PagedAttention: instead of paging KV blocks within a single context, it pages entire contexts across multiple parallel agents.</p>
+        <h4>Why This Changes KV Cache</h4>
+        <p>Kimi K2.5 shows that as AI moves from chatbots to agents, the KV cache problem shifts from memory scaling into <strong>dynamic memory management</strong>. Compression still matters, but the system also has to decide <em>which contexts to keep alive, when to reset them, and how to distribute work across parallel cache instances</em>. Agent Swarm is close to PagedAttention at the agent level: instead of paging KV blocks within one context, it spreads whole contexts across multiple agents.</p>
     </div>
 </div>
 
@@ -3209,11 +3210,11 @@
     </div>
 
     <h3>RadixAttention (SGLang)</h3>
-    <p>APC handles exact prefix matches. RadixAttention, from the SGLang paper, goes further. It organizes the KV cache as a radix tree, essentially a trie over token sequences. This lets you cache and reuse shared subtrees, not just common leading prefixes. So if Request A and Request B share the same first 500 tokens but diverge after that, they still share those 500 tokens of KV cache in the tree, even if neither is an exact prefix of the other. Multi-turn conversations are a natural fit, the tree structure matches the branching structure of conversations with shared history.</p>
+    <p>APC handles exact prefix matches. RadixAttention, from the SGLang paper, goes further. It organizes the KV cache as a radix tree, basically a trie over token sequences. This lets you cache and reuse shared subtrees along with common leading prefixes. If Request A and Request B share the same first 500 tokens but diverge after that, they still share those 500 tokens of KV cache in the tree, even if neither request is an exact prefix of the other. Multi-turn conversations fit this structure well because they branch from shared history.</p>
 
     <div class="citation">Zheng, L. et al. "SGLang: Efficient Execution of Structured Language Model Programs." <em>arXiv</em>, 2024. <a href="https://arxiv.org/abs/2312.07104">arXiv:2312.07104</a></div>
 
-    <p>LRU eviction happens at the leaves, the least recently used branches get dropped first when memory is needed, preserving the most commonly hit paths. Multiple concurrent requests can read from the same node without any lock contention. It's a relatively simple data structure doing a lot of useful work.</p>
+    <p>LRU eviction happens at the leaves. The least recently used branches get dropped first when memory is needed, preserving the most commonly used paths. Multiple concurrent requests can read from the same node without lock contention. It is a simple data structure doing useful work.</p>
 
     <h3>Real-World Impact</h3>
     <div class="table-wrapper">
@@ -3232,7 +3233,7 @@
 
     <div class="key-insight">
         <h4>Often the Highest-ROI Fix Available</h4>
-        <p>KIVI's 2-bit quantization saves 75% of KV memory per token. Impressive. But prefix caching saves <strong>100% of KV compute</strong> for matched tokens, those tokens don't get processed at all. Zero model changes required. Zero accuracy risk. If you have a fixed system prompt and you're not running prefix caching, that's probably the first thing I'd fix before touching quantization, eviction, or anything else in this survey.</p>
+        <p>KIVI's 2-bit quantization saves 75% of KV memory per token. Prefix caching saves <strong>100% of KV compute</strong> for matched tokens because those tokens do not get processed again. It requires no model changes and carries no accuracy risk. If you have a fixed system prompt and are not running prefix caching, it is often the first thing to fix before quantization or eviction.</p>
     </div>
 </div>
 
@@ -3242,9 +3243,9 @@
     <h2>Mixture of Experts &amp; KV Cache: Sparse Activation</h2>
     <div class="section-divider"></div>
 
-    <p>Something that doesn't get discussed enough: some of the biggest recent KV cache efficiency gains aren't coming from any of the techniques in the previous chapters. They're coming from a different architectural choice entirely, <strong>Mixture of Experts (MoE)</strong>. DeepSeek V3, Qwen3-MoE, Mixtral, DeepSeek V4. All MoE. And the KV cache benefits are substantial, if indirect.</p>
+    <p>Some recent KV cache efficiency gains come from a different architectural choice: <strong>Mixture of Experts (MoE)</strong>. DeepSeek V3, Qwen3-MoE, Mixtral, and DeepSeek V4 all use MoE. The KV cache benefits are indirect, but they matter.</p>
 
-    <p>I think MoE gets separated out from "KV cache optimization" in most surveys because it's not a KV cache technique per se. But when you're building a model and choosing the architecture, MoE vs dense is one of the most consequential decisions for how big your cache will be. So it belongs here.</p>
+    <p>MoE is often left out of KV cache surveys because it is not a KV cache technique by itself. But when choosing a model architecture, MoE versus dense affects how much memory headroom is left for the cache. That makes it relevant here.</p>
 
     <div class="info-card success">
         <h4>The Core Idea</h4>
@@ -3269,10 +3270,10 @@
     <h3>MoE's Effect on KV Cache</h3>
 
     <h4>1. Attention stays dense, MoE doesn't directly help the cache</h4>
-    <p>Here's the important nuance: MoE only applies to FFN sublayers. The attention layers are fully dense, every token attends to every other token, full KV for every layer. So MoE doesn't reduce KV cache size on its own. DeepSeek V3 at 671B total parameters has the same KV cache structure as a dense model with 37B active parameters. The 93% KV reduction in V3 comes from MLA, not MoE. The two are orthogonal, stacked on top of each other.</p>
+    <p>The important nuance: MoE only applies to FFN sublayers. The attention layers are fully dense, every token attends to every other token, and full KV is kept for every layer. MoE does not reduce KV cache size on its own. DeepSeek V3 at 671B total parameters has the same KV cache structure as a dense model with 37B active parameters. The 93% KV reduction in V3 comes from MLA, not MoE. The two techniques are separate and can be stacked.</p>
 
     <h4>2. More parameters, same cache, the memory split matters</h4>
-    <p>MoE does affect total GPU memory, but indirectly. Expert weights all need to live somewhere, you can't load 64 expert FFNs from disk on every decode step. So the GPU memory budget gets split between KV cache (which scales with context) and expert weights (which scale with model size). Serving a large MoE model means you have less memory headroom for the KV cache, which can force you to be more aggressive about quantization or eviction even if the cache architecture itself is efficient.</p>
+    <p>MoE does affect total GPU memory, but indirectly. Expert weights all need to live somewhere; you cannot load 64 expert FFNs from disk on every decode step. The GPU memory budget gets split between KV cache, which scales with context, and expert weights, which scale with model size. Serving a large MoE model can leave less memory headroom for KV cache, which may force more aggressive quantization or eviction even when the cache architecture is efficient.</p>
 
     <div class="table-wrapper">
         <table>
@@ -3290,11 +3291,11 @@
     </div>
 
     <h3>DeepSeek's MoE + MLA Combination</h3>
-    <p>DeepSeek's real innovation is combining MoE (for compute efficiency) with MLA (for KV cache efficiency), two orthogonal optimizations that together make a 671B-parameter model deployable on a small GPU cluster. MoE reduces active compute; MLA reduces memory bandwidth. Neither helps the other directly, but together they address the two biggest bottlenecks in serving large models.</p>
+    <p>DeepSeek combines MoE for compute efficiency with MLA for KV cache efficiency. Together, they make a 671B-parameter model practical to serve on a small GPU cluster. MoE reduces active compute; MLA reduces memory bandwidth. Neither solves the other's problem directly, but together they address two major bottlenecks in serving large models.</p>
 
     <div class="info-card warning">
         <h4>The MoE KV Cache Gotcha</h4>
-        <p>When load balancing fails and most tokens route to the same few experts, those experts become a bottleneck. This also affects KV cache indirectly: if the model is stalled waiting for an expert, the decode step takes longer, and the KV cache must be held in memory for the duration. Expert load balancing (DeepSeek uses an auxiliary loss for this) is therefore a KV cache latency concern, not just a throughput concern.</p>
+        <p>When load balancing fails and most tokens route to the same few experts, those experts become a bottleneck. This also affects KV cache indirectly: if the model is stalled waiting for an expert, the decode step takes longer, and the KV cache must be held in memory for the duration. Expert load balancing (DeepSeek uses an auxiliary loss for this) is therefore a KV cache latency concern as well as a throughput concern.</p>
     </div>
 </div>
 
@@ -3304,9 +3305,9 @@
     <h2>KV Cache Offloading: CPU &amp; NVMe as Overflow</h2>
     <div class="section-divider"></div>
 
-    <p>Sometimes you've done everything right, GQA, quantization, prefix caching, and the context is still too long for GPU memory. You're generating a 300,000-token response for a legal analysis. The cache doesn't fit. Now what?</p>
+    <p>Sometimes GQA, quantization, and prefix caching are still not enough. The context is too long for GPU memory. You may be generating a 300,000-token legal analysis, and the cache simply does not fit. Now what?</p>
 
-    <p>You spill it. Move the blocks that aren't needed right now to CPU RAM, or to NVMe if even that's full. Load them back when the attention head reaches those positions. It's slow. It's inelegant. But it's the difference between a failed request and a completed one, and for batch workloads where latency is flexible, the throughput can be acceptable.</p>
+    <p>You spill it. Move the blocks that are not needed right now to CPU RAM, or to NVMe if RAM is full. Load them back when the attention head reaches those positions. It is slow, but it can be the difference between a failed request and a completed one. For batch workloads where latency is flexible, the throughput can be acceptable.</p>
 
     <div class="info-card">
         <h4>Memory Hierarchy Reminder</h4>
@@ -3318,13 +3319,13 @@
     </div>
 
     <h3>FlexGen</h3>
-    <p>FlexGen (Sheng et al., 2023) is one of the most thoughtful papers in this space for single-GPU deployment. Rather than treating offloading as an emergency fallback, it treats it as a first-class scheduling problem. GPU, CPU DRAM, and NVMe are all resources with different bandwidth and capacity. A linear programming solver decides the optimal placement of model weights, activations, and KV cache across all three, given your throughput target and memory constraints. It's a principled approach rather than a heuristic one.</p>
+    <p>FlexGen (Sheng et al., 2023) treats offloading as a scheduling problem, rather than only an emergency fallback. GPU, CPU DRAM, and NVMe are resources with different bandwidth and capacity. A linear programming solver chooses where to place model weights, activations, and KV cache across all three, given the throughput target and memory constraints.</p>
     <div class="citation">Sheng, Y. et al. "FlexGen: High-Throughput Generative Inference of Large Language Models with a Single GPU." <em>ICML</em>, 2023. <a href="https://arxiv.org/abs/2303.06865">arXiv:2303.06865</a></div>
 
-    <p>Running a 30B model on a single 16 GB GPU, you'd normally laugh at that. FlexGen makes it real, by accepting that latency will be high and committing to optimizing throughput instead. For research workloads and offline batch jobs, this is a legitimate tradeoff. For anything interactive, it's not.</p>
+    <p>Running a 30B model on a single 16 GB GPU is normally unrealistic. FlexGen makes it possible by accepting high latency and optimizing throughput instead. For research workloads and offline batch jobs, this can be a valid tradeoff. For interactive use, it usually is not.</p>
 
     <h3>InfiniGen</h3>
-    <p>InfiniGen is smarter about what it offloads. Rather than moving everything to CPU and fetching it back blindly, it runs a lightweight predictor that scores which KV blocks the current decode step will likely need, prefetches those, and leaves the low-scoring blocks on disk entirely, never loaded. You're paying attention bandwidth only for blocks that are actually going to matter.</p>
+    <p>InfiniGen is selective about what it offloads. Rather than moving everything to CPU and fetching it back blindly, it runs a lightweight predictor that scores which KV blocks the current decode step will likely need. It prefetches those blocks and leaves low-scoring blocks on disk. Attention bandwidth is spent only on blocks that are likely to matter.</p>
 
     <div class="flow-diagram">
         <div class="flow-box input">Current token query Q</div>
@@ -3383,7 +3384,7 @@
     <p>When a new request arrives during ongoing decode, the GPU has to make a bad choice. Handle the compute-heavy prefill and delay existing users, or keep decoding and make the new user wait for the first token. That collision is <strong>prefill-decode interference</strong>.</p>
 
     <h3>Disaggregated Serving (Splitwise, DistServe, Mooncake)</h3>
-    <p>The fix is easy to describe and harder to operate: separate the two phases. A prefill cluster builds the prompt's KV cache. The KV blocks are transferred over NVLink or InfiniBand. A decode cluster handles generation. Two fleets, two resource profiles, much less interference.</p>
+    <p>The fix is easy to describe and harder to operate: separate the two phases. A prefill cluster builds the prompt's KV cache. The KV blocks are transferred over NVLink or InfiniBand. A decode cluster handles generation. Two fleets with different resource profiles create much less interference.</p>
 
     <div class="flow-diagram">
         <div class="flow-box input">User request</div>
@@ -3403,7 +3404,7 @@
 
     <div class="citation">Liu, H. et al. "Ring Attention with Blockwise Transformers for Near-Infinite Context." <em>arXiv</em>, 2023. <a href="https://arxiv.org/abs/2310.01889">arXiv:2310.01889</a></div>
 
-    <p>Worth noting: production long-context systems rarely disclose whether they use Ring Attention specifically. Most model cards say "supports 1M token context" without describing the serving stack. Ring Attention is the main published technique for this problem, but that doesn't mean it's the one in use everywhere.</p>
+    <p>Production long-context systems rarely disclose whether they use Ring Attention specifically. Most model cards say "supports 1M token context" without describing the serving stack. Ring Attention is the main published technique for this problem, but that does not mean it is used everywhere.</p>
 
     <div class="table-wrapper">
         <table>
@@ -3431,7 +3432,7 @@
     <h2>Where Things Stand in 2026</h2>
     <div class="section-divider"></div>
 
-    <p>This field moves fast enough that any summary has a short shelf life. Still, by early 2026 the shape is clear. KV cache efficiency is no longer one technique. It is a stack.</p>
+    <p>This field moves quickly, so any summary has a short shelf life. By early 2026, one pattern is clear: KV cache efficiency is a stack, not a single technique.</p>
 
     <h3>What's Working Today</h3>
     <div class="comparison-grid">
@@ -3453,15 +3454,15 @@
     </div>
 
     <h3>What Is Still Unsettled</h3>
-    <p><strong>1. Trillion-scale MLA:</strong> Kimi K2 from Moonshot AI is the key data point. It takes DeepSeek-style MLA to roughly 1 trillion parameters with 384 routed experts. The public config shows the latent cache approach survives at that scale. Quality tradeoffs still need broader evaluation.</p>
+    <p><strong>1. Trillion-scale MLA:</strong> Kimi K2 from Moonshot AI is the main data point. It takes DeepSeek-style MLA to roughly 1 trillion parameters with 384 routed experts. The public config shows the latent cache approach survives at that scale. Quality tradeoffs still need broader evaluation.</p>
 
-    <p><strong>2. Ten-million-token context:</strong> Meta's LLaMA 4 Scout model card reports a 10 million token context window, roughly thousands of pages in one prompt. The card does not expose enough attention internals to map every technique, but the target itself shows where long-context systems are heading.</p>
+    <p><strong>2. Ten-million-token context:</strong> Meta's LLaMA 4 Scout model card reports a 10 million token context window, roughly thousands of pages in one prompt. The card does not expose enough attention internals to map every technique, but the target shows how far long-context systems are being pushed.</p>
 
-    <p><strong>3. On-device long context:</strong> Gemma 4 E2B and E4B are interesting because they aim at mobile and edge hardware while keeping 128K context. Their KV budget comes from a blend of low KV-head counts, local-global attention, cross-layer sharing, and per-layer embeddings. Gemma 4 26B-A4B is the MoE member; E2B and E4B are not.</p>
+    <p><strong>3. On-device long context:</strong> Gemma 4 E2B and E4B aim at mobile and edge hardware while keeping 128K context. Their KV budget comes from a blend of low KV-head counts, local-global attention, cross-layer sharing, and per-layer embeddings. Gemma 4 26B-A4B is the MoE member; E2B and E4B are not.</p>
 
     <p><strong>4. Aggressive KV-head reduction:</strong> Qwen3's MoE variant uses 4 KV heads with 64 query heads, a 16:1 ratio. The field keeps testing how few KV heads are enough.</p>
 
-    <p><strong>5. Data-oblivious quantization:</strong> TurboQuant matters because it does not require calibration per model. That makes it attractive for teams serving many architectures. The exact compression factor still depends on model, workload, and context length.</p>
+    <p><strong>5. Data-oblivious quantization:</strong> TurboQuant does not require calibration per model. That makes it attractive for teams serving many architectures. The exact compression factor still depends on model, workload, and context length.</p>
 
     <h3>The Journey in Numbers</h3>
 
@@ -3511,8 +3512,8 @@
     </div>
 
     <div class="key-insight">
-        <h4>What I Take Away</h4>
-        <p>The KV cache problem was never one problem. It was memory size, memory bandwidth, fragmentation, precision, token importance, and serving layout all tangled together. MQA, GQA, and MLA changed the architecture. PagedAttention changed allocation. KIVI and TurboQuant changed the number format. Sliding windows and eviction changed what gets kept. Disaggregated serving changed where the work runs. None of these made the others obsolete. The useful systems in 2026 combine them, then tune the mix to the workload.</p>
+        <h4>My Takeaway</h4>
+        <p>The KV cache problem was never one problem. It was memory size, memory bandwidth, fragmentation, precision, token importance, and serving layout tangled together. MQA, GQA, and MLA changed the architecture. PagedAttention changed allocation. KIVI and TurboQuant changed the number format. Sliding windows and eviction changed what gets kept. Disaggregated serving changed where the work runs. None of these made the others obsolete. Strong systems in 2026 combine them, then tune the mix to the workload.</p>
     </div>
 </div>
 
@@ -3524,7 +3525,7 @@
     <div class="recap-shell">
         <div class="recap-header">
             <div class="hero-badge recap-kicker">Interactive Canvas</div>
-            <h3 class="recap-title"><span>Scrub the visual journey from MHA to MLA</span></h3>
+            <h3 class="recap-title"><span>Scrub the visual recap from MHA to MLA</span></h3>
             <p class="recap-copy">This article keeps the live canvas animation embedded. Social-ready MP4/WebM exports are generated locally in the <code>videos/</code> folder for upload to LinkedIn.</p>
         </div>
         <div class="recap-frame">
@@ -4002,7 +4003,7 @@ function setupHiDPICanvas(canvas, width, height) {
             ctx.textAlign='center';ctx.fillText(t,x+tsW/2,tsY+14);ctx.textAlign='left';
         });
 
-        // Draw 4 method panels — 2-column layout: left=cache vis, right=stats
+        // Draw 4 method panels: 2-column layout, left=cache vis, right=stats
         const panelH = 170, panelGap = 8, startY = 42;
         methods.forEach((m, mi) => {
             const py = startY + mi * (panelH + panelGap);
@@ -4864,7 +4865,7 @@ function setupHiDPICanvas(canvas, width, height) {
 
             if(progress>0.6){
                 subtitle('All five designs solve the same next-token problem.',420,vis);
-                subtitle('The journey is about how much state each one keeps in cache to get there.',445,vis);
+                subtitle('The point is how much state each one keeps in cache to get there.',445,vis);
             }
         }
 
@@ -5426,7 +5427,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     animate();
 })();
 
-// ========== ANIMATION: DeepSeek V4 — Hybrid Attention Deep Dive ==========
+// ========== ANIMATION: DeepSeek V4: Hybrid Attention Deep Dive ==========
 (function(){
     const canvas = document.getElementById('deepseekV4Anim');
     if(!canvas) return;
@@ -5485,7 +5486,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     }
 
     // ============================================================
-    // SCENE 0: Intro — animated title with particle field
+    // SCENE 0: Intro, animated title with particle field
     // ============================================================
     function drawScene0(t){
         const p=ease(Math.min(1,t*3)),pOut=t>0.75?ease((t-0.75)/0.25):1,vis=p*pOut;
@@ -5521,7 +5522,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     }
 
     // ============================================================
-    // SCENE 1: The Memory Problem — KV grows with context
+    // SCENE 1: The Memory Problem, KV grows with context
     // ============================================================
     function drawScene1(t){
         const prog=ease(Math.min(1,t*1.4));
@@ -5591,7 +5592,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     }
 
     // ============================================================
-    // SCENE 2: Hybrid architecture — layer stack with data flow
+    // SCENE 2: Hybrid architecture, layer stack with data flow
     // ============================================================
     function drawScene2(t){
         const prog=ease(Math.min(1,t*1.4));
@@ -5657,7 +5658,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     }
 
     // ============================================================
-    // SCENE 3: CSA — step by step
+    // SCENE 3: CSA, step by step
     // ============================================================
     function drawScene3(t){
         const prog=ease(Math.min(1,t*1.2));
@@ -5735,7 +5736,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     }
 
     // ============================================================
-    // SCENE 4: HCA — step by step
+    // SCENE 4: HCA, step by step
     // ============================================================
     function drawScene4(t){
         const prog=ease(Math.min(1,t*1.2));
@@ -5917,7 +5918,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     drawLoop();
 })();
 
-// ========== ANIMATION: DFlash — Block Diffusion Speculative Decoding ==========
+// ========== ANIMATION: DFlash: Block Diffusion Speculative Decoding ==========
 (function(){
     const canvas=document.getElementById('dflashAnim');
     if(!canvas)return;
@@ -5995,7 +5996,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     }
 
     // ============================================================
-    // SCENE 1: Autoregressive — the bottleneck
+    // SCENE 1: Autoregressive, the bottleneck
     // ============================================================
     function drawScene1(t){
         const prog=ease(Math.min(1,t*1.4));
